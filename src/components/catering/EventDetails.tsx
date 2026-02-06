@@ -6,8 +6,27 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { eventTypes } from "@/data/products";
 import { cn } from "@/lib/utils";
-import { Users, CalendarDays, ChevronRight, Clock } from "lucide-react";
+import { 
+  Users, 
+  CalendarDays, 
+  ChevronRight, 
+  Clock,
+  Heart,
+  Presentation,
+  Gift,
+  Briefcase,
+  Music,
+} from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
+
+const iconMap = {
+  Heart,
+  Presentation,
+  Gift,
+  Briefcase,
+  Music,
+  CalendarDays,
+} as const;
 
 type EventDetailsProps = {
   guestCount: number;
@@ -91,23 +110,44 @@ export function EventDetails({
           <CardTitle className="text-lg">Typ Wydarzenia</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-2">
-            {eventTypes.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => onEventTypeChange(type.id)}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all",
-                  "hover:border-primary focus:outline-none",
-                  eventType === type.id
-                    ? "border-primary bg-accent text-primary"
-                    : "border-border"
-                )}
-              >
-                <span className="text-2xl">{type.icon}</span>
-                <span className="text-xs font-medium text-center">{type.name}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-3">
+            {eventTypes.map((type) => {
+              const IconComponent = iconMap[type.icon as keyof typeof iconMap];
+              const isSelected = eventType === type.id;
+              
+              return (
+                <button
+                  key={type.id}
+                  onClick={() => onEventTypeChange(type.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                    "hover:border-primary hover:bg-accent/50 focus:outline-none",
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-card"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+                      isSelected 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <IconComponent className="w-5 h-5" strokeWidth={1.5} />
+                  </div>
+                  <span 
+                    className={cn(
+                      "text-xs font-medium text-center leading-tight",
+                      isSelected ? "text-primary" : "text-foreground"
+                    )}
+                  >
+                    {type.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

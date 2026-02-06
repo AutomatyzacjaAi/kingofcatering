@@ -530,10 +530,12 @@ export const products: Product[] = [
 ];
 
 export const eventTypes = [
-  { id: "wedding", name: "Wesele", icon: "💒" },
-  { id: "conference", name: "Konferencja", icon: "🎤" },
-  { id: "birthday", name: "Urodziny", icon: "🎂" },
-  { id: "corporate", name: "Spotkanie Firmowe", icon: "💼" },
-  { id: "party", name: "Impreza", icon: "🎉" },
-  { id: "other", name: "Inne", icon: "📝" },
-];
+  { id: "wedding", name: "Wesele", icon: "Heart" },
+  { id: "conference", name: "Konferencja", icon: "Presentation" },
+  { id: "birthday", name: "Urodziny", icon: "Gift" },
+  { id: "corporate", name: "Spotkanie Firmowe", icon: "Briefcase" },
+  { id: "party", name: "Impreza", icon: "Music" },
+  { id: "other", name: "Inne", icon: "CalendarDays" },
+] as const;
+
+export type EventType = typeof eventTypes[number];
