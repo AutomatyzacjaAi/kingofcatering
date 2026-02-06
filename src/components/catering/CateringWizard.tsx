@@ -1,10 +1,9 @@
 import { useCateringOrder } from "@/hooks/useCateringOrder";
-import { ProgressBar } from "./ProgressBar";
+import { MobileNav } from "./MobileNav";
 import { EventDetails } from "./EventDetails";
 import { CategoryStep } from "./CategoryStep";
 import { ContactForm } from "./ContactForm";
 import { OrderSummary } from "./OrderSummary";
-import { categories } from "@/data/products";
 
 export function CateringWizard() {
   const {
@@ -20,10 +19,28 @@ export function CateringWizard() {
     getItemsCountForCategory,
     nextStep,
     prevStep,
-    goToStep,
     updateOrder,
     resetOrder,
   } = useCateringOrder();
+
+  // Check if can proceed to next step
+  const canGoNext = (): boolean => {
+    if (currentStep === 0) {
+      return !!(order.guestCount > 0 && order.eventType && order.eventDate);
+    }
+    if (currentStep === steps.length - 2) {
+      return !!(order.contactName && order.contactEmail && order.contactPhone);
+    }
+    return true;
+  };
+
+  // Get next button label
+  const getNextLabel = () => {
+    if (currentStep === 0) return "Dalej";
+    if (currentStep === steps.length - 3) return "Kontakt";
+    if (currentStep === steps.length - 2) return "Podsumowanie";
+    return "Dalej";
+  };
 
   const renderStep = () => {
     // Step 0: Event Details
@@ -38,7 +55,6 @@ export function CateringWizard() {
           onEventTypeChange={(type) => updateOrder({ eventType: type })}
           onEventDateChange={(date) => updateOrder({ eventDate: date })}
           onEventTimeChange={(time) => updateOrder({ eventTime: time })}
-          onNext={nextStep}
         />
       );
     }
@@ -49,7 +65,6 @@ export function CateringWizard() {
         <OrderSummary
           order={order}
           totalPrice={totalPrice}
-          onPrev={prevStep}
           onSubmit={resetOrder}
         />
       );
@@ -67,16 +82,13 @@ export function CateringWizard() {
           onEmailChange={(email) => updateOrder({ contactEmail: email })}
           onPhoneChange={(phone) => updateOrder({ contactPhone: phone })}
           onNotesChange={(notes) => updateOrder({ notes })}
-          onNext={nextStep}
-          onPrev={prevStep}
         />
       );
     }
 
-    // Category steps (1 through length-3)
+    // Category steps
     const categoryId = steps[currentStep].id;
     const categoryProducts = getCurrentCategoryProducts();
-    const isLastCategory = currentStep === steps.length - 3;
 
     return (
       <CategoryStep
@@ -87,23 +99,27 @@ export function CateringWizard() {
         getSuggestedQuantity={getSuggestedQuantity}
         onQuantityChange={updateItemQuantity}
         onAddWithSuggestion={addProductWithSuggestion}
-        onNext={nextStep}
-        onPrev={prevStep}
-        totalPrice={totalPrice}
-        isLastCategory={isLastCategory}
       />
     );
   };
 
+  const isLastStep = currentStep === steps.length - 1;
+
   return (
     <div className="min-h-screen bg-background">
-      <ProgressBar
+      <MobileNav
         steps={steps}
         currentStep={currentStep}
-        onStepClick={goToStep}
-        getItemsCountForCategory={getItemsCountForCategory}
+        totalSteps={steps.length}
+        onNext={nextStep}
+        onPrev={prevStep}
+        canGoNext={canGoNext()}
+        nextLabel={getNextLabel()}
+        showNav={!isLastStep}
       />
-      {renderStep()}
+      <div className="pb-safe">
+        {renderStep()}
+      </div>
     </div>
   );
 }
