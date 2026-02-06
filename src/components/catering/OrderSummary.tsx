@@ -1,14 +1,37 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Send, Users, Phone, Mail, PartyPopper, MapPin, Check } from "lucide-react";
+import { 
+  Send, 
+  Users, 
+  Phone, 
+  Mail, 
+  PartyPopper, 
+  MapPin, 
+  Check, 
+  Calendar,
+  UtensilsCrossed,
+  Sparkles,
+  Package,
+  CreditCard,
+  Banknote,
+  FileText,
+  Receipt
+} from "lucide-react";
 import { products, categories, eventTypes } from "@/data/products";
 import { extraItems, packagingOptions, waiterServiceOptions, paymentMethods } from "@/data/extras";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+// Map payment method ids to Lucide icons
+const paymentIcons: Record<string, React.ReactNode> = {
+  online: <CreditCard className="w-5 h-5 text-primary" />,
+  gotowka: <Banknote className="w-5 h-5 text-primary" />,
+  oferta: <FileText className="w-5 h-5 text-primary" />,
+  proforma: <Receipt className="w-5 h-5 text-primary" />,
+};
 
 type OrderSummaryProps = {
   order: CateringOrder;
@@ -179,7 +202,9 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
       <Card>
         <CardContent className="pt-4 space-y-3">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">📅</span>
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-primary" />
+            </div>
             <div>
               <p className="font-medium">{eventType?.name || "Wydarzenie"}</p>
               <p className="text-sm text-muted-foreground">{formatDate(order.eventDate)}</p>
@@ -208,13 +233,13 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
       {itemsByCategory.length > 0 && (
         <Card>
           <CardContent className="pt-4 space-y-4">
-            <h3 className="font-semibold">🍽️ Produkty</h3>
+            <div className="flex items-center gap-2">
+              <UtensilsCrossed className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold">Produkty</h3>
+            </div>
             {itemsByCategory.map((group) => (
               <div key={group.category.id}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span>{group.category.icon}</span>
-                  <h4 className="font-medium text-sm">{group.category.name}</h4>
-                </div>
+                <h4 className="font-medium text-sm text-muted-foreground mb-2">{group.category.name}</h4>
                 <div className="space-y-1">
                   {group.items.map((item, idx) => (
                     <div
@@ -240,7 +265,10 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
       {extrasItems.length > 0 && (
         <Card>
           <CardContent className="pt-4 space-y-2">
-            <h3 className="font-semibold">✨ Dodatki</h3>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold">Dodatki</h3>
+            </div>
             {extrasItems.map((item, idx) => (
               <div
                 key={idx}
@@ -263,7 +291,9 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <span className="text-xl">{selectedPackaging.icon}</span>
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Package className="w-5 h-5 text-primary" />
+              </div>
               <div>
                 <p className="font-medium text-sm">{selectedPackaging.name}</p>
                 <p className="text-xs text-muted-foreground">{selectedPackaging.description}</p>
@@ -276,7 +306,10 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
       {/* Payment Method Selection */}
       <Card>
         <CardContent className="pt-4 space-y-3">
-          <h3 className="font-semibold">💳 Metoda płatności</h3>
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold">Metoda płatności</h3>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {paymentMethods.map((method) => {
               const isSelected = order.paymentMethod === method.id;
@@ -292,7 +325,7 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
                   )}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{method.icon}</span>
+                    {paymentIcons[method.id]}
                     <span className="font-medium text-sm">{method.name}</span>
                     {isSelected && <Check className="w-4 h-4 text-primary ml-auto" />}
                   </div>
