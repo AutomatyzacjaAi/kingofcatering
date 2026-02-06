@@ -1,8 +1,6 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -16,13 +14,10 @@ type ProductModalProps = {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
-  // Simple product
   simpleQuantity?: number;
   onSimpleQuantityChange?: (productId: string, quantity: number) => void;
-  // Expandable product
   expandableQuantities?: Record<string, number>;
   onExpandableVariantChange?: (productId: string, variantId: string, quantity: number) => void;
-  // Configurable product
   configurableQuantity?: number;
   configurableOptions?: Record<string, string[]>;
   onConfigurableChange?: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
@@ -49,22 +44,18 @@ export function ProductModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent hideCloseButton className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col">
-        {/* Custom Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{product.icon}</span>
-            <div>
-              <DialogTitle className="text-lg font-bold">{product.name}</DialogTitle>
-              <p className="text-sm text-muted-foreground">{product.description}</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={handleClose}>
+        {/* Hidden title for accessibility */}
+        <DialogTitle className="sr-only">{product.name}</DialogTitle>
+        
+        {/* Close button */}
+        <div className="absolute top-4 right-4 z-10">
+          <Button variant="secondary" size="icon" onClick={handleClose} className="rounded-full bg-background/80 backdrop-blur-sm">
             <X className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Content - scrollable */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto">
           {product.type === "simple" && (
             <SimpleProductContent
               product={product}
@@ -97,7 +88,7 @@ export function ProductModal({
         {/* Footer with Add button */}
         <div className="p-4 border-t border-border bg-background shrink-0">
           <Button onClick={handleClose} className="w-full" size="lg">
-            Gotowe
+            Dodaj
           </Button>
         </div>
       </DialogContent>
@@ -116,77 +107,84 @@ function SimpleProductContent({
   onQuantityChange: (qty: number) => void;
 }) {
   return (
-    <div className="space-y-6">
+    <div>
       {/* Hero Image */}
       {product.image && (
-        <div className="relative -mx-4 -mt-4">
+        <div className="relative">
           <img 
             src={product.image} 
             alt={product.name}
-            className="w-full h-48 object-cover"
+            className="w-full h-56 object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
       )}
 
-      {/* Long Description */}
-      {product.longDescription && (
-        <p className="text-muted-foreground">
-          {product.longDescription}
-        </p>
-      )}
-
-      {/* Price and Quantity */}
-      <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
+      {/* Content */}
+      <div className="p-4 space-y-6">
+        {/* Title and Description */}
         <div>
-          <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
-          <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
+          <h2 className="text-xl font-bold">{product.name}</h2>
+          <p className="text-muted-foreground mt-1">{product.description}</p>
+          {product.longDescription && (
+            <p className="text-sm text-muted-foreground mt-2">
+              {product.longDescription}
+            </p>
+          )}
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onQuantityChange(Math.max(0, quantity - 1))}
-            disabled={quantity === 0}
-          >
-            <Minus className="w-4 h-4" />
-          </Button>
-          <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onQuantityChange(quantity + 1)}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
 
-      {/* Contents */}
-      <div>
-        <h3 className="font-semibold mb-3">Zawartość patery:</h3>
-        <div className="space-y-2">
-          {product.contents.map((item, idx) => (
-            <div
-              key={idx}
-              className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
+        {/* Price and Quantity */}
+        <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
+          <div>
+            <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
+            <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onQuantityChange(Math.max(0, quantity - 1))}
+              disabled={quantity === 0}
             >
-              <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-              <span className="text-sm">{item}</span>
-            </div>
-          ))}
+              <Minus className="w-4 h-4" />
+            </Button>
+            <span className="w-12 text-center text-xl font-bold">{quantity}</span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onQuantityChange(quantity + 1)}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Allergens */}
-      {product.allergens.length > 0 && (
-        <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
-          <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0" />
-          <span className="text-sm text-orange-700 dark:text-orange-400">
-            Alergeny: {product.allergens.join(", ")}
-          </span>
+        {/* Contents */}
+        <div>
+          <h3 className="font-semibold mb-3">Zawartość patery:</h3>
+          <div className="space-y-2">
+            {product.contents.map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
+              >
+                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
+                <span className="text-sm">{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
+
+        {/* Allergens */}
+        {product.allergens.length > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+            <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0" />
+            <span className="text-sm text-orange-700 dark:text-orange-400">
+              Alergeny: {product.allergens.join(", ")}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -202,8 +200,17 @@ function ExpandableProductContent({
   onVariantQuantityChange: (variantId: string, qty: number) => void;
 }) {
   return (
-    <div className="space-y-3">
-      <h3 className="font-semibold mb-3">Wybierz warianty:</h3>
+    <div className="p-4 space-y-4">
+      {/* Title */}
+      <div>
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <span className="text-2xl">{product.icon}</span>
+          {product.name}
+        </h2>
+        <p className="text-muted-foreground mt-1">{product.description}</p>
+      </div>
+
+      <h3 className="font-semibold">Wybierz warianty:</h3>
       {product.variants.map((variant) => {
         const qty = quantities[variant.id] || 0;
         return (
@@ -291,7 +298,16 @@ function ConfigurableProductContent({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 space-y-6">
+      {/* Title */}
+      <div>
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <span className="text-2xl">{product.icon}</span>
+          {product.name}
+        </h2>
+        <p className="text-muted-foreground mt-1">{product.description}</p>
+      </div>
+
       {/* Price and Quantity */}
       <div className="p-4 bg-accent rounded-xl">
         <div className="flex items-center justify-between mb-3">
