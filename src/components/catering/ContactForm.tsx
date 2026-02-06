@@ -1,17 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Phone, MessageSquare } from "lucide-react";
+import { User, Mail, Phone, MessageSquare, MapPin } from "lucide-react";
 
 type ContactFormProps = {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  contactAddress: string;
   notes: string;
   onNameChange: (name: string) => void;
   onEmailChange: (email: string) => void;
   onPhoneChange: (phone: string) => void;
+  onAddressChange: (address: string) => void;
   onNotesChange: (notes: string) => void;
 };
 
@@ -19,10 +21,12 @@ export function ContactForm({
   contactName,
   contactEmail,
   contactPhone,
+  contactAddress,
   notes,
   onNameChange,
   onEmailChange,
   onPhoneChange,
+  onAddressChange,
   onNotesChange,
 }: ContactFormProps) {
   return (
@@ -83,13 +87,30 @@ export function ContactForm({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="address" className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" />
+              Adres dostawy *
+            </Label>
+            <Input
+              id="address"
+              placeholder="Kraków, ul. Przykładowa 123"
+              value={contactAddress}
+              onChange={(e) => onAddressChange(e.target.value)}
+              className="h-12"
+            />
+            <p className="text-xs text-muted-foreground">
+              Wpisz adres, a my dostarczymy catering na miejsce
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="notes" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-primary" />
               Uwagi (opcjonalne)
             </Label>
             <Textarea
               id="notes"
-              placeholder="Alergie, preferencje..."
+              placeholder="Alergie, preferencje, szczegóły lokalizacji..."
               value={notes}
               onChange={(e) => onNotesChange(e.target.value)}
               rows={3}
