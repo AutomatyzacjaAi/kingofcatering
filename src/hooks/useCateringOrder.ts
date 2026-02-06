@@ -35,11 +35,11 @@ export function useCateringOrder() {
   const [order, setOrder] = useState<CateringOrder>(initialOrder);
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Steps: Event Details + 6 categories + Contact Form + Summary
+  // Steps: Event Details + Products + Contact Form + Summary
   const steps = useMemo(
     () => [
       { id: "event", name: "Wydarzenie", icon: "📋" },
-      ...categories.map((cat) => ({ id: cat.id, name: cat.name, icon: cat.icon })),
+      { id: "products", name: "Produkty", icon: "🍽️" },
       { id: "contact", name: "Kontakt", icon: "📧" },
       { id: "summary", name: "Podsumowanie", icon: "✅" },
     ],
