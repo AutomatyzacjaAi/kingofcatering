@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { products, type Product, type SimpleProduct, type ExpandableProduct, type ConfigurableProduct } from "@/data/products";
-import { packagingOptions, waiterServiceOptions } from "@/data/extras";
+import { packagingOptions, waiterServiceOptions, extraItems } from "@/data/extras";
 
 export type OrderItem = {
   productId: string;
@@ -120,8 +120,7 @@ export function useCateringOrder() {
     // Extras
     for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
       if (qty > 0) {
-        const extraItems = require("@/data/extras").extraItems;
-        const extra = extraItems.find((e: any) => e.id === extraId);
+        const extra = extraItems.find((e) => e.id === extraId);
         if (extra) {
           total += extra.price * qty;
         }
