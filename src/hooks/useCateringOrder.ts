@@ -29,7 +29,10 @@ export type CateringOrder = {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  contactAddress: string;
+  contactCity: string;
+  contactStreet: string;
+  contactBuildingNumber: string;
+  contactApartmentNumber: string;
   notes: string;
   // Payment
   paymentMethod: string;
@@ -52,7 +55,10 @@ const initialOrder: CateringOrder = {
   contactName: "",
   contactEmail: "",
   contactPhone: "",
-  contactAddress: "",
+  contactCity: "",
+  contactStreet: "",
+  contactBuildingNumber: "",
+  contactApartmentNumber: "",
   notes: "",
   paymentMethod: "",
 };

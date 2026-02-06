@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronRight, Minus, Plus, X } from "lucide-react";
+import { Check, ChevronRight, Minus, Plus, X, Sparkles, Package, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,12 @@ import {
   type PackagingOption,
   type WaiterServiceOption,
 } from "@/data/extras";
+
+const categoryIcons: Record<string, React.ReactNode> = {
+  Sparkles: <Sparkles className="w-4 h-4" />,
+  Package: <Package className="w-4 h-4" />,
+  Users: <Users className="w-4 h-4" />,
+};
 
 type ExtrasStepProps = {
   selectedExtras: Record<string, number>; // extraId -> quantity
@@ -80,7 +86,7 @@ export function ExtrasStep({
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span>{category.icon}</span>
+                <span className="text-primary">{categoryIcons[category.icon] || <Sparkles className="w-4 h-4" />}</span>
                 <span className="text-sm">{category.name}</span>
                 {category.required && !itemCount && (
                   <Badge variant="destructive" className="text-xs px-1.5 py-0">

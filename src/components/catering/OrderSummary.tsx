@@ -219,7 +219,11 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span>{order.contactAddress || "Brak adresu"}</span>
+                <span>
+                  {order.contactCity && order.contactStreet 
+                    ? `${order.contactStreet} ${order.contactBuildingNumber}${order.contactApartmentNumber ? `/${order.contactApartmentNumber}` : ''}, ${order.contactCity}`
+                    : "Brak adresu"}
+                </span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="w-4 h-4 text-muted-foreground" />

@@ -35,7 +35,7 @@ export function CateringWizard() {
       return !!order.selectedPackaging;
     }
     if (currentStep === 3) {
-      return !!(order.contactName && order.contactEmail && order.contactPhone && order.contactAddress);
+      return !!(order.contactName && order.contactEmail && order.contactPhone && order.contactCity && order.contactStreet && order.contactBuildingNumber);
     }
     return true;
   };
@@ -95,12 +95,18 @@ export function CateringWizard() {
             contactName={order.contactName}
             contactEmail={order.contactEmail}
             contactPhone={order.contactPhone}
-            contactAddress={order.contactAddress}
+            contactCity={order.contactCity}
+            contactStreet={order.contactStreet}
+            contactBuildingNumber={order.contactBuildingNumber}
+            contactApartmentNumber={order.contactApartmentNumber}
             notes={order.notes}
             onNameChange={(name) => updateOrder({ contactName: name })}
             onEmailChange={(email) => updateOrder({ contactEmail: email })}
             onPhoneChange={(phone) => updateOrder({ contactPhone: phone })}
-            onAddressChange={(address) => updateOrder({ contactAddress: address })}
+            onCityChange={(city) => updateOrder({ contactCity: city })}
+            onStreetChange={(street) => updateOrder({ contactStreet: street })}
+            onBuildingNumberChange={(num) => updateOrder({ contactBuildingNumber: num })}
+            onApartmentNumberChange={(num) => updateOrder({ contactApartmentNumber: num })}
             onNotesChange={(notes) => updateOrder({ notes })}
           />
         );
