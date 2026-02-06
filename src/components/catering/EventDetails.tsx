@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { eventTypes } from "@/data/products";
 import { cn } from "@/lib/utils";
-import { Users, CalendarDays, ChevronRight } from "lucide-react";
-import { FullscreenCalendar } from "./FullscreenCalendar";
-import { TimePicker } from "./TimePicker";
+import { Users, CalendarDays, ChevronRight, Clock } from "lucide-react";
+import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
 
 type EventDetailsProps = {
   guestCount: number;
@@ -31,12 +30,13 @@ export function EventDetails({
   onEventDateChange,
   onEventTimeChange,
 }: EventDetailsProps) {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const selectedDate = eventDate ? new Date(eventDate) : undefined;
 
-  const handleDateSelect = (date: Date) => {
+  const handleConfirm = (date: Date, time: string) => {
     onEventDateChange(format(date, "yyyy-MM-dd"));
+    onEventTimeChange(time);
   };
 
   return (
@@ -112,37 +112,38 @@ export function EventDetails({
         </CardContent>
       </Card>
 
-      {/* Date Selection */}
+      {/* Date & Time Selection */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarDays className="w-5 h-5 text-primary" />
-            Data Wydarzenia
+            Data i Godzina
           </CardTitle>
         </CardHeader>
         <CardContent>
           <button
-            onClick={() => setIsCalendarOpen(true)}
+            onClick={() => setIsPickerOpen(true)}
             className={cn(
               "w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all",
               "hover:border-primary focus:outline-none",
-              eventDate ? "border-primary bg-accent" : "border-border"
+              eventDate && eventTime ? "border-primary bg-accent" : "border-border"
             )}
           >
             <div className="text-left">
-              {selectedDate ? (
+              {selectedDate && eventTime ? (
                 <>
                   <p className="font-semibold text-foreground">
                     {format(selectedDate, "d MMMM yyyy", { locale: pl })}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(selectedDate, "EEEE", { locale: pl })}
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {eventTime} • {format(selectedDate, "EEEE", { locale: pl })}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="font-medium text-muted-foreground">Wybierz datę</p>
-                  <p className="text-sm text-muted-foreground">Kliknij aby otworzyć kalendarz</p>
+                  <p className="font-medium text-muted-foreground">Wybierz datę i godzinę</p>
+                  <p className="text-sm text-muted-foreground">Kliknij aby wybrać termin</p>
                 </>
               )}
             </div>
@@ -151,22 +152,13 @@ export function EventDetails({
         </CardContent>
       </Card>
 
-      {/* Time Selection */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Godzina</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TimePicker value={eventTime} onChange={onEventTimeChange} />
-        </CardContent>
-      </Card>
-
-      {/* Fullscreen Calendar */}
-      <FullscreenCalendar
-        isOpen={isCalendarOpen}
+      {/* Fullscreen Date & Time Picker */}
+      <FullscreenDateTimePicker
+        isOpen={isPickerOpen}
         selectedDate={selectedDate}
-        onSelect={handleDateSelect}
-        onClose={() => setIsCalendarOpen(false)}
+        selectedTime={eventTime}
+        onConfirm={handleConfirm}
+        onClose={() => setIsPickerOpen(false)}
       />
     </div>
   );
