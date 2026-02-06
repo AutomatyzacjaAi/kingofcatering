@@ -52,7 +52,7 @@ export function ContactForm({
         </p>
       </div>
 
-      <Card>
+      <Card className="border-0 shadow-none">
         <CardContent className="pt-6 space-y-4">
           {/* Personal info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
