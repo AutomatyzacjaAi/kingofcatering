@@ -45,32 +45,32 @@ export function MobileNav({
   return (
     <>
       {/* Top Header - Progress */}
-      <div className="sticky top-0 z-20 bg-background border-b border-border">
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-lg border-b border-border/50 shadow-sm">
         <div className="px-4 py-3">
           {/* Step indicator */}
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-medium text-muted-foreground">
               Krok {currentStep + 1} z {totalSteps}
             </span>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{currentStepData?.icon}</span>
-                <span className="font-medium text-sm">{currentStepData?.name}</span>
-              </div>
-              {onQuantityChange && (
-                <CartDrawer
-                  items={items}
-                  totalPrice={totalPrice}
-                  onQuantityChange={onQuantityChange}
-                />
-              )}
+            
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+              <span className="text-xl">{currentStepData?.icon}</span>
+              <span className="font-semibold text-foreground">{currentStepData?.name}</span>
             </div>
+
+            {onQuantityChange && (
+              <CartDrawer
+                items={items}
+                totalPrice={totalPrice}
+                onQuantityChange={onQuantityChange}
+              />
+            )}
           </div>
           
           {/* Progress bar */}
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-1 bg-muted/50 rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
+              className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700 ease-out rounded-full"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
