@@ -24,6 +24,7 @@ type MobileNavProps = {
   onSimpleQuantityChange: (productId: string, quantity: number) => void;
   onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
   onConfigurableChange: (productId: string, quantity: number) => void;
+  onExtraChange?: (extraId: string, quantity: number) => void;
 };
 
 export function MobileNav({
@@ -40,6 +41,7 @@ export function MobileNav({
   onSimpleQuantityChange,
   onExpandableVariantChange,
   onConfigurableChange,
+  onExtraChange,
 }: MobileNavProps) {
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
   const currentStepData = steps[currentStep];
@@ -62,6 +64,7 @@ export function MobileNav({
               onSimpleQuantityChange={onSimpleQuantityChange}
               onExpandableVariantChange={onExpandableVariantChange}
               onConfigurableChange={onConfigurableChange}
+              onExtraChange={onExtraChange}
             />
           </div>
           
