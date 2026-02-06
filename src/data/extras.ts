@@ -5,28 +5,36 @@ export type ExtraItem = {
   name: string;
   description: string;
   longDescription?: string;
+  image?: string;
   price: number;
   unitLabel: string; // "szt.", "event", "os."
   icon: string;
+  contents?: string[]; // what's included
 };
 
 export type PackagingOption = {
   id: string;
   name: string;
   description: string;
+  longDescription?: string;
+  image?: string;
   price: number; // 0 = free
   priceLabel: string; // "Gratis", "25 zł/os."
   requiresPersonCount?: boolean;
   icon: string;
+  contents?: string[];
 };
 
 export type WaiterServiceOption = {
   id: string;
   name: string;
   description: string;
+  longDescription?: string;
+  image?: string;
   duration: string; // "4h", "8h", "12h"
   price: number;
   icon: string;
+  contents?: string[];
 };
 
 export type ExtrasCategory = {
@@ -70,46 +78,82 @@ export const extraItems: ExtraItem[] = [
     id: "wniesienie",
     name: "Wniesienie na salę",
     description: "Wniesiemy catering na wskazane piętro",
-    longDescription: "Nasz personel wniesie wszystkie produkty cateringowe na wskazane przez Ciebie piętro lub salę. Cena obejmuje wniesienie i rozstawienie.",
+    longDescription: "Nasz profesjonalny personel wniesie wszystkie produkty cateringowe na wskazane przez Ciebie piętro lub salę. Cena obejmuje wniesienie, rozstawienie i przygotowanie bufetu do serwowania.",
+    image: "/extras/wniesienie.jpg",
     price: 150,
     unitLabel: "event",
     icon: "📦",
+    contents: [
+      "Wniesienie na wskazane piętro",
+      "Rozstawienie na stołach",
+      "Przygotowanie bufetu",
+      "Dekoracja podstawowa",
+    ],
   },
   {
     id: "dekoracja-stolu",
     name: "Dekoracja stołu",
     description: "Profesjonalna dekoracja stołów cateringowych",
-    longDescription: "Dekorujemy stoły kwiatami, świecami i elegancką zastawą. Wszystko w wybranej przez Ciebie kolorystyce.",
+    longDescription: "Dekorujemy stoły kwiatami, świecami i elegancką zastawą. Wszystko w wybranej przez Ciebie kolorystyce. Nasi dekoratorzy stworzą niepowtarzalną atmosferę.",
+    image: "/extras/dekoracja-stolu.jpg",
     price: 200,
     unitLabel: "event",
     icon: "🌸",
+    contents: [
+      "Kompozycje kwiatowe",
+      "Świece dekoracyjne",
+      "Eleganckie serwetki",
+      "Obrusy w wybranym kolorze",
+      "Drobne akcesoria dekoracyjne",
+    ],
   },
   {
     id: "led-swiece",
     name: "Świece LED",
     description: "Atmosferyczne oświetlenie LED",
-    longDescription: "Zestaw eleganckich świec LED, które stworzą niepowtarzalny klimat na Twoim wydarzeniu. Bezpieczne i długotrwałe.",
+    longDescription: "Zestaw eleganckich świec LED, które stworzą niepowtarzalny klimat na Twoim wydarzeniu. Bezpieczne, bezwonne i długotrwałe - idealne do sal, gdzie ogień jest zabroniony.",
+    image: "/extras/led-swiece.jpg",
     price: 80,
     unitLabel: "zestaw",
     icon: "🕯️",
+    contents: [
+      "12 świec LED różnej wysokości",
+      "Baterie w zestawie",
+      "Pilot do sterowania",
+      "Tryb migotania płomienia",
+    ],
   },
   {
     id: "naczynia-podgrzewacze",
     name: "Podgrzewacze na naczynia",
     description: "Utrzymaj potrawy ciepłe przez całe wydarzenie",
-    longDescription: "Profesjonalne podgrzewacze bufetowe z płomieniami. Idealne do dań gorących. W zestawie 6 sztuk.",
+    longDescription: "Profesjonalne podgrzewacze bufetowe ze świecami podgrzewającymi. Utrzymują idealną temperaturę dań przez wiele godzin. Niezbędne przy daniach gorących.",
+    image: "/extras/podgrzewacze.jpg",
     price: 120,
     unitLabel: "zestaw",
     icon: "🔥",
+    contents: [
+      "6 podgrzewaczy stalowych",
+      "Świece podgrzewające (4h)",
+      "Pokrywki szklane",
+      "Podstawki ochronne",
+    ],
   },
   {
     id: "odbiorcatering",
     name: "Odbiór resztek",
     description: "Przyjdziemy i zabierzemy wszystko po imprezie",
-    longDescription: "Po zakończeniu wydarzenia przyjedziemy i zabierzemy wszystkie naczynia, resztki jedzenia i śmieci. Ty cieszysz się imprezą!",
+    longDescription: "Po zakończeniu wydarzenia przyjedziemy i zabierzemy wszystkie naczynia, resztki jedzenia i śmieci. Ty cieszysz się imprezą, a my zajmiemy się sprzątaniem!",
+    image: "/extras/odbior.jpg",
     price: 100,
     unitLabel: "event",
     icon: "🚚",
+    contents: [
+      "Odbiór naczyń i zastawy",
+      "Zabierzenie resztek jedzenia",
+      "Podstawowe sprzątanie stołów",
+      "Wywóz śmieci cateringowych",
+    ],
   },
 ];
 
