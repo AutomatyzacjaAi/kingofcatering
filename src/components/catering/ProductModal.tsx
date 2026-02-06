@@ -43,7 +43,10 @@ export function ProductModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent hideCloseButton className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col">
+      <DialogContent 
+        hideCloseButton 
+        className="h-[100dvh] max-h-[100dvh] w-full max-w-full m-0 p-0 rounded-none border-0 flex flex-col md:h-auto md:max-h-[85vh] md:max-w-2xl md:rounded-2xl md:border"
+      >
         <DialogTitle className="sr-only">{product.name}</DialogTitle>
         
         <div className="absolute top-4 right-4 z-10">

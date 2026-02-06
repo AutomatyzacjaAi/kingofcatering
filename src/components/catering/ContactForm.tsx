@@ -30,9 +30,9 @@ export function ContactForm({
   onNotesChange,
 }: ContactFormProps) {
   return (
-    <div className="px-4 py-6 pb-24 space-y-6">
+    <div className="px-4 py-6 pb-24 space-y-6 md:max-w-4xl md:mx-auto lg:max-w-5xl">
       <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">
+        <h1 className="text-2xl font-bold text-foreground md:text-3xl">
           Dane Kontaktowe
         </h1>
         <p className="text-muted-foreground">
@@ -41,7 +41,7 @@ export function ContactForm({
       </div>
 
       <Card>
-        <CardContent className="pt-6 space-y-4">
+        <CardContent className="pt-6 space-y-4 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
           <div className="space-y-2">
             <Label htmlFor="name" className="flex items-center gap-2">
               <User className="w-4 h-4 text-primary" />
