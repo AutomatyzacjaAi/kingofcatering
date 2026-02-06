@@ -12,7 +12,7 @@ type CartDrawerProps = {
   onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
   onConfigurableChange: (productId: string, quantity: number) => void;
   onExtraChange?: (extraId: string, quantity: number) => void;
-  onPackagingChange?: (packagingId: string, personCount: number) => void;
+  onPackagingChange?: (packagingId: string | null, personCount: number) => void;
   onWaiterServiceChange?: (serviceId: string | null, count: number) => void;
 };
 
@@ -156,15 +156,29 @@ export function CartDrawer({
   const itemCount = cartItems.length;
 
   const handleQuantityChange = (item: CartItem, newQty: number) => {
+    const safeQty = Math.max(0, newQty);
+
     if (item.type === "simple") {
-      onSimpleQuantityChange(item.productId, newQty);
+      onSimpleQuantityChange(item.productId, safeQty);
     } else if (item.type === "expandable" && item.variantId) {
-      onExpandableVariantChange(item.productId, item.variantId, newQty);
+      onExpandableVariantChange(item.productId, item.variantId, safeQty);
     } else if (item.type === "configurable") {
-      onConfigurableChange(item.productId, newQty);
+      onConfigurableChange(item.productId, safeQty);
     } else if (item.type === "extra" && onExtraChange) {
-      onExtraChange(item.productId, newQty);
+      onExtraChange(item.productId, safeQty);
     }
+  };
+
+  const handleRemoveItem = (item: CartItem) => {
+    if (item.type === "packaging") {
+      onPackagingChange?.(null, 0);
+      return;
+    }
+    if (item.type === "waiter") {
+      onWaiterServiceChange?.(null, 0);
+      return;
+    }
+    handleQuantityChange(item, 0);
   };
 
   return (
@@ -256,21 +270,21 @@ export function CartDrawer({
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-primary">
-                          {(item.price * item.quantity).toFixed(0)} zł
-                        </span>
-                        {!item.isReadOnly && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleQuantityChange(item, 0)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
+                       <div className="flex items-center gap-2">
+                         <span className="font-semibold text-sm text-primary">
+                           {(item.price * item.quantity).toFixed(0)} zł
+                         </span>
+                         {((!item.isReadOnly) || item.type === "packaging" || item.type === "waiter") && (
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                             onClick={() => handleRemoveItem(item)}
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
+                         )}
+                       </div>
                     </div>
                   </div>
                 </div>

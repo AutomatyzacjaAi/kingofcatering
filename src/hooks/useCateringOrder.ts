@@ -209,11 +209,11 @@ export function useCateringOrder() {
     }));
   }, []);
 
-  const updatePackaging = useCallback((packagingId: string, personCount: number) => {
+  const updatePackaging = useCallback((packagingId: string | null, personCount: number) => {
     setOrder((prev) => ({
       ...prev,
       selectedPackaging: packagingId,
-      packagingPersonCount: personCount,
+      packagingPersonCount: packagingId ? personCount : 0,
     }));
   }, []);
 
