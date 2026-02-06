@@ -46,13 +46,6 @@ export function ProductsStep({
 
   return (
     <div className="pb-24">
-      {/* Header */}
-      <div className="px-4 py-4 bg-accent/30">
-        <h1 className="text-xl font-bold text-foreground">Wybierz produkty</h1>
-        <p className="text-sm text-muted-foreground">
-          Dla {guestCount} gości • {Object.values(items).filter(i => i.quantity > 0).length} produktów w zamówieniu
-        </p>
-      </div>
 
       {/* Category Tabs - Horizontal Scroll */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
