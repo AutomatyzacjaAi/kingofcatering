@@ -26,102 +26,94 @@ export function ProductCard({
   return (
     <Card
       className={cn(
-        "transition-all duration-200 hover:shadow-md",
-        isSelected && "ring-2 ring-primary shadow-md"
+        "transition-all duration-200",
+        isSelected && "ring-2 ring-primary"
       )}
     >
-      <CardContent className="p-4">
-        {/* Icon & Title */}
-        <div className="flex items-start gap-3 mb-3">
+      <CardContent className="p-3">
+        <div className="flex gap-3">
+          {/* Icon */}
           <div
             className={cn(
-              "w-14 h-14 rounded-lg flex items-center justify-center text-2xl shrink-0",
+              "w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0",
               isSelected ? "bg-primary/10" : "bg-muted"
             )}
           >
             {product.icon}
           </div>
+          
+          {/* Content */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground leading-tight">
-              {product.name}
-            </h3>
-            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-semibold text-foreground text-sm leading-tight">
+                {product.name}
+              </h3>
+              <span className="text-sm font-bold text-primary whitespace-nowrap">
+                {product.pricePerPortion} zł
+              </span>
+            </div>
+            
+            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
               {product.description}
             </p>
+
+            {/* Tags */}
+            {product.dietaryTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {product.dietaryTags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="mt-2">
+              {isSelected ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => onQuantityChange(quantity - 1)}
+                      className="h-8 w-8"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={quantity}
+                      onChange={(e) => onQuantityChange(parseInt(e.target.value) || 0)}
+                      className="h-8 w-14 text-center text-sm font-bold px-1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => onQuantityChange(quantity + 1)}
+                      className="h-8 w-8"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <span className="text-sm font-bold text-primary">
+                    {(product.pricePerPortion * quantity).toFixed(0)} zł
+                  </span>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  className="w-full h-8"
+                  onClick={onAddWithSuggestion}
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Dodaj ({suggestedQuantity})
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Tags */}
-        {product.dietaryTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {product.dietaryTags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {/* Price */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-lg font-bold text-primary">
-            {product.pricePerPortion} zł
-            <span className="text-sm font-normal text-muted-foreground">/porcja</span>
-          </span>
-        </div>
-
-        {/* Suggested quantity hint */}
-        {!isSelected && suggestedQuantity > 0 && (
-          <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span>Sugerowane: {suggestedQuantity} porcji</span>
-          </div>
-        )}
-
-        {/* Actions */}
-        {isSelected ? (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onQuantityChange(quantity - 1)}
-              className="h-10 w-10"
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <Input
-              type="number"
-              min={0}
-              value={quantity}
-              onChange={(e) => onQuantityChange(parseInt(e.target.value) || 0)}
-              className="h-10 text-center font-bold"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onQuantityChange(quantity + 1)}
-              className="h-10 w-10"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        ) : (
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={onAddWithSuggestion}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Dodaj ({suggestedQuantity} szt.)
-          </Button>
-        )}
-
-        {/* Selected total */}
-        {isSelected && (
-          <div className="mt-2 text-sm font-medium text-right text-primary">
-            Suma: {(product.pricePerPortion * quantity).toFixed(0)} zł
-          </div>
-        )}
       </CardContent>
     </Card>
   );
