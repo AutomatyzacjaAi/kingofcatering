@@ -190,8 +190,60 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
     );
   }
 
+  // Get 2 random products that are NOT already in the order for upsell
+  const getUpsellProducts = () => {
+    const orderedProductIds = new Set([
+      ...Object.keys(order.simpleQuantities).filter(id => order.simpleQuantities[id] > 0),
+      ...Object.keys(order.expandableQuantities).filter(id => 
+        Object.values(order.expandableQuantities[id] || {}).some(qty => qty > 0)
+      ),
+      ...Object.keys(order.configurableData).filter(id => order.configurableData[id]?.quantity > 0),
+    ]);
+    
+    const availableProducts = products.filter(p => !orderedProductIds.has(p.id) && p.image);
+    
+    // Shuffle and pick 2
+    const shuffled = [...availableProducts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 2);
+  };
+  
+  const upsellProducts = getUpsellProducts();
+
   return (
     <div className="px-4 py-6 pb-8 md:max-w-4xl md:mx-auto lg:max-w-5xl">
+      {/* Upsell Section */}
+      {upsellProducts.length > 0 && (
+        <div className="mb-6">
+          <div className="text-center mb-4">
+            <p className="text-sm text-muted-foreground">✨ A może weźmiesz jeszcze...</p>
+          </div>
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+            {upsellProducts.map((product) => (
+              <Card 
+                key={product.id}
+                className="shrink-0 w-44 cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+              >
+                <div className="relative h-24 overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="p-3">
+                  <h4 className="font-medium text-sm line-clamp-1">{product.name}</h4>
+                  <p className="text-xs text-primary font-semibold mt-1">
+                    {product.type === "simple" && `od ${product.pricePerUnit.toFixed(0)} zł`}
+                    {product.type === "expandable" && `od ${Math.min(...product.variants.map(v => v.price)).toFixed(0)} zł`}
+                    {product.type === "configurable" && `${product.pricePerPerson.toFixed(0)} zł/os.`}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="text-center space-y-1 mb-6">
         <h1 className="text-2xl font-bold text-foreground md:text-3xl">
           Podsumowanie
