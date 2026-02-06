@@ -22,17 +22,24 @@ export function CartDrawer({ items, totalPrice, onQuantityChange }: CartDrawerPr
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors">
+        <button 
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-300",
+            itemCount > 0 
+              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
+              : "bg-muted/50 text-muted-foreground hover:bg-muted"
+          )}
+        >
           <div className="relative">
-            <ShoppingCart className="w-5 h-5 text-primary" />
+            <ShoppingCart className="w-4 h-4" />
             {itemCount > 0 && (
-              <span className="absolute -top-2 -right-2 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-background text-primary text-[10px] font-bold rounded-full flex items-center justify-center">
                 {itemCount}
               </span>
             )}
           </div>
-          <span className="font-semibold text-sm text-primary">
-            {totalPrice.toFixed(0)} zł
+          <span className="font-semibold text-sm">
+            {totalPrice > 0 ? `${totalPrice.toFixed(0)} zł` : "Koszyk"}
           </span>
         </button>
       </SheetTrigger>
