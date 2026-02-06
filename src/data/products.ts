@@ -23,6 +23,8 @@ export type ExpandableProduct = {
   id: string;
   name: string;
   description: string;
+  longDescription?: string;
+  image?: string;
   basePrice: number;
   minQuantity: number;
   icon: string;
@@ -45,6 +47,8 @@ export type ConfigurableProduct = {
   id: string;
   name: string;
   description: string;
+  longDescription?: string;
+  image?: string;
   pricePerPerson: number;
   minPersons: number;
   icon: string;
@@ -215,6 +219,8 @@ export const products: Product[] = [
     id: "tacos",
     name: "Meksykańskie Tacos",
     description: "Cena bazowa: 18,00 zł/szt.",
+    longDescription: "Autentyczne meksykańskie tacos na świeżych tortillach kukurydzianych. Wybierz spośród różnych nadzieniem - od klasycznego kurczaka al pastor po wegańskie opcje z grzybami.",
+    image: "/products/tacos.jpg",
     basePrice: 18,
     minQuantity: 8,
     icon: "🌮",
@@ -259,6 +265,8 @@ export const products: Product[] = [
     id: "mini-burgery",
     name: "Mini Burgery",
     description: "Cena bazowa: 15,00 zł/szt.",
+    longDescription: "Soczyste mini burgery idealne na imprezy. Ręcznie formowane kotlety z najlepszej wołowiny, świeże bułki brioche i domowe sosy.",
+    image: "/products/mini-burgery.jpg",
     basePrice: 15,
     minQuantity: 10,
     icon: "🍔",
@@ -295,6 +303,8 @@ export const products: Product[] = [
     id: "sushi",
     name: "Sushi Selection",
     description: "Cena bazowa: 8,00 zł/szt.",
+    longDescription: "Świeże sushi przygotowywane przez naszych sushi masterów. Premium ryż, najświeższe ryby i owoce morza. Idealne na eleganckie przyjęcia.",
+    image: "/products/sushi.jpg",
     basePrice: 8,
     minQuantity: 16,
     icon: "🍣",
@@ -341,6 +351,8 @@ export const products: Product[] = [
     id: "zestaw-1",
     name: "Zestaw nr 1",
     description: "Minimalne zamówienie z jednego rodzaju to 12 sztuk.",
+    longDescription: "Klasyczny zestaw cateringowy idealny na spotkania firmowe, konferencje i uroczystości rodzinne. Wybierz dania główne, dodatki i sałatki według własnych preferencji.",
+    image: "/products/zestaw-1.jpg",
     pricePerPerson: 70,
     minPersons: 12,
     icon: "🍽️",
@@ -391,6 +403,8 @@ export const products: Product[] = [
     id: "zestaw-2",
     name: "Zestaw nr 2 Premium",
     description: "Menu premium z wykwintnymi daniami. Minimum 15 osób.",
+    longDescription: "Wykwintne menu premium dla wymagających gości. Polędwica wołowa, kaczka konfitowana, świeży łosoś - dania godne najlepszych restauracji.",
+    image: "/products/zestaw-2.jpg",
     pricePerPerson: 95,
     minPersons: 15,
     icon: "👨‍🍳",
@@ -437,6 +451,8 @@ export const products: Product[] = [
     id: "zestaw-3",
     name: "Zestaw Wegetariański",
     description: "Pełne menu bez mięsa. Minimum 10 osób.",
+    longDescription: "Kolorowe i pełne smaku menu wegetariańskie. Curry, falafel, lasagne warzywna i świeże sałatki - udowadniamy, że bez mięsa może być pysznie!",
+    image: "/products/zestaw-3.jpg",
     pricePerPerson: 60,
     minPersons: 10,
     icon: "🥗",

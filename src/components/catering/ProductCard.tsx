@@ -50,8 +50,8 @@ export function ProductCard({
     return "";
   };
 
-  // Check if product has an image (only simple products have images for now)
-  const hasImage = product.type === "simple" && product.image;
+  // Check if product has an image
+  const hasImage = 'image' in product && product.image;
 
   return (
     <Card

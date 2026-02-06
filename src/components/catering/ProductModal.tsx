@@ -44,17 +44,14 @@ export function ProductModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent hideCloseButton className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col">
-        {/* Hidden title for accessibility */}
         <DialogTitle className="sr-only">{product.name}</DialogTitle>
         
-        {/* Close button */}
         <div className="absolute top-4 right-4 z-10">
           <Button variant="secondary" size="icon" onClick={handleClose} className="rounded-full bg-background/80 backdrop-blur-sm">
             <X className="w-5 h-5" />
           </Button>
         </div>
 
-        {/* Content - scrollable */}
         <div className="flex-1 overflow-y-auto">
           {product.type === "simple" && (
             <SimpleProductContent
@@ -85,7 +82,6 @@ export function ProductModal({
           )}
         </div>
 
-        {/* Footer with Add button */}
         <div className="p-4 border-t border-border bg-background shrink-0">
           <Button onClick={handleClose} className="w-full" size="lg">
             Dodaj
@@ -96,7 +92,6 @@ export function ProductModal({
   );
 }
 
-// Simple Product Content
 function SimpleProductContent({
   product,
   quantity,
@@ -108,66 +103,43 @@ function SimpleProductContent({
 }) {
   return (
     <div>
-      {/* Hero Image */}
       {product.image && (
         <div className="relative">
-          <img 
-            src={product.image} 
-            alt={product.name}
-            className="w-full h-56 object-cover"
-          />
+          <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
       )}
 
-      {/* Content */}
       <div className="p-4 space-y-6">
-        {/* Title and Description */}
         <div>
           <h2 className="text-xl font-bold">{product.name}</h2>
           <p className="text-muted-foreground mt-1">{product.description}</p>
           {product.longDescription && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {product.longDescription}
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">{product.longDescription}</p>
           )}
         </div>
 
-        {/* Price and Quantity */}
         <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
           <div>
             <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
             <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onQuantityChange(Math.max(0, quantity - 1))}
-              disabled={quantity === 0}
-            >
+            <Button variant="outline" size="icon" onClick={() => onQuantityChange(Math.max(0, quantity - 1))} disabled={quantity === 0}>
               <Minus className="w-4 h-4" />
             </Button>
             <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => onQuantityChange(quantity + 1)}
-            >
+            <Button variant="outline" size="icon" onClick={() => onQuantityChange(quantity + 1)}>
               <Plus className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* Contents */}
         <div>
           <h3 className="font-semibold mb-3">Zawartość patery:</h3>
           <div className="space-y-2">
             {product.contents.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
-              >
+              <div key={idx} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                 <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
                 <span className="text-sm">{item}</span>
               </div>
@@ -175,7 +147,6 @@ function SimpleProductContent({
           </div>
         </div>
 
-        {/* Allergens */}
         {product.allergens.length > 0 && (
           <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
             <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0" />
@@ -189,7 +160,6 @@ function SimpleProductContent({
   );
 }
 
-// Expandable Product Content
 function ExpandableProductContent({
   product,
   quantities,
@@ -200,69 +170,61 @@ function ExpandableProductContent({
   onVariantQuantityChange: (variantId: string, qty: number) => void;
 }) {
   return (
-    <div className="p-4 space-y-4">
-      {/* Title */}
-      <div>
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <span className="text-2xl">{product.icon}</span>
-          {product.name}
-        </h2>
-        <p className="text-muted-foreground mt-1">{product.description}</p>
-      </div>
+    <div>
+      {product.image && (
+        <div className="relative">
+          <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        </div>
+      )}
 
-      <h3 className="font-semibold">Wybierz warianty:</h3>
-      {product.variants.map((variant) => {
-        const qty = quantities[variant.id] || 0;
-        return (
-          <div
-            key={variant.id}
-            className={cn(
-              "flex items-center justify-between p-4 rounded-xl border transition-all",
-              qty > 0 ? "border-primary bg-primary/5" : "border-border"
-            )}
-          >
-            <div className="flex-1">
-              <div className="font-medium">{variant.name}</div>
-              <div className="text-sm text-muted-foreground">
-                {variant.price.toFixed(2)} zł / szt.
-              </div>
-              {variant.allergens.length > 0 && (
-                <div className="flex items-center gap-1 mt-1">
-                  <AlertTriangle className="w-3 h-3 text-orange-500" />
-                  <span className="text-xs text-orange-600">
-                    {variant.allergens.join(", ")}
-                  </span>
-                </div>
+      <div className="p-4 space-y-4">
+        <div>
+          <h2 className="text-xl font-bold">{product.name}</h2>
+          <p className="text-muted-foreground mt-1">{product.description}</p>
+          {product.longDescription && (
+            <p className="text-sm text-muted-foreground mt-2">{product.longDescription}</p>
+          )}
+        </div>
+
+        <h3 className="font-semibold">Wybierz warianty:</h3>
+        {product.variants.map((variant) => {
+          const qty = quantities[variant.id] || 0;
+          return (
+            <div
+              key={variant.id}
+              className={cn(
+                "flex items-center justify-between p-4 rounded-xl border transition-all",
+                qty > 0 ? "border-primary bg-primary/5" : "border-border"
               )}
+            >
+              <div className="flex-1">
+                <div className="font-medium">{variant.name}</div>
+                <div className="text-sm text-muted-foreground">{variant.price.toFixed(2)} zł / szt.</div>
+                {variant.allergens.length > 0 && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <AlertTriangle className="w-3 h-3 text-orange-500" />
+                    <span className="text-xs text-orange-600">{variant.allergens.join(", ")}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onVariantQuantityChange(variant.id, Math.max(0, qty - 1))} disabled={qty === 0}>
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="w-8 text-center font-bold">{qty}</span>
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onVariantQuantityChange(variant.id, qty + 1)}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => onVariantQuantityChange(variant.id, Math.max(0, qty - 1))}
-                disabled={qty === 0}
-              >
-                <Minus className="w-4 h-4" />
-              </Button>
-              <span className="w-8 text-center font-bold">{qty}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => onVariantQuantityChange(variant.id, qty + 1)}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-// Configurable Product Content
 function ConfigurableProductContent({
   product,
   quantity,
@@ -298,132 +260,133 @@ function ConfigurableProductContent({
   };
 
   return (
-    <div className="p-4 space-y-6">
-      {/* Title */}
-      <div>
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <span className="text-2xl">{product.icon}</span>
-          {product.name}
-        </h2>
-        <p className="text-muted-foreground mt-1">{product.description}</p>
-      </div>
+    <div>
+      {product.image && (
+        <div className="relative">
+          <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        </div>
+      )}
 
-      {/* Price and Quantity */}
-      <div className="p-4 bg-accent rounded-xl">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <span className="text-2xl font-bold">{product.pricePerPerson.toFixed(2)} zł</span>
-            <span className="text-muted-foreground ml-1">/ osoba</span>
-          </div>
-          <Badge variant="outline" className="text-primary border-primary">
-            min. {product.minPersons} osób
-          </Badge>
+      <div className="p-4 space-y-6">
+        <div>
+          <h2 className="text-xl font-bold">{product.name}</h2>
+          <p className="text-muted-foreground mt-1">{product.description}</p>
+          {product.longDescription && (
+            <p className="text-sm text-muted-foreground mt-2">{product.longDescription}</p>
+          )}
         </div>
-        
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Liczba osób:</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9"
-              onClick={() => {
-                if (quantity <= product.minPersons) {
-                  onQuantityChange(0);
-                } else {
-                  onQuantityChange(quantity - 1);
-                }
-              }}
-              disabled={quantity === 0}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9"
-              onClick={() => {
-                if (quantity === 0) {
-                  onQuantityChange(product.minPersons);
-                } else {
-                  onQuantityChange(quantity + 1);
-                }
-              }}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+
+        <div className="p-4 bg-accent rounded-xl">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <span className="text-2xl font-bold">{product.pricePerPerson.toFixed(2)} zł</span>
+              <span className="text-muted-foreground ml-1">/ osoba</span>
+            </div>
+            <Badge variant="outline" className="text-primary border-primary">
+              min. {product.minPersons} osób
+            </Badge>
           </div>
-        </div>
-        
-        {quantity > 0 && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Suma:</span>
-              <span className="text-lg font-bold text-primary">
-                {(quantity * product.pricePerPerson).toFixed(2)} zł
-              </span>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Liczba osób:</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => {
+                  if (quantity <= product.minPersons) {
+                    onQuantityChange(0);
+                  } else {
+                    onQuantityChange(quantity - 1);
+                  }
+                }}
+                disabled={quantity === 0}
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <span className="w-12 text-center text-xl font-bold">{quantity}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => {
+                  if (quantity === 0) {
+                    onQuantityChange(product.minPersons);
+                  } else {
+                    onQuantityChange(quantity + 1);
+                  }
+                }}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
           </div>
+          
+          {quantity > 0 && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Suma:</span>
+                <span className="text-lg font-bold text-primary">
+                  {(quantity * product.pricePerPerson).toFixed(2)} zł
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {quantity > 0 && product.optionGroups.map((group) => {
+          const selected = selectedOptions[group.id] || [];
+          
+          return (
+            <div key={group.id}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold">{group.name}</h3>
+                <span className="text-xs text-muted-foreground uppercase">
+                  Wybierz {selected.length} z {group.maxSelections}
+                </span>
+              </div>
+              
+              <div className="space-y-2">
+                {group.options.map((option) => {
+                  const isChecked = selected.includes(option.id);
+                  
+                  return (
+                    <div
+                      key={option.id}
+                      onClick={() => toggleOption(group.id, option.id)}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all",
+                        isChecked
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground/50"
+                      )}
+                    >
+                      <Checkbox checked={isChecked} className="pointer-events-none" />
+                      <div className="flex-1">
+                        <span className="font-medium">{option.name}</span>
+                        {option.allergens.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <AlertTriangle className="w-3 h-3 text-orange-500" />
+                            <span className="text-xs text-orange-600">{option.allergens.join(", ")}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+        
+        {quantity === 0 && (
+          <p className="text-center text-muted-foreground py-8">
+            Dodaj liczbę osób, aby skonfigurować zestaw
+          </p>
         )}
       </div>
-
-      {/* Option Groups */}
-      {quantity > 0 && product.optionGroups.map((group) => {
-        const selected = selectedOptions[group.id] || [];
-        
-        return (
-          <div key={group.id}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">{group.name}</h3>
-              <span className="text-xs text-muted-foreground uppercase">
-                Wybierz {selected.length} z {group.maxSelections}
-              </span>
-            </div>
-            
-            <div className="space-y-2">
-              {group.options.map((option) => {
-                const isChecked = selected.includes(option.id);
-                
-                return (
-                  <div
-                    key={option.id}
-                    onClick={() => toggleOption(group.id, option.id)}
-                    className={cn(
-                      "flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all",
-                      isChecked
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-muted-foreground/50"
-                    )}
-                  >
-                    <Checkbox
-                      checked={isChecked}
-                      className="pointer-events-none"
-                    />
-                    <div className="flex-1">
-                      <span className="font-medium">{option.name}</span>
-                      {option.allergens.length > 0 && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <AlertTriangle className="w-3 h-3 text-orange-500" />
-                          <span className="text-xs text-orange-600">
-                            {option.allergens.join(", ")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-      
-      {quantity === 0 && (
-        <p className="text-center text-muted-foreground py-8">
-          Dodaj liczbę osób, aby skonfigurować zestaw
-        </p>
-      )}
     </div>
   );
 }
