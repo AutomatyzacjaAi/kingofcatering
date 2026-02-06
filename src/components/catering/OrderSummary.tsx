@@ -328,10 +328,10 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
                       key={method.id}
                       onClick={() => onPaymentMethodChange(method.id)}
                       className={cn(
-                        "p-3 rounded-lg border cursor-pointer transition-all",
+                        "p-3 rounded-lg cursor-pointer transition-all",
                         isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-muted-foreground/50"
+                          ? "bg-primary/10"
+                          : "bg-muted/50 hover:bg-muted"
                       )}
                     >
                       <div className="flex items-center gap-2">
