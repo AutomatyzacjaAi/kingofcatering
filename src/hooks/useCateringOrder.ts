@@ -244,14 +244,17 @@ export function useCateringOrder() {
 
   const nextStep = useCallback(() => {
     setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [steps.length]);
 
   const prevStep = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
   const goToStep = useCallback((step: number) => {
     setCurrentStep(step);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
   const getSuggestedQuantity = useCallback(
