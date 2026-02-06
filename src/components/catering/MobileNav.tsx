@@ -51,8 +51,11 @@ export function MobileNav({
       {/* Top Header - Progress */}
       <div className="sticky top-0 z-20 bg-background border-b border-border">
         <div className="px-4 py-3">
-          {/* Cart and Progress */}
-          <div className="flex items-center justify-end mb-2">
+          {/* Step indicator */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">
+              Krok {currentStep + 1} z {totalSteps}
+            </span>
             <CartDrawer
               order={order}
               totalPrice={totalPrice}
