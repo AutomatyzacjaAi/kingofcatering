@@ -74,7 +74,7 @@ export function ProductCard({
               <img 
                 src={product.image} 
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-lg"
               />
             ) : (
               <span className="text-2xl">{product.icon}</span>
