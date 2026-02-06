@@ -2,14 +2,13 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { categories, products, type Product } from "@/data/products";
-import { SimpleProductCard } from "./SimpleProductCard";
-import { ExpandableProductCard } from "./ExpandableProductCard";
-import { ConfigurableProductCard } from "./ConfigurableProductCard";
+import { ProductCard } from "./ProductCard";
+import { ProductModal } from "./ProductModal";
 
 type ProductsStepProps = {
-  simpleQuantities: Record<string, number>; // productId -> qty
-  expandableQuantities: Record<string, Record<string, number>>; // productId -> variantId -> qty
-  configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>; // productId -> data
+  simpleQuantities: Record<string, number>;
+  expandableQuantities: Record<string, Record<string, number>>;
+  configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>;
   onSimpleQuantityChange: (productId: string, quantity: number) => void;
   onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
   onConfigurableChange: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
@@ -24,6 +23,7 @@ export function ProductsStep({
   onConfigurableChange,
 }: ProductsStepProps) {
   const [activeCategory, setActiveCategory] = useState(categories[0].id);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const categoryProducts = products.filter((p) => p.category === activeCategory);
   
@@ -41,43 +41,32 @@ export function ProductsStep({
     }, 0);
   };
 
-  const renderProductCard = (product: Product) => {
-    switch (product.type) {
-      case "simple":
-        return (
-          <SimpleProductCard
-            key={product.id}
-            product={product}
-            quantity={simpleQuantities[product.id] || 0}
-            onQuantityChange={(qty) => onSimpleQuantityChange(product.id, qty)}
-          />
-        );
-      case "expandable":
-        return (
-          <ExpandableProductCard
-            key={product.id}
-            product={product}
-            quantities={expandableQuantities[product.id] || {}}
-            onVariantQuantityChange={onExpandableVariantChange}
-          />
-        );
-      case "configurable":
-        const data = configurableData[product.id] || { quantity: 0, options: {} };
-        return (
-          <ConfigurableProductCard
-            key={product.id}
-            product={product}
-            quantity={data.quantity}
-            selectedOptions={data.options}
-            onQuantityChange={(qty) => onConfigurableChange(product.id, qty)}
-            onOptionsChange={(productId, groupId, optionIds) => 
-              onConfigurableChange(productId, data.quantity, groupId, optionIds)
-            }
-          />
-        );
-      default:
-        return null;
+  const isProductSelected = (product: Product): boolean => {
+    if (product.type === "simple") {
+      return (simpleQuantities[product.id] || 0) > 0;
     }
+    if (product.type === "expandable") {
+      const variants = expandableQuantities[product.id] || {};
+      return Object.values(variants).some(q => q > 0);
+    }
+    if (product.type === "configurable") {
+      return (configurableData[product.id]?.quantity || 0) > 0;
+    }
+    return false;
+  };
+
+  const getProductSelectedCount = (product: Product): number => {
+    if (product.type === "simple") {
+      return simpleQuantities[product.id] || 0;
+    }
+    if (product.type === "expandable") {
+      const variants = expandableQuantities[product.id] || {};
+      return Object.values(variants).reduce((sum, q) => sum + q, 0);
+    }
+    if (product.type === "configurable") {
+      return configurableData[product.id]?.quantity || 0;
+    }
+    return 0;
   };
 
   return (
@@ -141,9 +130,31 @@ export function ProductsStep({
       </div>
 
       {/* Products List */}
-      <div className="px-4 py-4 space-y-4">
-        {categoryProducts.map(renderProductCard)}
+      <div className="px-4 py-4 space-y-3">
+        {categoryProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            isSelected={isProductSelected(product)}
+            selectedCount={getProductSelectedCount(product)}
+            onClick={() => setSelectedProduct(product)}
+          />
+        ))}
       </div>
+
+      {/* Product Modal */}
+      <ProductModal
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        simpleQuantity={selectedProduct?.type === "simple" ? simpleQuantities[selectedProduct.id] || 0 : 0}
+        onSimpleQuantityChange={onSimpleQuantityChange}
+        expandableQuantities={selectedProduct?.type === "expandable" ? expandableQuantities[selectedProduct.id] || {} : {}}
+        onExpandableVariantChange={onExpandableVariantChange}
+        configurableQuantity={selectedProduct?.type === "configurable" ? configurableData[selectedProduct.id]?.quantity || 0 : 0}
+        configurableOptions={selectedProduct?.type === "configurable" ? configurableData[selectedProduct.id]?.options || {} : {}}
+        onConfigurableChange={onConfigurableChange}
+      />
     </div>
   );
 }
