@@ -50,9 +50,9 @@ export function MobileNav({
     <>
       {/* Top Header - Progress */}
       <div className="sticky top-0 z-20 bg-background border-b border-border">
-        <div className="px-4 py-3">
-          {/* Step indicator */}
-          <div className="flex items-center justify-between mb-2">
+        <div className="px-4 py-3 md:max-w-4xl md:mx-auto lg:max-w-5xl">
+          {/* Step indicator - Mobile */}
+          <div className="flex items-center justify-between mb-2 md:hidden">
             <span className="text-sm text-muted-foreground">
               Krok {currentStep + 1} z {totalSteps}
             </span>
@@ -65,11 +65,44 @@ export function MobileNav({
             />
           </div>
           
-          {/* Progress bar */}
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+          {/* Progress bar - Mobile */}
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden md:hidden">
             <div
               className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
               style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+
+          {/* Desktop Step Navigation */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {steps.map((step, index) => (
+                <div key={step.id} className="flex items-center">
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-medium",
+                      index === currentStep
+                        ? "bg-primary text-primary-foreground"
+                        : index < currentStep
+                        ? "bg-primary/20 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <span>{step.icon}</span>
+                    <span>{step.name}</span>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className="w-8 h-0.5 bg-muted mx-1" />
+                  )}
+                </div>
+              ))}
+            </div>
+            <CartDrawer
+              order={order}
+              totalPrice={totalPrice}
+              onSimpleQuantityChange={onSimpleQuantityChange}
+              onExpandableVariantChange={onExpandableVariantChange}
+              onConfigurableChange={onConfigurableChange}
             />
           </div>
         </div>
@@ -78,12 +111,12 @@ export function MobileNav({
       {/* Bottom Navigation - Fixed */}
       {showNav && (
         <div className="fixed bottom-0 left-0 right-0 z-20 bg-background border-t border-border safe-area-bottom">
-          <div className="flex items-center justify-between p-4 gap-3">
+          <div className="flex items-center justify-between p-4 gap-3 md:max-w-4xl md:mx-auto lg:max-w-5xl">
             <Button
               variant="outline"
               onClick={onPrev}
               disabled={isFirstStep}
-              className="flex-1 h-12"
+              className="flex-1 h-12 md:flex-none md:w-40"
             >
               <ChevronLeft className="w-5 h-5 mr-1" />
               Wstecz
@@ -92,7 +125,7 @@ export function MobileNav({
             <Button
               onClick={onNext}
               disabled={!canGoNext || isLastStep}
-              className="flex-1 h-12"
+              className="flex-1 h-12 md:flex-none md:w-40"
             >
               {nextLabel}
               <ChevronRight className="w-5 h-5 ml-1" />

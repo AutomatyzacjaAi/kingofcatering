@@ -129,17 +129,19 @@ export function ProductsStep({
         </div>
       </div>
 
-      {/* Products List */}
-      <div className="px-4 py-4 space-y-3">
-        {categoryProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            isSelected={isProductSelected(product)}
-            selectedCount={getProductSelectedCount(product)}
-            onClick={() => setSelectedProduct(product)}
-          />
-        ))}
+      {/* Products Grid */}
+      <div className="px-4 py-4 md:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          {categoryProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              isSelected={isProductSelected(product)}
+              selectedCount={getProductSelectedCount(product)}
+              onClick={() => setSelectedProduct(product)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Product Modal */}

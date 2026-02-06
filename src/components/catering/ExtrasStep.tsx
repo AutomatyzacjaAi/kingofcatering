@@ -106,7 +106,7 @@ export function ExtrasStep({
       </div>
 
       {/* Content based on active category */}
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-4 py-4 md:px-6 lg:px-8">
         {activeCategory === "dodatki" && (
           <ExtrasListSection
             extras={extraItems}
@@ -189,7 +189,7 @@ function ExtrasListSection({
   onExtraClick: (extra: ExtraItem) => void;
 }) {
   return (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
       {extras.map((extra) => {
         const quantity = selectedExtras[extra.id] || 0;
         const isSelected = quantity > 0;
@@ -253,7 +253,7 @@ function ExtrasListSection({
           </Card>
         );
       })}
-    </>
+    </div>
   );
 }
 
@@ -278,7 +278,7 @@ function ExtraItemModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         hideCloseButton
-        className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col"
+        className="h-[100dvh] max-h-[100dvh] w-full max-w-full m-0 p-0 rounded-none border-0 flex flex-col md:h-auto md:max-h-[85vh] md:max-w-2xl md:rounded-2xl md:border"
       >
         <DialogTitle className="sr-only">{item.name}</DialogTitle>
 
@@ -383,10 +383,11 @@ function PackagingSection({
   onOptionClick: (option: PackagingOption) => void;
 }) {
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground px-1">
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
         Wybierz sposób pakowania i serwowania
       </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
       {options.map((option) => {
         const isSelected = selectedId === option.id;
         const hasImage = option.image;
@@ -445,6 +446,7 @@ function PackagingSection({
           </Card>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -477,7 +479,7 @@ function PackagingModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         hideCloseButton
-        className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col"
+        className="h-[100dvh] max-h-[100dvh] w-full max-w-full m-0 p-0 rounded-none border-0 flex flex-col md:h-auto md:max-h-[85vh] md:max-w-2xl md:rounded-2xl md:border"
       >
         <DialogTitle className="sr-only">{option.name}</DialogTitle>
 
@@ -593,41 +595,42 @@ function WaiterServiceSection({
   onNoServiceClick: () => void;
 }) {
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground px-1">
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
         Dodaj profesjonalną obsługę kelnerską (opcjonalne)
       </p>
       
-      {/* No service option */}
-      <Card
-        onClick={onNoServiceClick}
-        className={cn(
-          "cursor-pointer transition-all duration-200 hover:shadow-md",
-          !selectedId && "ring-2 ring-primary"
-        )}
-      >
-        <CardContent className="p-3">
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "w-16 h-16 rounded-lg flex items-center justify-center shrink-0",
-                !selectedId ? "bg-primary text-primary-foreground" : "bg-muted"
-              )}
-            >
-              <span className="text-2xl">❌</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        {/* No service option */}
+        <Card
+          onClick={onNoServiceClick}
+          className={cn(
+            "cursor-pointer transition-all duration-200 hover:shadow-md",
+            !selectedId && "ring-2 ring-primary"
+          )}
+        >
+          <CardContent className="p-3">
+            <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  "w-16 h-16 rounded-lg flex items-center justify-center shrink-0",
+                  !selectedId ? "bg-primary text-primary-foreground" : "bg-muted"
+                )}
+              >
+                <span className="text-2xl">❌</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm">Bez obsługi</h3>
+                <p className="text-xs text-muted-foreground">
+                  Nie potrzebuję obsługi kelnerskiej
+                </p>
+              </div>
+              {!selectedId && <Check className="w-5 h-5 text-primary" />}
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm">Bez obsługi</h3>
-              <p className="text-xs text-muted-foreground">
-                Nie potrzebuję obsługi kelnerskiej
-              </p>
-            </div>
-            {!selectedId && <Check className="w-5 h-5 text-primary" />}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {options.map((option) => {
+        {options.map((option) => {
         const isSelected = selectedId === option.id;
         const hasImage = option.image;
 
@@ -687,6 +690,7 @@ function WaiterServiceSection({
           </Card>
         );
       })}
+      </div>
     </div>
   );
 }
@@ -719,7 +723,7 @@ function WaiterServiceModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         hideCloseButton
-        className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col"
+        className="h-[100dvh] max-h-[100dvh] w-full max-w-full m-0 p-0 rounded-none border-0 flex flex-col md:h-auto md:max-h-[85vh] md:max-w-2xl md:rounded-2xl md:border"
       >
         <DialogTitle className="sr-only">{option.name}</DialogTitle>
 

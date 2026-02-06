@@ -59,9 +59,9 @@ export function EventDetails({
   };
 
   return (
-    <div className="px-4 py-6 pb-24 space-y-6">
+    <div className="px-4 py-6 pb-24 space-y-6 md:max-w-4xl md:mx-auto lg:max-w-5xl">
       <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">
+        <h1 className="text-2xl font-bold text-foreground md:text-3xl">
           Zaplanuj Wydarzenie
         </h1>
         <p className="text-muted-foreground">
@@ -110,7 +110,7 @@ export function EventDetails({
           <CardTitle className="text-lg">Typ Wydarzenia</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {eventTypes.map((type) => {
               const IconComponent = iconMap[type.icon as keyof typeof iconMap];
               const isSelected = eventType === type.id;
