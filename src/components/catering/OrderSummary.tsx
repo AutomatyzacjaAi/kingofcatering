@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Send, Calendar, Users, Phone, Mail, PartyPopper } from "lucide-react";
+import { Send, Users, Phone, Mail, PartyPopper } from "lucide-react";
 import { products, categories, eventTypes } from "@/data/products";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
 import { useState } from "react";
@@ -19,18 +19,66 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
   const { toast } = useToast();
 
   const eventType = eventTypes.find((e) => e.id === order.eventType);
-  const itemsByCategory = categories.map((category) => ({
-    category,
-    items: Object.values(order.items)
-      .filter((item) => {
-        const product = products.find((p) => p.id === item.productId);
-        return product?.category === category.id;
-      })
-      .map((item) => ({
-        ...item,
-        product: products.find((p) => p.id === item.productId)!,
-      })),
-  })).filter((group) => group.items.length > 0);
+  
+  // Build summary items from all product types
+  const summaryItems: { categoryId: string; name: string; quantity: number; price: number }[] = [];
+  
+  // Simple products
+  for (const [productId, qty] of Object.entries(order.simpleQuantities)) {
+    if (qty > 0) {
+      const product = products.find(p => p.id === productId);
+      if (product && product.type === "simple") {
+        summaryItems.push({
+          categoryId: product.category,
+          name: product.name,
+          quantity: qty,
+          price: product.pricePerUnit * qty,
+        });
+      }
+    }
+  }
+  
+  // Expandable products (variants)
+  for (const [productId, variants] of Object.entries(order.expandableQuantities)) {
+    const product = products.find(p => p.id === productId);
+    if (product && product.type === "expandable") {
+      for (const [variantId, qty] of Object.entries(variants)) {
+        if (qty > 0) {
+          const variant = product.variants.find(v => v.id === variantId);
+          if (variant) {
+            summaryItems.push({
+              categoryId: product.category,
+              name: variant.name,
+              quantity: qty,
+              price: variant.price * qty,
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  // Configurable products
+  for (const [productId, data] of Object.entries(order.configurableData)) {
+    if (data.quantity > 0) {
+      const product = products.find(p => p.id === productId);
+      if (product && product.type === "configurable") {
+        summaryItems.push({
+          categoryId: product.category,
+          name: product.name,
+          quantity: data.quantity,
+          price: product.pricePerPerson * data.quantity,
+        });
+      }
+    }
+  }
+
+  const itemsByCategory = categories
+    .map((category) => ({
+      category,
+      items: summaryItems.filter(item => item.categoryId === category.id),
+    }))
+    .filter((group) => group.items.length > 0);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "Do ustalenia";
@@ -83,7 +131,7 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
       <Card>
         <CardContent className="pt-4 space-y-3">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{eventType?.icon}</span>
+            <span className="text-2xl">📅</span>
             <div>
               <p className="font-medium">{eventType?.name || "Wydarzenie"}</p>
               <p className="text-sm text-muted-foreground">{formatDate(order.eventDate)}</p>
@@ -114,16 +162,16 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
                 <h3 className="font-medium text-sm">{group.category.name}</h3>
               </div>
               <div className="space-y-1">
-                {group.items.map((item) => (
+                {group.items.map((item, idx) => (
                   <div
-                    key={item.productId}
+                    key={idx}
                     className="flex items-center justify-between text-sm py-1"
                   >
                     <span className="text-muted-foreground">
-                      {item.quantity}× {item.product.name}
+                      {item.quantity}× {item.name}
                     </span>
                     <span className="font-medium">
-                      {(item.quantity * item.product.pricePerPortion).toFixed(0)} zł
+                      {item.price.toFixed(0)} zł
                     </span>
                   </div>
                 ))}

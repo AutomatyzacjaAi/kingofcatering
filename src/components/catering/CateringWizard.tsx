@@ -12,8 +12,9 @@ export function CateringWizard() {
     currentStep,
     totalPrice,
     setGuestCount,
-    updateItemQuantity,
-    getSuggestedQuantity,
+    updateSimpleQuantity,
+    updateExpandableVariant,
+    updateConfigurable,
     nextStep,
     prevStep,
     updateOrder,
@@ -57,10 +58,12 @@ export function CateringWizard() {
       case 1:
         return (
           <ProductsStep
-            items={order.items}
-            guestCount={order.guestCount}
-            getSuggestedQuantity={getSuggestedQuantity}
-            onQuantityChange={updateItemQuantity}
+            simpleQuantities={order.simpleQuantities}
+            expandableQuantities={order.expandableQuantities}
+            configurableData={order.configurableData}
+            onSimpleQuantityChange={updateSimpleQuantity}
+            onExpandableVariantChange={updateExpandableVariant}
+            onConfigurableChange={updateConfigurable}
           />
         );
       case 2:
@@ -102,9 +105,11 @@ export function CateringWizard() {
         canGoNext={canGoNext()}
         nextLabel={getNextLabel()}
         showNav={!isLastStep}
-        items={order.items}
+        order={order}
         totalPrice={totalPrice}
-        onQuantityChange={updateItemQuantity}
+        onSimpleQuantityChange={updateSimpleQuantity}
+        onExpandableVariantChange={updateExpandableVariant}
+        onConfigurableChange={updateConfigurable}
       />
       <div className="pb-safe">
         {renderStep()}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { products, categories, type Product } from "@/data/products";
+import { products, type Product, type SimpleProduct, type ExpandableProduct, type ConfigurableProduct } from "@/data/products";
 
 export type OrderItem = {
   productId: string;
@@ -12,7 +12,13 @@ export type CateringOrder = {
   eventType: string;
   eventDate: string;
   eventTime: string;
+  // New product structure
+  simpleQuantities: Record<string, number>;
+  expandableQuantities: Record<string, Record<string, number>>;
+  configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>;
+  // Legacy items for backward compatibility
   items: Record<string, OrderItem>;
+  // Contact
   contactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -24,6 +30,9 @@ const initialOrder: CateringOrder = {
   eventType: "",
   eventDate: "",
   eventTime: "",
+  simpleQuantities: {},
+  expandableQuantities: {},
+  configurableData: {},
   items: {},
   contactName: "",
   contactEmail: "",
@@ -35,7 +44,6 @@ export function useCateringOrder() {
   const [order, setOrder] = useState<CateringOrder>(initialOrder);
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Steps: Event Details + Products + Contact Form + Summary
   const steps = useMemo(
     () => [
       { id: "event", name: "Wydarzenie", icon: "📋" },
@@ -46,109 +54,116 @@ export function useCateringOrder() {
     []
   );
 
-  // Calculate suggested quantity based on guest count
-  const getSuggestedQuantity = useCallback(
-    (product: Product) => {
-      return Math.ceil(order.guestCount * product.portionsPerPerson);
-    },
-    [order.guestCount]
-  );
+  // Calculate total price
+  const totalPrice = useMemo(() => {
+    let total = 0;
+    
+    // Simple products
+    for (const [productId, qty] of Object.entries(order.simpleQuantities)) {
+      if (qty > 0) {
+        const product = products.find(p => p.id === productId);
+        if (product && product.type === "simple") {
+          total += product.pricePerUnit * qty;
+        }
+      }
+    }
+    
+    // Expandable products
+    for (const [productId, variants] of Object.entries(order.expandableQuantities)) {
+      const product = products.find(p => p.id === productId);
+      if (product && product.type === "expandable") {
+        for (const [variantId, qty] of Object.entries(variants)) {
+          if (qty > 0) {
+            const variant = product.variants.find(v => v.id === variantId);
+            if (variant) {
+              total += variant.price * qty;
+            }
+          }
+        }
+      }
+    }
+    
+    // Configurable products
+    for (const [productId, data] of Object.entries(order.configurableData)) {
+      if (data.quantity > 0) {
+        const product = products.find(p => p.id === productId);
+        if (product && product.type === "configurable") {
+          total += product.pricePerPerson * data.quantity;
+        }
+      }
+    }
+    
+    return total;
+  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData]);
 
-  // Get products for current category step
-  const getCurrentCategoryProducts = useCallback(() => {
-    if (currentStep === 0 || currentStep >= steps.length - 2) return [];
-    const categoryId = steps[currentStep].id;
-    return products.filter((p) => p.category === categoryId);
-  }, [currentStep, steps]);
-
-  // Update guest count and recalculate suggestions
-  const setGuestCount = useCallback((count: number) => {
+  // Simple product quantity change
+  const updateSimpleQuantity = useCallback((productId: string, quantity: number) => {
     setOrder((prev) => ({
       ...prev,
-      guestCount: count,
-      // Reset items when guest count changes significantly
-      items: Object.fromEntries(
-        Object.entries(prev.items).map(([productId, item]) => {
-          const product = products.find((p) => p.id === productId);
-          if (!product) return [productId, item];
-          const suggestedQuantity = Math.ceil(count * product.portionsPerPerson);
-          return [
-            productId,
-            {
-              ...item,
-              suggestedQuantity,
-              // Only update quantity if it was at suggested level
-              quantity: item.quantity === item.suggestedQuantity ? suggestedQuantity : item.quantity,
-            },
-          ];
-        })
-      ),
+      simpleQuantities: {
+        ...prev.simpleQuantities,
+        [productId]: quantity,
+      },
     }));
   }, []);
 
-  // Add or update item quantity
-  const updateItemQuantity = useCallback(
-    (productId: string, quantity: number) => {
-      const product = products.find((p) => p.id === productId);
-      if (!product) return;
+  // Expandable product variant quantity change
+  const updateExpandableVariant = useCallback((productId: string, variantId: string, quantity: number) => {
+    setOrder((prev) => ({
+      ...prev,
+      expandableQuantities: {
+        ...prev.expandableQuantities,
+        [productId]: {
+          ...(prev.expandableQuantities[productId] || {}),
+          [variantId]: quantity,
+        },
+      },
+    }));
+  }, []);
 
-      setOrder((prev) => {
-        const suggestedQuantity = Math.ceil(prev.guestCount * product.portionsPerPerson);
+  // Configurable product change
+  const updateConfigurable = useCallback((
+    productId: string, 
+    quantity: number, 
+    groupId?: string, 
+    optionIds?: string[]
+  ) => {
+    setOrder((prev) => {
+      const currentData = prev.configurableData[productId] || { quantity: 0, options: {} };
+      
+      const newData = {
+        quantity,
+        options: groupId && optionIds 
+          ? { ...currentData.options, [groupId]: optionIds }
+          : currentData.options,
+      };
+      
+      return {
+        ...prev,
+        configurableData: {
+          ...prev.configurableData,
+          [productId]: newData,
+        },
+      };
+    });
+  }, []);
 
-        if (quantity <= 0) {
-          const { [productId]: _, ...rest } = prev.items;
-          return { ...prev, items: rest };
-        }
+  // Legacy: update item quantity (for cart drawer compatibility)
+  const updateItemQuantity = useCallback((productId: string, quantity: number) => {
+    const product = products.find(p => p.id === productId);
+    if (product?.type === "simple") {
+      updateSimpleQuantity(productId, quantity);
+    }
+  }, [updateSimpleQuantity]);
 
-        return {
-          ...prev,
-          items: {
-            ...prev.items,
-            [productId]: {
-              productId,
-              quantity,
-              suggestedQuantity,
-            },
-          },
-        };
-      });
-    },
-    []
-  );
+  const setGuestCount = useCallback((count: number) => {
+    setOrder((prev) => ({ ...prev, guestCount: count }));
+  }, []);
 
-  // Add product with suggested quantity
-  const addProductWithSuggestion = useCallback(
-    (productId: string) => {
-      const product = products.find((p) => p.id === productId);
-      if (!product) return;
+  const updateOrder = useCallback((updates: Partial<CateringOrder>) => {
+    setOrder((prev) => ({ ...prev, ...updates }));
+  }, []);
 
-      const suggestedQuantity = getSuggestedQuantity(product);
-      updateItemQuantity(productId, suggestedQuantity);
-    },
-    [getSuggestedQuantity, updateItemQuantity]
-  );
-
-  // Calculate total price
-  const totalPrice = useMemo(() => {
-    return Object.values(order.items).reduce((total, item) => {
-      const product = products.find((p) => p.id === item.productId);
-      if (!product) return total;
-      return total + product.pricePerPortion * item.quantity;
-    }, 0);
-  }, [order.items]);
-
-  // Get items count per category
-  const getItemsCountForCategory = useCallback(
-    (categoryId: string) => {
-      return Object.values(order.items).filter((item) => {
-        const product = products.find((p) => p.id === item.productId);
-        return product?.category === categoryId;
-      }).length;
-    },
-    [order.items]
-  );
-
-  // Navigation
   const nextStep = useCallback(() => {
     setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
   }, [steps.length]);
@@ -161,12 +176,22 @@ export function useCateringOrder() {
     setCurrentStep(step);
   }, []);
 
-  // Update order fields
-  const updateOrder = useCallback((updates: Partial<CateringOrder>) => {
-    setOrder((prev) => ({ ...prev, ...updates }));
-  }, []);
+  const getSuggestedQuantity = useCallback(
+    (product: Product): number => {
+      if (product.type === "simple") {
+        return Math.max(1, Math.ceil(order.guestCount / 8));
+      }
+      if (product.type === "expandable") {
+        return product.minQuantity;
+      }
+      if (product.type === "configurable") {
+        return Math.max(product.minPersons, order.guestCount);
+      }
+      return 1;
+    },
+    [order.guestCount]
+  );
 
-  // Reset order
   const resetOrder = useCallback(() => {
     setOrder(initialOrder);
     setCurrentStep(0);
@@ -178,11 +203,11 @@ export function useCateringOrder() {
     currentStep,
     totalPrice,
     setGuestCount,
+    updateSimpleQuantity,
+    updateExpandableVariant,
+    updateConfigurable,
     updateItemQuantity,
-    addProductWithSuggestion,
     getSuggestedQuantity,
-    getCurrentCategoryProducts,
-    getItemsCountForCategory,
     nextStep,
     prevStep,
     goToStep,

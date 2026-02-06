@@ -1,52 +1,87 @@
-import { useState, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { categories, products, type Product } from "@/data/products";
-import type { OrderItem } from "@/hooks/useCateringOrder";
-import { ProductConfiguratorModal } from "./ProductConfiguratorModal";
+import { SimpleProductCard } from "./SimpleProductCard";
+import { ExpandableProductCard } from "./ExpandableProductCard";
+import { ConfigurableProductCard } from "./ConfigurableProductCard";
 
 type ProductsStepProps = {
-  items: Record<string, OrderItem>;
-  guestCount: number;
-  getSuggestedQuantity: (product: Product) => number;
-  onQuantityChange: (productId: string, quantity: number) => void;
+  simpleQuantities: Record<string, number>; // productId -> qty
+  expandableQuantities: Record<string, Record<string, number>>; // productId -> variantId -> qty
+  configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>; // productId -> data
+  onSimpleQuantityChange: (productId: string, quantity: number) => void;
+  onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
+  onConfigurableChange: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
 };
 
 export function ProductsStep({
-  items,
-  guestCount,
-  getSuggestedQuantity,
-  onQuantityChange,
+  simpleQuantities,
+  expandableQuantities,
+  configurableData,
+  onSimpleQuantityChange,
+  onExpandableVariantChange,
+  onConfigurableChange,
 }: ProductsStepProps) {
   const [activeCategory, setActiveCategory] = useState(categories[0].id);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isConfiguratorOpen, setIsConfiguratorOpen] = useState(false);
 
   const categoryProducts = products.filter((p) => p.category === activeCategory);
   
   const getTotalItemsInCategory = (categoryId: string) => {
-    return Object.values(items).filter((item) => {
-      const product = products.find((p) => p.id === item.productId);
-      return product?.category === categoryId && item.quantity > 0;
-    }).length;
+    return products.filter(p => p.category === categoryId).reduce((count, product) => {
+      if (product.type === "simple") {
+        return count + (simpleQuantities[product.id] > 0 ? 1 : 0);
+      } else if (product.type === "expandable") {
+        const variants = expandableQuantities[product.id] || {};
+        return count + (Object.values(variants).some(q => q > 0) ? 1 : 0);
+      } else if (product.type === "configurable") {
+        return count + ((configurableData[product.id]?.quantity || 0) > 0 ? 1 : 0);
+      }
+      return count;
+    }, 0);
   };
 
-  const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    setIsConfiguratorOpen(true);
-  };
-
-  const handleConfiguratorConfirm = (quantity: number) => {
-    if (selectedProduct) {
-      onQuantityChange(selectedProduct.id, quantity);
+  const renderProductCard = (product: Product) => {
+    switch (product.type) {
+      case "simple":
+        return (
+          <SimpleProductCard
+            key={product.id}
+            product={product}
+            quantity={simpleQuantities[product.id] || 0}
+            onQuantityChange={(qty) => onSimpleQuantityChange(product.id, qty)}
+          />
+        );
+      case "expandable":
+        return (
+          <ExpandableProductCard
+            key={product.id}
+            product={product}
+            quantities={expandableQuantities[product.id] || {}}
+            onVariantQuantityChange={onExpandableVariantChange}
+          />
+        );
+      case "configurable":
+        const data = configurableData[product.id] || { quantity: 0, options: {} };
+        return (
+          <ConfigurableProductCard
+            key={product.id}
+            product={product}
+            quantity={data.quantity}
+            selectedOptions={data.options}
+            onQuantityChange={(qty) => onConfigurableChange(product.id, qty)}
+            onOptionsChange={(productId, groupId, optionIds) => 
+              onConfigurableChange(productId, data.quantity, groupId, optionIds)
+            }
+          />
+        );
+      default:
+        return null;
     }
   };
 
   return (
     <div className="pb-24">
-
       {/* Category Tabs - Horizontal Scroll */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="relative flex items-center">
@@ -106,84 +141,9 @@ export function ProductsStep({
       </div>
 
       {/* Products List */}
-      <div className="px-4 py-4 space-y-3">
-        {categoryProducts.map((product) => {
-          const item = items[product.id];
-          const isSelected = item && item.quantity > 0;
-          
-          return (
-            <Card
-              key={product.id}
-              className={cn(
-                "transition-all duration-200 cursor-pointer hover:shadow-md",
-                isSelected && "ring-2 ring-primary"
-              )}
-              onClick={() => handleProductClick(product)}
-            >
-              <CardContent className="p-3">
-                <div className="flex gap-3">
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      "w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0 relative",
-                      isSelected ? "bg-primary/10" : "bg-muted"
-                    )}
-                  >
-                    {product.icon}
-                    {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                        <Check className="w-3 h-3 text-primary-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-foreground text-sm leading-tight">
-                        {product.name}
-                      </h3>
-                      <span className="text-sm font-bold text-primary whitespace-nowrap">
-                        {product.pricePerPortion} zł
-                      </span>
-                    </div>
-                    
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                      {product.description}
-                    </p>
-
-                    {/* Tags and Quantity */}
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex flex-wrap gap-1">
-                        {product.dietaryTags.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      {isSelected && (
-                        <span className="text-sm font-semibold text-primary">
-                          × {item.quantity}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="px-4 py-4 space-y-4">
+        {categoryProducts.map(renderProductCard)}
       </div>
-
-      {/* Product Configurator Modal */}
-      <ProductConfiguratorModal
-        isOpen={isConfiguratorOpen}
-        product={selectedProduct}
-        currentQuantity={selectedProduct ? items[selectedProduct.id]?.quantity || 0 : 0}
-        suggestedQuantity={selectedProduct ? getSuggestedQuantity(selectedProduct) : 0}
-        onConfirm={handleConfiguratorConfirm}
-        onClose={() => setIsConfiguratorOpen(false)}
-      />
     </div>
   );
 }

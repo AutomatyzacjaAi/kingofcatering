@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartDrawer } from "./CartDrawer";
-import type { OrderItem } from "@/hooks/useCateringOrder";
+import type { CateringOrder } from "@/hooks/useCateringOrder";
 
 type Step = {
   id: string;
@@ -19,9 +19,11 @@ type MobileNavProps = {
   canGoNext?: boolean;
   nextLabel?: string;
   showNav?: boolean;
-  items?: Record<string, OrderItem>;
-  totalPrice?: number;
-  onQuantityChange?: (productId: string, quantity: number) => void;
+  order: CateringOrder;
+  totalPrice: number;
+  onSimpleQuantityChange: (productId: string, quantity: number) => void;
+  onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
+  onConfigurableChange: (productId: string, quantity: number) => void;
 };
 
 export function MobileNav({
@@ -33,9 +35,11 @@ export function MobileNav({
   canGoNext = true,
   nextLabel = "Dalej",
   showNav = true,
-  items = {},
-  totalPrice = 0,
-  onQuantityChange,
+  order,
+  totalPrice,
+  onSimpleQuantityChange,
+  onExpandableVariantChange,
+  onConfigurableChange,
 }: MobileNavProps) {
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
   const currentStepData = steps[currentStep];
@@ -57,13 +61,13 @@ export function MobileNav({
                 <span className="text-xl">{currentStepData?.icon}</span>
                 <span className="font-medium text-sm">{currentStepData?.name}</span>
               </div>
-              {onQuantityChange && (
-                <CartDrawer
-                  items={items}
-                  totalPrice={totalPrice}
-                  onQuantityChange={onQuantityChange}
-                />
-              )}
+              <CartDrawer
+                order={order}
+                totalPrice={totalPrice}
+                onSimpleQuantityChange={onSimpleQuantityChange}
+                onExpandableVariantChange={onExpandableVariantChange}
+                onConfigurableChange={onConfigurableChange}
+              />
             </div>
           </div>
           
