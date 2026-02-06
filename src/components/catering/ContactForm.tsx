@@ -42,7 +42,7 @@ export function ContactForm({
   onNotesChange,
 }: ContactFormProps) {
   return (
-    <div className="px-4 py-6 pb-24 space-y-6 md:max-w-4xl md:mx-auto lg:max-w-5xl">
+    <div className="px-4 py-6 pb-24 space-y-6 md:max-w-5xl md:mx-auto lg:max-w-6xl">
       <div className="text-center space-y-1">
         <h1 className="text-2xl font-bold text-foreground md:text-3xl">
           Dane Kontaktowe
