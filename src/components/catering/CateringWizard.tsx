@@ -102,6 +102,9 @@ export function CateringWizard() {
         canGoNext={canGoNext()}
         nextLabel={getNextLabel()}
         showNav={!isLastStep}
+        items={order.items}
+        totalPrice={totalPrice}
+        onQuantityChange={updateItemQuantity}
       />
       <div className="pb-safe">
         {renderStep()}
