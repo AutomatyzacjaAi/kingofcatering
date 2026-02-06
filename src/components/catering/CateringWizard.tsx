@@ -2,6 +2,7 @@ import { useCateringOrder } from "@/hooks/useCateringOrder";
 import { MobileNav } from "./MobileNav";
 import { EventDetails } from "./EventDetails";
 import { ProductsStep } from "./ProductsStep";
+import { ExtrasStep } from "./ExtrasStep";
 import { ContactForm } from "./ContactForm";
 import { OrderSummary } from "./OrderSummary";
 
@@ -15,6 +16,9 @@ export function CateringWizard() {
     updateSimpleQuantity,
     updateExpandableVariant,
     updateConfigurable,
+    updateExtra,
+    updatePackaging,
+    updateWaiterService,
     nextStep,
     prevStep,
     updateOrder,
@@ -27,7 +31,11 @@ export function CateringWizard() {
       return !!(order.guestCount > 0 && order.eventType && order.eventDate);
     }
     if (currentStep === 2) {
-      return !!(order.contactName && order.contactEmail && order.contactPhone);
+      // Extras - packaging is required
+      return !!order.selectedPackaging;
+    }
+    if (currentStep === 3) {
+      return !!(order.contactName && order.contactEmail && order.contactPhone && order.contactAddress);
     }
     return true;
   };
@@ -35,8 +43,9 @@ export function CateringWizard() {
   // Get next button label
   const getNextLabel = () => {
     if (currentStep === 0) return "Produkty";
-    if (currentStep === 1) return "Kontakt";
-    if (currentStep === 2) return "Podsumowanie";
+    if (currentStep === 1) return "Dodatki";
+    if (currentStep === 2) return "Kontakt";
+    if (currentStep === 3) return "Podsumowanie";
     return "Dalej";
   };
 
@@ -68,22 +77,39 @@ export function CateringWizard() {
         );
       case 2:
         return (
-          <ContactForm
-            contactName={order.contactName}
-            contactEmail={order.contactEmail}
-            contactPhone={order.contactPhone}
-            notes={order.notes}
-            onNameChange={(name) => updateOrder({ contactName: name })}
-            onEmailChange={(email) => updateOrder({ contactEmail: email })}
-            onPhoneChange={(phone) => updateOrder({ contactPhone: phone })}
-            onNotesChange={(notes) => updateOrder({ notes })}
+          <ExtrasStep
+            selectedExtras={order.selectedExtras}
+            selectedPackaging={order.selectedPackaging}
+            packagingPersonCount={order.packagingPersonCount}
+            selectedWaiterService={order.selectedWaiterService}
+            waiterCount={order.waiterCount}
+            onExtraChange={updateExtra}
+            onPackagingChange={updatePackaging}
+            onWaiterServiceChange={updateWaiterService}
+            guestCount={order.guestCount}
           />
         );
       case 3:
         return (
+          <ContactForm
+            contactName={order.contactName}
+            contactEmail={order.contactEmail}
+            contactPhone={order.contactPhone}
+            contactAddress={order.contactAddress}
+            notes={order.notes}
+            onNameChange={(name) => updateOrder({ contactName: name })}
+            onEmailChange={(email) => updateOrder({ contactEmail: email })}
+            onPhoneChange={(phone) => updateOrder({ contactPhone: phone })}
+            onAddressChange={(address) => updateOrder({ contactAddress: address })}
+            onNotesChange={(notes) => updateOrder({ notes })}
+          />
+        );
+      case 4:
+        return (
           <OrderSummary
             order={order}
             totalPrice={totalPrice}
+            onPaymentMethodChange={(method) => updateOrder({ paymentMethod: method })}
             onSubmit={resetOrder}
           />
         );
@@ -92,7 +118,7 @@ export function CateringWizard() {
     }
   };
 
-  const isLastStep = currentStep === 3;
+  const isLastStep = currentStep === 4;
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,19 +1,23 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Send, Users, Phone, Mail, PartyPopper } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Send, Users, Phone, Mail, PartyPopper, MapPin, Check } from "lucide-react";
 import { products, categories, eventTypes } from "@/data/products";
+import { extraItems, packagingOptions, waiterServiceOptions, paymentMethods } from "@/data/extras";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 type OrderSummaryProps = {
   order: CateringOrder;
   totalPrice: number;
+  onPaymentMethodChange: (method: string) => void;
   onSubmit: () => void;
 };
 
-export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps) {
+export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmit }: OrderSummaryProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
@@ -80,6 +84,42 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
     }))
     .filter((group) => group.items.length > 0);
 
+  // Extras summary
+  const extrasItems: { name: string; quantity: number; price: number }[] = [];
+  
+  for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
+    if (qty > 0) {
+      const extra = extraItems.find(e => e.id === extraId);
+      if (extra) {
+        extrasItems.push({
+          name: extra.name,
+          quantity: qty,
+          price: extra.price * qty,
+        });
+      }
+    }
+  }
+
+  // Packaging
+  const selectedPackaging = packagingOptions.find(p => p.id === order.selectedPackaging);
+  if (selectedPackaging && selectedPackaging.price > 0) {
+    extrasItems.push({
+      name: selectedPackaging.name,
+      quantity: order.packagingPersonCount,
+      price: selectedPackaging.price * order.packagingPersonCount,
+    });
+  }
+
+  // Waiter service
+  const selectedService = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
+  if (selectedService) {
+    extrasItems.push({
+      name: selectedService.name,
+      quantity: order.waiterCount,
+      price: selectedService.price * order.waiterCount,
+    });
+  }
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "Do ustalenia";
     return new Date(dateStr).toLocaleDateString("pl-PL", {
@@ -90,6 +130,14 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
   };
 
   const handleSubmit = async () => {
+    if (!order.paymentMethod) {
+      toast({
+        title: "Wybierz metodę płatności",
+        description: "Musisz wybrać sposób płatności przed wysłaniem.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSubmitting(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsSubmitting(false);
@@ -142,6 +190,10 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
             <span>{order.guestCount} gości</span>
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <MapPin className="w-4 h-4 text-muted-foreground" />
+            <span>{order.contactAddress || "Brak adresu"}</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
             <Mail className="w-4 h-4 text-muted-foreground" />
             <span>{order.contactEmail}</span>
           </div>
@@ -152,38 +204,114 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
         </CardContent>
       </Card>
 
-      {/* Items */}
-      <Card>
-        <CardContent className="pt-4 space-y-4">
-          {itemsByCategory.map((group) => (
-            <div key={group.category.id}>
-              <div className="flex items-center gap-2 mb-2">
-                <span>{group.category.icon}</span>
-                <h3 className="font-medium text-sm">{group.category.name}</h3>
+      {/* Products */}
+      {itemsByCategory.length > 0 && (
+        <Card>
+          <CardContent className="pt-4 space-y-4">
+            <h3 className="font-semibold">🍽️ Produkty</h3>
+            {itemsByCategory.map((group) => (
+              <div key={group.category.id}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span>{group.category.icon}</span>
+                  <h4 className="font-medium text-sm">{group.category.name}</h4>
+                </div>
+                <div className="space-y-1">
+                  {group.items.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between text-sm py-1"
+                    >
+                      <span className="text-muted-foreground">
+                        {item.quantity}× {item.name}
+                      </span>
+                      <span className="font-medium">
+                        {item.price.toFixed(0)} zł
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-1">
-                {group.items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between text-sm py-1"
-                  >
-                    <span className="text-muted-foreground">
-                      {item.quantity}× {item.name}
-                    </span>
-                    <span className="font-medium">
-                      {item.price.toFixed(0)} zł
-                    </span>
-                  </div>
-                ))}
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Extras */}
+      {extrasItems.length > 0 && (
+        <Card>
+          <CardContent className="pt-4 space-y-2">
+            <h3 className="font-semibold">✨ Dodatki</h3>
+            {extrasItems.map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between text-sm py-1"
+              >
+                <span className="text-muted-foreground">
+                  {item.quantity > 1 ? `${item.quantity}× ` : ""}{item.name}
+                </span>
+                <span className="font-medium">
+                  {item.price.toFixed(0)} zł
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Packaging info */}
+      {selectedPackaging && (
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{selectedPackaging.icon}</span>
+              <div>
+                <p className="font-medium text-sm">{selectedPackaging.name}</p>
+                <p className="text-xs text-muted-foreground">{selectedPackaging.description}</p>
               </div>
             </div>
-          ))}
+          </CardContent>
+        </Card>
+      )}
 
-          <Separator />
+      {/* Payment Method Selection */}
+      <Card>
+        <CardContent className="pt-4 space-y-3">
+          <h3 className="font-semibold">💳 Metoda płatności</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {paymentMethods.map((method) => {
+              const isSelected = order.paymentMethod === method.id;
+              return (
+                <div
+                  key={method.id}
+                  onClick={() => onPaymentMethodChange(method.id)}
+                  className={cn(
+                    "p-3 rounded-lg border cursor-pointer transition-all",
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground/50"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{method.icon}</span>
+                    <span className="font-medium text-sm">{method.name}</span>
+                    {isSelected && <Check className="w-4 h-4 text-primary ml-auto" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {method.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Total */}
+      <Card>
+        <CardContent className="pt-4">
           <div className="flex items-center justify-between text-lg">
             <span className="font-semibold">Razem</span>
-            <span className="font-bold text-primary">{totalPrice.toFixed(0)} zł</span>
+            <span className="font-bold text-primary text-xl">{totalPrice.toFixed(0)} zł</span>
           </div>
         </CardContent>
       </Card>
@@ -192,7 +320,7 @@ export function OrderSummary({ order, totalPrice, onSubmit }: OrderSummaryProps)
       <Button 
         size="lg" 
         onClick={handleSubmit} 
-        disabled={isSubmitting}
+        disabled={isSubmitting || !order.paymentMethod}
         className="w-full h-14 text-lg"
       >
         {isSubmitting ? (

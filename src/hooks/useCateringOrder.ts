@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { products, type Product, type SimpleProduct, type ExpandableProduct, type ConfigurableProduct } from "@/data/products";
+import { packagingOptions, waiterServiceOptions } from "@/data/extras";
 
 export type OrderItem = {
   productId: string;
@@ -12,17 +13,26 @@ export type CateringOrder = {
   eventType: string;
   eventDate: string;
   eventTime: string;
-  // New product structure
+  // Products
   simpleQuantities: Record<string, number>;
   expandableQuantities: Record<string, Record<string, number>>;
   configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>;
+  // Extras
+  selectedExtras: Record<string, number>;
+  selectedPackaging: string | null;
+  packagingPersonCount: number;
+  selectedWaiterService: string | null;
+  waiterCount: number;
   // Legacy items for backward compatibility
   items: Record<string, OrderItem>;
   // Contact
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  contactAddress: string;
   notes: string;
+  // Payment
+  paymentMethod: string;
 };
 
 const initialOrder: CateringOrder = {
@@ -33,11 +43,18 @@ const initialOrder: CateringOrder = {
   simpleQuantities: {},
   expandableQuantities: {},
   configurableData: {},
+  selectedExtras: {},
+  selectedPackaging: null,
+  packagingPersonCount: 0,
+  selectedWaiterService: null,
+  waiterCount: 1,
   items: {},
   contactName: "",
   contactEmail: "",
   contactPhone: "",
+  contactAddress: "",
   notes: "",
+  paymentMethod: "",
 };
 
 export function useCateringOrder() {
@@ -48,6 +65,7 @@ export function useCateringOrder() {
     () => [
       { id: "event", name: "Wydarzenie", icon: "📋" },
       { id: "products", name: "Produkty", icon: "🍽️" },
+      { id: "extras", name: "Dodatki", icon: "✨" },
       { id: "contact", name: "Kontakt", icon: "📧" },
       { id: "summary", name: "Podsumowanie", icon: "✅" },
     ],
@@ -92,9 +110,36 @@ export function useCateringOrder() {
         }
       }
     }
+
+    // Extras
+    for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
+      if (qty > 0) {
+        const extraItems = require("@/data/extras").extraItems;
+        const extra = extraItems.find((e: any) => e.id === extraId);
+        if (extra) {
+          total += extra.price * qty;
+        }
+      }
+    }
+
+    // Packaging
+    if (order.selectedPackaging) {
+      const packaging = packagingOptions.find(p => p.id === order.selectedPackaging);
+      if (packaging && packaging.price > 0) {
+        total += packaging.price * order.packagingPersonCount;
+      }
+    }
+
+    // Waiter service
+    if (order.selectedWaiterService) {
+      const service = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
+      if (service) {
+        total += service.price * order.waiterCount;
+      }
+    }
     
     return total;
-  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData]);
+  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData, order.selectedExtras, order.selectedPackaging, order.packagingPersonCount, order.selectedWaiterService, order.waiterCount]);
 
   // Simple product quantity change
   const updateSimpleQuantity = useCallback((productId: string, quantity: number) => {
@@ -146,6 +191,33 @@ export function useCateringOrder() {
         },
       };
     });
+  }, []);
+
+  // Extras handlers
+  const updateExtra = useCallback((extraId: string, quantity: number) => {
+    setOrder((prev) => ({
+      ...prev,
+      selectedExtras: {
+        ...prev.selectedExtras,
+        [extraId]: quantity,
+      },
+    }));
+  }, []);
+
+  const updatePackaging = useCallback((packagingId: string, personCount: number) => {
+    setOrder((prev) => ({
+      ...prev,
+      selectedPackaging: packagingId,
+      packagingPersonCount: personCount,
+    }));
+  }, []);
+
+  const updateWaiterService = useCallback((serviceId: string | null, count: number) => {
+    setOrder((prev) => ({
+      ...prev,
+      selectedWaiterService: serviceId,
+      waiterCount: count,
+    }));
   }, []);
 
   // Legacy: update item quantity (for cart drawer compatibility)
@@ -206,6 +278,9 @@ export function useCateringOrder() {
     updateSimpleQuantity,
     updateExpandableVariant,
     updateConfigurable,
+    updateExtra,
+    updatePackaging,
+    updateWaiterService,
     updateItemQuantity,
     getSuggestedQuantity,
     nextStep,
