@@ -145,6 +145,7 @@ export function CateringWizard() {
         onSimpleQuantityChange={updateSimpleQuantity}
         onExpandableVariantChange={updateExpandableVariant}
         onConfigurableChange={updateConfigurable}
+        onExtraChange={updateExtra}
       />
       <div className="pb-safe">
         {renderStep()}

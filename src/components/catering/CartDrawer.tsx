@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
 import { products, type SimpleProduct } from "@/data/products";
+import { extraItems, packagingOptions, waiterServiceOptions } from "@/data/extras";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
 
 type CartDrawerProps = {
@@ -10,6 +11,9 @@ type CartDrawerProps = {
   onSimpleQuantityChange: (productId: string, quantity: number) => void;
   onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
   onConfigurableChange: (productId: string, quantity: number) => void;
+  onExtraChange?: (extraId: string, quantity: number) => void;
+  onPackagingChange?: (packagingId: string, personCount: number) => void;
+  onWaiterServiceChange?: (serviceId: string | null, count: number) => void;
 };
 
 export function CartDrawer({ 
@@ -18,9 +22,24 @@ export function CartDrawer({
   onSimpleQuantityChange,
   onExpandableVariantChange,
   onConfigurableChange,
+  onExtraChange,
+  onPackagingChange,
+  onWaiterServiceChange,
 }: CartDrawerProps) {
   // Build cart items from all product types
-  const cartItems: { key: string; name: string; icon: string; price: number; quantity: number; type: "simple" | "expandable" | "configurable"; productId: string; variantId?: string }[] = [];
+  type CartItem = { 
+    key: string; 
+    name: string; 
+    icon: string; 
+    price: number; 
+    quantity: number; 
+    type: "simple" | "expandable" | "configurable" | "extra" | "packaging" | "waiter"; 
+    productId: string; 
+    variantId?: string;
+    isReadOnly?: boolean;
+  };
+  
+  const cartItems: CartItem[] = [];
   
   // Simple products
   for (const [productId, qty] of Object.entries(order.simpleQuantities)) {
@@ -82,15 +101,69 @@ export function CartDrawer({
     }
   }
 
+  // Extras
+  for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
+    if (qty > 0) {
+      const extra = extraItems.find(e => e.id === extraId);
+      if (extra) {
+        cartItems.push({
+          key: `extra-${extraId}`,
+          name: extra.name,
+          icon: extra.icon,
+          price: extra.price,
+          quantity: qty,
+          type: "extra",
+          productId: extraId,
+        });
+      }
+    }
+  }
+
+  // Packaging
+  if (order.selectedPackaging) {
+    const packaging = packagingOptions.find(p => p.id === order.selectedPackaging);
+    if (packaging && packaging.price > 0) {
+      cartItems.push({
+        key: `packaging-${order.selectedPackaging}`,
+        name: packaging.name,
+        icon: packaging.icon,
+        price: packaging.price,
+        quantity: order.packagingPersonCount,
+        type: "packaging",
+        productId: order.selectedPackaging,
+        isReadOnly: true,
+      });
+    }
+  }
+
+  // Waiter service
+  if (order.selectedWaiterService) {
+    const service = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
+    if (service) {
+      cartItems.push({
+        key: `waiter-${order.selectedWaiterService}`,
+        name: service.name,
+        icon: service.icon,
+        price: service.price,
+        quantity: order.waiterCount,
+        type: "waiter",
+        productId: order.selectedWaiterService,
+        isReadOnly: true,
+      });
+    }
+  }
+
   const itemCount = cartItems.length;
 
-  const handleQuantityChange = (item: typeof cartItems[0], newQty: number) => {
+  const handleQuantityChange = (item: CartItem, newQty: number) => {
     if (item.type === "simple") {
       onSimpleQuantityChange(item.productId, newQty);
     } else if (item.type === "expandable" && item.variantId) {
       onExpandableVariantChange(item.productId, item.variantId, newQty);
     } else if (item.type === "configurable") {
       onConfigurableChange(item.productId, newQty);
+    } else if (item.type === "extra" && onExtraChange) {
+      onExtraChange(item.productId, newQty);
     }
   };
 
@@ -155,40 +228,48 @@ export function CartDrawer({
 
                     {/* Controls */}
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleQuantityChange(item, item.quantity - 1)}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        <span className="w-8 text-center font-semibold text-sm">
-                          {item.quantity}
+                      {item.isReadOnly ? (
+                        <span className="text-xs text-muted-foreground">
+                          {item.type === "packaging" ? `${item.quantity} os.` : `${item.quantity}×`}
                         </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleQuantityChange(item, item.quantity + 1)}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleQuantityChange(item, item.quantity - 1)}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="w-8 text-center font-semibold text-sm">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => handleQuantityChange(item, item.quantity + 1)}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                       
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm text-primary">
                           {(item.price * item.quantity).toFixed(0)} zł
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleQuantityChange(item, 0)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {!item.isReadOnly && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleQuantityChange(item, 0)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
