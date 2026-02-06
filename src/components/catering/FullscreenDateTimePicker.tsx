@@ -78,7 +78,8 @@ export function FullscreenDateTimePicker({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center md:p-4">
+      <div className="bg-background flex flex-col w-full h-full md:w-auto md:h-auto md:max-h-[90vh] md:max-w-md md:rounded-2xl md:shadow-2xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <button onClick={onClose} className="p-2 -m-2">
@@ -190,6 +191,7 @@ export function FullscreenDateTimePicker({
           <Check className="w-5 h-5 mr-2" />
           Potwierdź termin
         </Button>
+      </div>
       </div>
     </div>
   );

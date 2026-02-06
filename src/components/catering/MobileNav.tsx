@@ -50,9 +50,9 @@ export function MobileNav({
     <>
       {/* Top Header - Progress */}
       <div className="sticky top-0 z-20 bg-background border-b border-border">
-        <div className="px-4 py-3 md:max-w-4xl md:mx-auto lg:max-w-5xl">
-          {/* Step indicator - Mobile */}
-          <div className="flex items-center justify-between mb-2 md:hidden">
+        <div className="px-4 py-3 md:max-w-3xl md:mx-auto">
+          {/* Step indicator */}
+          <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-muted-foreground">
               Krok {currentStep + 1} z {totalSteps}
             </span>
@@ -65,44 +65,11 @@ export function MobileNav({
             />
           </div>
           
-          {/* Progress bar - Mobile */}
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden md:hidden">
+          {/* Progress bar */}
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
               style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-
-          {/* Desktop Step Navigation */}
-          <div className="hidden md:flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-medium",
-                      index === currentStep
-                        ? "bg-primary text-primary-foreground"
-                        : index < currentStep
-                        ? "bg-primary/20 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <span>{step.icon}</span>
-                    <span>{step.name}</span>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className="w-8 h-0.5 bg-muted mx-1" />
-                  )}
-                </div>
-              ))}
-            </div>
-            <CartDrawer
-              order={order}
-              totalPrice={totalPrice}
-              onSimpleQuantityChange={onSimpleQuantityChange}
-              onExpandableVariantChange={onExpandableVariantChange}
-              onConfigurableChange={onConfigurableChange}
             />
           </div>
         </div>
