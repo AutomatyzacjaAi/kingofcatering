@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { categories, products, type Product } from "@/data/products";
 import type { OrderItem } from "@/hooks/useCateringOrder";
 import { ProductConfiguratorModal } from "./ProductConfiguratorModal";
@@ -49,35 +49,59 @@ export function ProductsStep({
 
       {/* Category Tabs - Horizontal Scroll */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
-        <div className="flex overflow-x-auto no-scrollbar">
-          {categories.map((category) => {
-            const itemCount = getTotalItemsInCategory(category.id);
-            const isActive = activeCategory === category.id;
-            
-            return (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-3 whitespace-nowrap border-b-2 transition-colors shrink-0",
-                  isActive
-                    ? "border-primary text-primary font-medium"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <span>{category.icon}</span>
-                <span className="text-sm">{category.name}</span>
-                {itemCount > 0 && (
-                  <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-full",
-                    isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  )}>
-                    {itemCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div className="relative flex items-center">
+          {/* Left Arrow */}
+          <button
+            onClick={() => {
+              const container = document.getElementById('category-tabs');
+              if (container) container.scrollBy({ left: -150, behavior: 'smooth' });
+            }}
+            className="absolute left-0 z-10 h-full px-1 bg-gradient-to-r from-background via-background to-transparent hidden md:flex items-center"
+          >
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          </button>
+          
+          <div id="category-tabs" className="flex overflow-x-auto no-scrollbar px-6 md:px-8">
+            {categories.map((category) => {
+              const itemCount = getTotalItemsInCategory(category.id);
+              const isActive = activeCategory === category.id;
+              
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-3 whitespace-nowrap border-b-2 transition-colors shrink-0",
+                    isActive
+                      ? "border-primary text-primary font-medium"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span>{category.icon}</span>
+                  <span className="text-sm">{category.name}</span>
+                  {itemCount > 0 && (
+                    <span className={cn(
+                      "text-xs px-1.5 py-0.5 rounded-full",
+                      isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    )}>
+                      {itemCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Right Arrow */}
+          <button
+            onClick={() => {
+              const container = document.getElementById('category-tabs');
+              if (container) container.scrollBy({ left: 150, behavior: 'smooth' });
+            }}
+            className="absolute right-0 z-10 h-full px-1 bg-gradient-to-l from-background via-background to-transparent hidden md:flex items-center"
+          >
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
       </div>
 
