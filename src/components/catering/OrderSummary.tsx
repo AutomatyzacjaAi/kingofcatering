@@ -18,12 +18,13 @@ import {
   FileText,
   Receipt
 } from "lucide-react";
-import { products, categories, eventTypes } from "@/data/products";
+import { products, categories, eventTypes, type Product } from "@/data/products";
 import { extraItems, packagingOptions, waiterServiceOptions, paymentMethods } from "@/data/extras";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ProductModal } from "./ProductModal";
 
 // Map payment method ids to Lucide icons
 const paymentIcons: Record<string, React.ReactNode> = {
@@ -38,12 +39,42 @@ type OrderSummaryProps = {
   totalPrice: number;
   onPaymentMethodChange: (method: string) => void;
   onSubmit: () => void;
+  onSimpleQuantityChange: (productId: string, quantity: number) => void;
+  onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
+  onConfigurableChange: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
 };
 
-export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmit }: OrderSummaryProps) {
+export function OrderSummary({ 
+  order, 
+  totalPrice, 
+  onPaymentMethodChange, 
+  onSubmit,
+  onSimpleQuantityChange,
+  onExpandableVariantChange,
+  onConfigurableChange,
+}: OrderSummaryProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [selectedUpsellProduct, setSelectedUpsellProduct] = useState<Product | null>(null);
   const { toast } = useToast();
+
+  // Get 2 random products that are NOT already in the order for upsell - memoized to prevent reshuffling
+  const upsellProducts = useMemo(() => {
+    const orderedProductIds = new Set([
+      ...Object.keys(order.simpleQuantities).filter(id => order.simpleQuantities[id] > 0),
+      ...Object.keys(order.expandableQuantities).filter(id => 
+        Object.values(order.expandableQuantities[id] || {}).some(qty => qty > 0)
+      ),
+      ...Object.keys(order.configurableData).filter(id => order.configurableData[id]?.quantity > 0),
+    ]);
+    
+    const availableProducts = products.filter(p => !orderedProductIds.has(p.id) && p.image);
+    
+    // Shuffle and pick 2
+    const shuffled = [...availableProducts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 2);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const eventType = eventTypes.find((e) => e.id === order.eventType);
   
@@ -190,24 +221,6 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
     );
   }
 
-  // Get 2 random products that are NOT already in the order for upsell
-  const getUpsellProducts = () => {
-    const orderedProductIds = new Set([
-      ...Object.keys(order.simpleQuantities).filter(id => order.simpleQuantities[id] > 0),
-      ...Object.keys(order.expandableQuantities).filter(id => 
-        Object.values(order.expandableQuantities[id] || {}).some(qty => qty > 0)
-      ),
-      ...Object.keys(order.configurableData).filter(id => order.configurableData[id]?.quantity > 0),
-    ]);
-    
-    const availableProducts = products.filter(p => !orderedProductIds.has(p.id) && p.image);
-    
-    // Shuffle and pick 2
-    const shuffled = [...availableProducts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 2);
-  };
-  
-  const upsellProducts = getUpsellProducts();
 
   return (
     <div className="px-4 py-6 pb-8 md:max-w-4xl md:mx-auto lg:max-w-5xl">
@@ -217,23 +230,24 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
           <div className="text-center mb-4">
             <p className="text-sm text-muted-foreground">✨ A może weźmiesz jeszcze...</p>
           </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+          <div className="grid grid-cols-2 gap-3">
             {upsellProducts.map((product) => (
               <Card 
                 key={product.id}
-                className="shrink-0 w-44 cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+                onClick={() => setSelectedUpsellProduct(product)}
+                className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
               >
-                <div className="relative h-24 overflow-hidden">
+                <div className="relative h-20 overflow-hidden">
                   <img 
                     src={product.image} 
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <CardContent className="p-3">
-                  <h4 className="font-medium text-sm line-clamp-1">{product.name}</h4>
-                  <p className="text-xs text-primary font-semibold mt-1">
-                    {product.type === "simple" && `od ${product.pricePerUnit.toFixed(0)} zł`}
+                <CardContent className="p-2">
+                  <h4 className="font-medium text-xs line-clamp-1">{product.name}</h4>
+                  <p className="text-xs text-primary font-semibold">
+                    {product.type === "simple" && `${product.pricePerUnit.toFixed(0)} zł`}
                     {product.type === "expandable" && `od ${Math.min(...product.variants.map(v => v.price)).toFixed(0)} zł`}
                     {product.type === "configurable" && `${product.pricePerPerson.toFixed(0)} zł/os.`}
                   </p>
@@ -243,6 +257,20 @@ export function OrderSummary({ order, totalPrice, onPaymentMethodChange, onSubmi
           </div>
         </div>
       )}
+
+      {/* Upsell Product Modal */}
+      <ProductModal
+        product={selectedUpsellProduct}
+        isOpen={!!selectedUpsellProduct}
+        onClose={() => setSelectedUpsellProduct(null)}
+        simpleQuantity={selectedUpsellProduct?.type === "simple" ? order.simpleQuantities[selectedUpsellProduct.id] || 0 : 0}
+        onSimpleQuantityChange={onSimpleQuantityChange}
+        expandableQuantities={selectedUpsellProduct?.type === "expandable" ? order.expandableQuantities[selectedUpsellProduct.id] || {} : {}}
+        onExpandableVariantChange={onExpandableVariantChange}
+        configurableQuantity={selectedUpsellProduct?.type === "configurable" ? order.configurableData[selectedUpsellProduct.id]?.quantity || 0 : 0}
+        configurableOptions={selectedUpsellProduct?.type === "configurable" ? order.configurableData[selectedUpsellProduct.id]?.options || {} : {}}
+        onConfigurableChange={onConfigurableChange}
+      />
 
       <div className="text-center space-y-1 mb-6">
         <h1 className="text-2xl font-bold text-foreground md:text-3xl">

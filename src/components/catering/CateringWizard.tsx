@@ -117,6 +117,9 @@ export function CateringWizard() {
             totalPrice={totalPrice}
             onPaymentMethodChange={(method) => updateOrder({ paymentMethod: method })}
             onSubmit={resetOrder}
+            onSimpleQuantityChange={updateSimpleQuantity}
+            onExpandableVariantChange={updateExpandableVariant}
+            onConfigurableChange={updateConfigurable}
           />
         );
       default:
