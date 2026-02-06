@@ -1,10 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { eventTypes } from "@/data/products";
 import { cn } from "@/lib/utils";
-import { Users } from "lucide-react";
+import { Users, CalendarDays, ChevronRight } from "lucide-react";
+import { FullscreenCalendar } from "./FullscreenCalendar";
+import { TimePicker } from "./TimePicker";
 
 type EventDetailsProps = {
   guestCount: number;
@@ -27,6 +31,14 @@ export function EventDetails({
   onEventDateChange,
   onEventTimeChange,
 }: EventDetailsProps) {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const selectedDate = eventDate ? new Date(eventDate) : undefined;
+
+  const handleDateSelect = (date: Date) => {
+    onEventDateChange(format(date, "yyyy-MM-dd"));
+  };
+
   return (
     <div className="px-4 py-6 pb-24 space-y-6">
       <div className="text-center space-y-1">
@@ -100,35 +112,62 @@ export function EventDetails({
         </CardContent>
       </Card>
 
-      {/* Date & Time */}
+      {/* Date Selection */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Data i Godzina</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-primary" />
+            Data Wydarzenia
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="event-date">Data</Label>
-            <Input
-              id="event-date"
-              type="date"
-              value={eventDate}
-              onChange={(e) => onEventDateChange(e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-              className="h-12"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="event-time">Godzina</Label>
-            <Input
-              id="event-time"
-              type="time"
-              value={eventTime}
-              onChange={(e) => onEventTimeChange(e.target.value)}
-              className="h-12"
-            />
-          </div>
+        <CardContent>
+          <button
+            onClick={() => setIsCalendarOpen(true)}
+            className={cn(
+              "w-full flex items-center justify-between p-4 rounded-lg border-2 transition-all",
+              "hover:border-primary focus:outline-none",
+              eventDate ? "border-primary bg-accent" : "border-border"
+            )}
+          >
+            <div className="text-left">
+              {selectedDate ? (
+                <>
+                  <p className="font-semibold text-foreground">
+                    {format(selectedDate, "d MMMM yyyy", { locale: pl })}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {format(selectedDate, "EEEE", { locale: pl })}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium text-muted-foreground">Wybierz datę</p>
+                  <p className="text-sm text-muted-foreground">Kliknij aby otworzyć kalendarz</p>
+                </>
+              )}
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </button>
         </CardContent>
       </Card>
+
+      {/* Time Selection */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Godzina</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TimePicker value={eventTime} onChange={onEventTimeChange} />
+        </CardContent>
+      </Card>
+
+      {/* Fullscreen Calendar */}
+      <FullscreenCalendar
+        isOpen={isCalendarOpen}
+        selectedDate={selectedDate}
+        onSelect={handleDateSelect}
+        onClose={() => setIsCalendarOpen(false)}
+      />
     </div>
   );
 }
