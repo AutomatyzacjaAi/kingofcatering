@@ -1,11 +1,74 @@
-export type Product = {
+// ============= PRODUCT TYPES =============
+
+// Type 1: Simple Product (Patery) - just display, add to cart
+export type SimpleProduct = {
+  type: "simple";
   id: string;
   name: string;
   description: string;
-  pricePerPortion: number;
-  portionsPerPerson: number; // suggested portions per guest
+  contents: string[]; // what's included
+  allergens: string[];
+  pricePerUnit: number;
+  unitLabel: string; // "szt.", "kg", "patera"
+  minQuantity: number;
+  icon: string;
   category: string;
+};
+
+// Type 2: Expandable Product (Mini) - has variants/options to choose
+export type ExpandableProduct = {
+  type: "expandable";
+  id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  minQuantity: number;
+  icon: string;
+  category: string;
+  variants: ProductVariant[];
+};
+
+export type ProductVariant = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  allergens: string[];
   dietaryTags: string[];
+};
+
+// Type 3: Configurable Set - price per person, select options from groups
+export type ConfigurableProduct = {
+  type: "configurable";
+  id: string;
+  name: string;
+  description: string;
+  pricePerPerson: number;
+  minPersons: number;
+  icon: string;
+  category: string;
+  optionGroups: OptionGroup[];
+};
+
+export type OptionGroup = {
+  id: string;
+  name: string;
+  minSelections: number;
+  maxSelections: number;
+  options: GroupOption[];
+};
+
+export type GroupOption = {
+  id: string;
+  name: string;
+  allergens: string[];
+};
+
+export type Product = SimpleProduct | ExpandableProduct | ConfigurableProduct;
+
+export type EventType = {
+  id: string;
+  name: string;
   icon: string;
 };
 
@@ -16,526 +79,403 @@ export type Category = {
   icon: string;
 };
 
-export const categories: Category[] = [
-  {
-    id: "cold-platters",
-    name: "Patery Zimne",
-    description: "Sery, wędliny, owoce morza i przystawki na zimno",
-    icon: "🧀",
-  },
-  {
-    id: "hot-platters",
-    name: "Patery Ciepłe",
-    description: "Dania mięsne i wegetariańskie podawane na gorąco",
-    icon: "🍖",
-  },
-  {
-    id: "finger-food",
-    name: "Finger Food",
-    description: "Przekąski do jedzenia w dłoni",
-    icon: "🥟",
-  },
-  {
-    id: "salads",
-    name: "Sałatki i Dodatki",
-    description: "Świeże sałatki, warzywa i dodatki",
-    icon: "🥗",
-  },
-  {
-    id: "desserts",
-    name: "Desery",
-    description: "Słodkie zakończenie każdego wydarzenia",
-    icon: "🍰",
-  },
-  {
-    id: "beverages",
-    name: "Napoje",
-    description: "Napoje zimne i gorące",
-    icon: "🥤",
-  },
-];
+// ============= EVENT TYPES =============
 
-export const products: Product[] = [
-  // Cold Platters - 8 products
-  {
-    id: "cp-1",
-    name: "Patera Serów Europejskich",
-    description: "Brie, Camembert, Gouda, Roquefort z winogronami i orzechami",
-    pricePerPortion: 18,
-    portionsPerPerson: 0.5,
-    category: "cold-platters",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🧀",
-  },
-  {
-    id: "cp-2",
-    name: "Patera Wędlin Premium",
-    description: "Szynka parmeńska, salami, chorizo, bresaola z oliwkami",
-    pricePerPortion: 22,
-    portionsPerPerson: 0.5,
-    category: "cold-platters",
-    dietaryTags: [],
-    icon: "🥓",
-  },
-  {
-    id: "cp-3",
-    name: "Patera Owoców Morza",
-    description: "Krewetki, łosoś wędzony, tuńczyk, kawior z kaparami",
-    pricePerPortion: 35,
-    portionsPerPerson: 0.3,
-    category: "cold-platters",
-    dietaryTags: [],
-    icon: "🦐",
-  },
-  {
-    id: "cp-4",
-    name: "Antipasto Włoskie",
-    description: "Suszone pomidory, oliwki, marynowane warzywa, mozzarella",
-    pricePerPortion: 16,
-    portionsPerPerson: 0.5,
-    category: "cold-platters",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🫒",
-  },
-  {
-    id: "cp-5",
-    name: "Hummus z Dipami",
-    description: "Hummus klasyczny, paprykowy, z pesto plus warzywa do dipowania",
-    pricePerPortion: 12,
-    portionsPerPerson: 0.4,
-    category: "cold-platters",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🥙",
-  },
-  {
-    id: "cp-6",
-    name: "Carpaccio z Polędwicy",
-    description: "Cienkie plastry polędwicy z rukolą, kaparami i parmezanem",
-    pricePerPortion: 28,
-    portionsPerPerson: 0.3,
-    category: "cold-platters",
-    dietaryTags: [],
-    icon: "🥩",
-  },
-  {
-    id: "cp-7",
-    name: "Tatar z Łososia",
-    description: "Świeży łosoś z avocado, szczypiorkiem i chipsami z pumpernikla",
-    pricePerPortion: 25,
-    portionsPerPerson: 0.3,
-    category: "cold-platters",
-    dietaryTags: [],
-    icon: "🐟",
-  },
-  {
-    id: "cp-8",
-    name: "Bruschetta Mix",
-    description: "Grzanki z pomidorem, bazylią, oliwkami i serami",
-    pricePerPortion: 10,
-    portionsPerPerson: 0.5,
-    category: "cold-platters",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍞",
-  },
-
-  // Hot Platters - 8 products
-  {
-    id: "hp-1",
-    name: "Patera Mięs Pieczonych",
-    description: "Polędwica, karkówka, udziec z kurczaka z sosami",
-    pricePerPortion: 32,
-    portionsPerPerson: 0.7,
-    category: "hot-platters",
-    dietaryTags: [],
-    icon: "🍗",
-  },
-  {
-    id: "hp-2",
-    name: "Pierogi Mix",
-    description: "Ruskie, z mięsem, ze szpinakiem - każdy znajdzie swój ulubiony",
-    pricePerPortion: 14,
-    portionsPerPerson: 0.5,
-    category: "hot-platters",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🥟",
-  },
-  {
-    id: "hp-3",
-    name: "Kofty Jagnięce",
-    description: "Aromatyczne klopsiki z jagnięciny z sosem jogurtowym",
-    pricePerPortion: 26,
-    portionsPerPerson: 0.4,
-    category: "hot-platters",
-    dietaryTags: [],
-    icon: "🍖",
-  },
-  {
-    id: "hp-4",
-    name: "Patera Rybna",
-    description: "Grillowany łosoś, dorsz, pstrąg z cytryną i ziołami",
-    pricePerPortion: 38,
-    portionsPerPerson: 0.5,
-    category: "hot-platters",
-    dietaryTags: [],
-    icon: "🐠",
-  },
-  {
-    id: "hp-5",
-    name: "Grillowane Warzywa",
-    description: "Cukinia, bakłażan, papryka, grzyby z oliwą i ziołami",
-    pricePerPortion: 15,
-    portionsPerPerson: 0.5,
-    category: "hot-platters",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🥦",
-  },
-  {
-    id: "hp-6",
-    name: "Risotto z Grzybami",
-    description: "Kremowe risotto z borowikami i parmezanem",
-    pricePerPortion: 18,
-    portionsPerPerson: 0.4,
-    category: "hot-platters",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍚",
-  },
-  {
-    id: "hp-7",
-    name: "Skrzydełka BBQ",
-    description: "Pieczone skrzydełka w sosie barbecue z dipem ranch",
-    pricePerPortion: 16,
-    portionsPerPerson: 0.5,
-    category: "hot-platters",
-    dietaryTags: [],
-    icon: "🍗",
-  },
-  {
-    id: "hp-8",
-    name: "Curry Warzywne",
-    description: "Pikantne curry z warzywami i ryżem basmati",
-    pricePerPortion: 16,
-    portionsPerPerson: 0.4,
-    category: "hot-platters",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🍛",
-  },
-
-  // Finger Food - 8 products
-  {
-    id: "ff-1",
-    name: "Mini Burgery",
-    description: "Miniaturowe burgery wołowe z serem i pikantnym sosem",
-    pricePerPortion: 12,
-    portionsPerPerson: 0.5,
-    category: "finger-food",
-    dietaryTags: [],
-    icon: "🍔",
-  },
-  {
-    id: "ff-2",
-    name: "Krewetki w Tempurze",
-    description: "Chrupiące krewetki w cieście tempura z sosem słodko-kwaśnym",
-    pricePerPortion: 18,
-    portionsPerPerson: 0.3,
-    category: "finger-food",
-    dietaryTags: [],
-    icon: "🦐",
-  },
-  {
-    id: "ff-3",
-    name: "Spring Rolls",
-    description: "Sajgonki warzywne z sosem chili",
-    pricePerPortion: 8,
-    portionsPerPerson: 0.5,
-    category: "finger-food",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🥢",
-  },
-  {
-    id: "ff-4",
-    name: "Arancini",
-    description: "Włoskie kulki ryżowe z mozzarellą i sosem pomidorowym",
-    pricePerPortion: 10,
-    portionsPerPerson: 0.4,
-    category: "finger-food",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🧆",
-  },
-  {
-    id: "ff-5",
-    name: "Satay z Kurczaka",
-    description: "Szaszłyki z kurczaka z sosem orzechowym",
-    pricePerPortion: 14,
-    portionsPerPerson: 0.5,
-    category: "finger-food",
-    dietaryTags: [],
-    icon: "🍢",
-  },
-  {
-    id: "ff-6",
-    name: "Kuleczki Serowe",
-    description: "Chrupiące kulki z sera cheddar i gouda",
-    pricePerPortion: 9,
-    portionsPerPerson: 0.4,
-    category: "finger-food",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🧀",
-  },
-  {
-    id: "ff-7",
-    name: "Falafel z Tahini",
-    description: "Chrupiące kulki z ciecierzycy z sosem tahini",
-    pricePerPortion: 8,
-    portionsPerPerson: 0.5,
-    category: "finger-food",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🧆",
-  },
-  {
-    id: "ff-8",
-    name: "Gyoza",
-    description: "Japońskie pierożki z nadzieniem wieprzowo-warzywnym",
-    pricePerPortion: 12,
-    portionsPerPerson: 0.4,
-    category: "finger-food",
-    dietaryTags: [],
-    icon: "🥟",
-  },
-
-  // Salads - 7 products
-  {
-    id: "sl-1",
-    name: "Sałatka Cezar",
-    description: "Klasyczna sałatka z kurczakiem, grzankami i parmezanem",
-    pricePerPortion: 14,
-    portionsPerPerson: 0.4,
-    category: "salads",
-    dietaryTags: [],
-    icon: "🥗",
-  },
-  {
-    id: "sl-2",
-    name: "Sałatka Grecka",
-    description: "Pomidory, ogórki, oliwki, feta z oregano",
-    pricePerPortion: 12,
-    portionsPerPerson: 0.4,
-    category: "salads",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🥒",
-  },
-  {
-    id: "sl-3",
-    name: "Caprese",
-    description: "Mozzarella, pomidory, bazylia z oliwą i balsamico",
-    pricePerPortion: 15,
-    portionsPerPerson: 0.3,
-    category: "salads",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍅",
-  },
-  {
-    id: "sl-4",
-    name: "Quinoa Bowl",
-    description: "Quinoa z grillowanymi warzywami i hummusem",
-    pricePerPortion: 16,
-    portionsPerPerson: 0.4,
-    category: "salads",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🥣",
-  },
-  {
-    id: "sl-5",
-    name: "Colesław Premium",
-    description: "Kapusta, marchewka, jabłko z domowym dressingiem",
-    pricePerPortion: 8,
-    portionsPerPerson: 0.3,
-    category: "salads",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🥬",
-  },
-  {
-    id: "sl-6",
-    name: "Sałatka z Rukolą",
-    description: "Rukola, suszone pomidory, orzechy włoskie, parmezan",
-    pricePerPortion: 13,
-    portionsPerPerson: 0.3,
-    category: "salads",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🌿",
-  },
-  {
-    id: "sl-7",
-    name: "Sałatka Owocowa",
-    description: "Sezonowe owoce z miętą i syropem klonowym",
-    pricePerPortion: 10,
-    portionsPerPerson: 0.3,
-    category: "salads",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🍓",
-  },
-
-  // Desserts - 8 products
-  {
-    id: "ds-1",
-    name: "Sernik Nowojorski",
-    description: "Kremowy sernik na kruchym spodzie",
-    pricePerPortion: 12,
-    portionsPerPerson: 0.3,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍰",
-  },
-  {
-    id: "ds-2",
-    name: "Tiramisu",
-    description: "Klasyczne włoskie tiramisu z mascarpone",
-    pricePerPortion: 14,
-    portionsPerPerson: 0.3,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "☕",
-  },
-  {
-    id: "ds-3",
-    name: "Mini Tartaletki",
-    description: "Mix: czekoladowe, owocowe, z kremem cytrynowym",
-    pricePerPortion: 8,
-    portionsPerPerson: 0.4,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🥧",
-  },
-  {
-    id: "ds-4",
-    name: "Panna Cotta",
-    description: "Delikatny krem mleczny z sosem malinowym",
-    pricePerPortion: 10,
-    portionsPerPerson: 0.3,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍮",
-  },
-  {
-    id: "ds-5",
-    name: "Brownie Czekoladowe",
-    description: "Intensywne brownie z orzechami włoskimi",
-    pricePerPortion: 8,
-    portionsPerPerson: 0.4,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍫",
-  },
-  {
-    id: "ds-6",
-    name: "Makaroniki",
-    description: "Kolorowe makaroniki w różnych smakach (6 szt.)",
-    pricePerPortion: 15,
-    portionsPerPerson: 0.3,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🧁",
-  },
-  {
-    id: "ds-7",
-    name: "Szarlotka Babci",
-    description: "Domowa szarlotka z bitą śmietaną",
-    pricePerPortion: 9,
-    portionsPerPerson: 0.3,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍎",
-  },
-  {
-    id: "ds-8",
-    name: "Owoce w Czekoladzie",
-    description: "Truskawki i pomarańcze w gorzkiej czekoladzie",
-    pricePerPortion: 12,
-    portionsPerPerson: 0.3,
-    category: "desserts",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍓",
-  },
-
-  // Beverages - 7 products
-  {
-    id: "bv-1",
-    name: "Lemoniada Domowa",
-    description: "Cytrynowa, malinowa lub ogórkowa (1L karafka)",
-    pricePerPortion: 18,
-    portionsPerPerson: 0.3,
-    category: "beverages",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🍋",
-  },
-  {
-    id: "bv-2",
-    name: "Herbata Premium",
-    description: "Wybór herbat liściastych z całego świata",
-    pricePerPortion: 6,
-    portionsPerPerson: 0.5,
-    category: "beverages",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🍵",
-  },
-  {
-    id: "bv-3",
-    name: "Kawa z Ekspresu",
-    description: "Espresso, cappuccino, latte - wybór gościa",
-    pricePerPortion: 8,
-    portionsPerPerson: 0.5,
-    category: "beverages",
-    dietaryTags: ["wegetariańskie"],
-    icon: "☕",
-  },
-  {
-    id: "bv-4",
-    name: "Smoothie Bar",
-    description: "Świeże smoothie z owoców sezonowych",
-    pricePerPortion: 12,
-    portionsPerPerson: 0.3,
-    category: "beverages",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🥤",
-  },
-  {
-    id: "bv-5",
-    name: "Woda Mineralna",
-    description: "Butelkowana woda gazowana i niegazowana",
-    pricePerPortion: 4,
-    portionsPerPerson: 0.5,
-    category: "beverages",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "💧",
-  },
-  {
-    id: "bv-6",
-    name: "Soki Świeżo Wyciskane",
-    description: "Pomarańczowy, jabłkowy, marchewkowy",
-    pricePerPortion: 10,
-    portionsPerPerson: 0.4,
-    category: "beverages",
-    dietaryTags: ["wegetariańskie", "wegańskie"],
-    icon: "🧃",
-  },
-  {
-    id: "bv-7",
-    name: "Gorąca Czekolada",
-    description: "Gęsta czekolada z bitą śmietaną",
-    pricePerPortion: 8,
-    portionsPerPerson: 0.3,
-    category: "beverages",
-    dietaryTags: ["wegetariańskie"],
-    icon: "🍫",
-  },
-];
-
-export const eventTypes = [
+export const eventTypes: EventType[] = [
   { id: "wedding", name: "Wesele", icon: "Heart" },
-  { id: "conference", name: "Konferencja", icon: "Presentation" },
+  { id: "corporate", name: "Konferencja", icon: "Presentation" },
   { id: "birthday", name: "Urodziny", icon: "Gift" },
-  { id: "corporate", name: "Spotkanie Firmowe", icon: "Briefcase" },
+  { id: "business", name: "Spotkanie firmowe", icon: "Briefcase" },
   { id: "party", name: "Impreza", icon: "Music" },
   { id: "other", name: "Inne", icon: "CalendarDays" },
-] as const;
+];
 
-export type EventType = typeof eventTypes[number];
+// ============= CATEGORIES =============
+
+export const categories: Category[] = [
+  {
+    id: "patery",
+    name: "Patery",
+    description: "Gotowe kompozycje na każdą okazję",
+    icon: "🧀",
+  },
+  {
+    id: "mini",
+    name: "Mini",
+    description: "Małe przekąski z wieloma wariantami",
+    icon: "🥟",
+  },
+  {
+    id: "zestawy",
+    name: "Zestawy",
+    description: "Pełne menu do konfiguracji",
+    icon: "🍽️",
+  },
+];
+
+// ============= PRODUCTS =============
+
+export const products: Product[] = [
+  // ===== PATERY (Simple) =====
+  {
+    type: "simple",
+    id: "patera-serow",
+    name: "Patera Serów Europejskich",
+    description: "Dla 7-8 osób. W środku znajdziesz 32 pyszności.",
+    contents: [
+      "Brie francuski 150g",
+      "Camembert z ziołami 150g", 
+      "Gouda długo dojrzewająca 200g",
+      "Roquefort 100g",
+      "Winogrona 200g",
+      "Orzechy włoskie 100g",
+      "Miód akacjowy 50ml",
+    ],
+    allergens: ["mleko", "orzechy"],
+    pricePerUnit: 450,
+    unitLabel: "szt.",
+    minQuantity: 1,
+    icon: "🧀",
+    category: "patery",
+  },
+  {
+    type: "simple",
+    id: "patera-wedlin",
+    name: "Patera Wędlin Premium",
+    description: "Dla 8-10 osób. Wyselekcjonowane wędliny z całej Europy.",
+    contents: [
+      "Szynka parmeńska 24-miesięczna 200g",
+      "Salami Milano 150g",
+      "Chorizo Iberico 150g",
+      "Bresaola 100g",
+      "Oliwki Kalamata 150g",
+      "Grissini 12 szt.",
+    ],
+    allergens: ["gluten"],
+    pricePerUnit: 520,
+    unitLabel: "szt.",
+    minQuantity: 1,
+    icon: "🥓",
+    category: "patery",
+  },
+  {
+    type: "simple",
+    id: "patera-owocow-morza",
+    name: "Patera Owoców Morza",
+    description: "Dla 6-8 osób. Świeże owoce morza na lodzie.",
+    contents: [
+      "Krewetki tygrysie 300g",
+      "Łosoś wędzony 200g",
+      "Tuńczyk sashimi 150g",
+      "Kawior czerwony 50g",
+      "Kapary 50g",
+      "Cytryna i koperek",
+    ],
+    allergens: ["ryby", "skorupiaki"],
+    pricePerUnit: 680,
+    unitLabel: "szt.",
+    minQuantity: 1,
+    icon: "🦐",
+    category: "patery",
+  },
+  {
+    type: "simple",
+    id: "patera-antipasto",
+    name: "Antipasto Włoskie",
+    description: "Dla 6-8 osób. Smak słonecznej Italii.",
+    contents: [
+      "Suszone pomidory w oliwie 150g",
+      "Oliwki mix 200g",
+      "Marynowane karczochy 150g",
+      "Mozzarella di Bufala 250g",
+      "Papryka grillowana 150g",
+      "Focaccia z rozmarynem",
+    ],
+    allergens: ["mleko", "gluten"],
+    pricePerUnit: 380,
+    unitLabel: "szt.",
+    minQuantity: 1,
+    icon: "🫒",
+    category: "patery",
+  },
+  
+  // ===== MINI (Expandable) =====
+  {
+    type: "expandable",
+    id: "tacos",
+    name: "Meksykańskie Tacos",
+    description: "Cena bazowa: 18,00 zł/szt.",
+    basePrice: 18,
+    minQuantity: 8,
+    icon: "🌮",
+    category: "mini",
+    variants: [
+      {
+        id: "tacos-kurczak",
+        name: "Tacos z szarpanym kurczakiem Al Pastor",
+        description: "grillowany ananas z miętą / salsa Pico De Gallo",
+        price: 18,
+        allergens: ["gluten"],
+        dietaryTags: [],
+      },
+      {
+        id: "tacos-wieprzowina",
+        name: "Tacos z szarpaną wieprzowiną w sosie adobo",
+        description: "salsa mexicana / crema / marynowana cebulka",
+        price: 18,
+        allergens: ["gluten", "mleko"],
+        dietaryTags: [],
+      },
+      {
+        id: "tacos-vege",
+        name: "Tacos vege z boczniakiem Chipotle",
+        description: "Guacamole / Salsa Pico De Gallo",
+        price: 18,
+        allergens: ["gluten"],
+        dietaryTags: ["Vege"],
+      },
+      {
+        id: "tacos-krewetki",
+        name: "Tacos z krewetkami w tempurze",
+        description: "guacamole / jalapeno / marynowana cebulka",
+        price: 22,
+        allergens: ["gluten", "skorupiaki"],
+        dietaryTags: ["Krewetki"],
+      },
+    ],
+  },
+  {
+    type: "expandable",
+    id: "mini-burgery",
+    name: "Mini Burgery",
+    description: "Cena bazowa: 15,00 zł/szt.",
+    basePrice: 15,
+    minQuantity: 10,
+    icon: "🍔",
+    category: "mini",
+    variants: [
+      {
+        id: "burger-klasyczny",
+        name: "Mini Burger Klasyczny",
+        description: "wołowina / cheddar / pikle / sos burgerowy",
+        price: 15,
+        allergens: ["gluten", "mleko"],
+        dietaryTags: [],
+      },
+      {
+        id: "burger-pulled-pork",
+        name: "Mini Burger z Pulled Pork",
+        description: "szarpana wieprzowina / colesław / sos BBQ",
+        price: 16,
+        allergens: ["gluten"],
+        dietaryTags: [],
+      },
+      {
+        id: "burger-vege",
+        name: "Mini Burger Vege",
+        description: "kotlet z batatów / rukola / hummus",
+        price: 15,
+        allergens: ["gluten", "sezam"],
+        dietaryTags: ["Vege"],
+      },
+    ],
+  },
+  {
+    type: "expandable",
+    id: "sushi",
+    name: "Sushi Selection",
+    description: "Cena bazowa: 8,00 zł/szt.",
+    basePrice: 8,
+    minQuantity: 16,
+    icon: "🍣",
+    category: "mini",
+    variants: [
+      {
+        id: "sushi-sake",
+        name: "Nigiri Sake (łosoś)",
+        description: "świeży łosoś na ryżu sushi",
+        price: 8,
+        allergens: ["ryby", "gluten"],
+        dietaryTags: [],
+      },
+      {
+        id: "sushi-maguro",
+        name: "Nigiri Maguro (tuńczyk)",
+        description: "świeży tuńczyk na ryżu sushi",
+        price: 10,
+        allergens: ["ryby", "gluten"],
+        dietaryTags: [],
+      },
+      {
+        id: "sushi-california",
+        name: "California Roll (6 szt.)",
+        description: "krab / awokado / ogórek / tobiko",
+        price: 28,
+        allergens: ["skorupiaki", "gluten"],
+        dietaryTags: [],
+      },
+      {
+        id: "sushi-vege-roll",
+        name: "Vege Roll (6 szt.)",
+        description: "awokado / ogórek / marchewka / tofu",
+        price: 24,
+        allergens: ["soja", "gluten"],
+        dietaryTags: ["Vege"],
+      },
+    ],
+  },
+  
+  // ===== ZESTAWY (Configurable) =====
+  {
+    type: "configurable",
+    id: "zestaw-1",
+    name: "Zestaw nr 1",
+    description: "Minimalne zamówienie z jednego rodzaju to 12 sztuk.",
+    pricePerPerson: 70,
+    minPersons: 12,
+    icon: "🍽️",
+    category: "zestawy",
+    optionGroups: [
+      {
+        id: "miesa",
+        name: "Mięsiwa i ryby",
+        minSelections: 2,
+        maxSelections: 6,
+        options: [
+          { id: "roladki-indyk", name: "Roladki z indyka ze szpinakiem suszonymi pomidorami i mozarellą", allergens: ["mleko"] },
+          { id: "schabowy", name: "Staropolski schabowy", allergens: ["gluten", "jaja"] },
+          { id: "pulpeciki", name: "Pulpeciki wołowo-wieprzowe w sosie grzybowym", allergens: ["gluten"] },
+          { id: "karkowka", name: "Karkówka w sosie własnym", allergens: [] },
+          { id: "kurczak-panko", name: "Filet z kurczaka w panko", allergens: ["gluten"] },
+          { id: "dorsz", name: "Dorsz w sosie cytrusowym", allergens: ["ryby"] },
+        ],
+      },
+      {
+        id: "dodatki",
+        name: "Dodatki",
+        minSelections: 2,
+        maxSelections: 4,
+        options: [
+          { id: "ziemniaki", name: "Ziemniaki opiekane z rozmarynem", allergens: [] },
+          { id: "ryz", name: "Ryż z warzywami", allergens: [] },
+          { id: "kasza", name: "Kasza gryczana", allergens: [] },
+          { id: "puree", name: "Puree ziemniaczane", allergens: ["mleko"] },
+        ],
+      },
+      {
+        id: "salatki",
+        name: "Sałatki",
+        minSelections: 1,
+        maxSelections: 3,
+        options: [
+          { id: "mizeria", name: "Mizeria", allergens: ["mleko"] },
+          { id: "surowka-marchew", name: "Surówka z marchewki", allergens: [] },
+          { id: "salatka-grecka", name: "Sałatka grecka", allergens: ["mleko"] },
+          { id: "coleslaw", name: "Colesław", allergens: ["jaja"] },
+        ],
+      },
+    ],
+  },
+  {
+    type: "configurable",
+    id: "zestaw-2",
+    name: "Zestaw nr 2 Premium",
+    description: "Menu premium z wykwintnymi daniami. Minimum 15 osób.",
+    pricePerPerson: 95,
+    minPersons: 15,
+    icon: "👨‍🍳",
+    category: "zestawy",
+    optionGroups: [
+      {
+        id: "dania-glowne",
+        name: "Dania główne",
+        minSelections: 2,
+        maxSelections: 4,
+        options: [
+          { id: "poledwica", name: "Polędwica wołowa z sosem z zielonym pieprzem", allergens: ["mleko"] },
+          { id: "kaczka", name: "Kaczka konfitowana z jabłkami", allergens: [] },
+          { id: "losos-grillowany", name: "Łosoś grillowany z masłem czosnkowym", allergens: ["ryby", "mleko"] },
+          { id: "risotto-truflowe", name: "Risotto z truflami (vege)", allergens: ["mleko"] },
+        ],
+      },
+      {
+        id: "przystawki",
+        name: "Przystawki",
+        minSelections: 2,
+        maxSelections: 3,
+        options: [
+          { id: "carpaccio", name: "Carpaccio z polędwicy", allergens: ["mleko"] },
+          { id: "tatar-losos", name: "Tatar z łososia z awokado", allergens: ["ryby"] },
+          { id: "bruschetta", name: "Bruschetta z pomidorami", allergens: ["gluten"] },
+        ],
+      },
+      {
+        id: "desery-premium",
+        name: "Desery",
+        minSelections: 1,
+        maxSelections: 2,
+        options: [
+          { id: "creme-brulee", name: "Crème brûlée", allergens: ["mleko", "jaja"] },
+          { id: "fondant", name: "Fondant czekoladowy", allergens: ["mleko", "jaja", "gluten"] },
+          { id: "panna-cotta", name: "Panna cotta z malinami", allergens: ["mleko"] },
+        ],
+      },
+    ],
+  },
+  {
+    type: "configurable",
+    id: "zestaw-3",
+    name: "Zestaw Wegetariański",
+    description: "Pełne menu bez mięsa. Minimum 10 osób.",
+    pricePerPerson: 60,
+    minPersons: 10,
+    icon: "🥗",
+    category: "zestawy",
+    optionGroups: [
+      {
+        id: "dania-vege",
+        name: "Dania główne",
+        minSelections: 2,
+        maxSelections: 4,
+        options: [
+          { id: "curry-vege", name: "Curry warzywne z mlekiem kokosowym", allergens: [] },
+          { id: "lasagne-vege", name: "Lasagne z warzywami", allergens: ["mleko", "gluten"] },
+          { id: "falafel-talerz", name: "Talerz falafel z hummusem", allergens: ["sezam"] },
+          { id: "stir-fry", name: "Stir-fry z tofu", allergens: ["soja", "gluten"] },
+        ],
+      },
+      {
+        id: "dodatki-vege",
+        name: "Dodatki",
+        minSelections: 2,
+        maxSelections: 3,
+        options: [
+          { id: "ryz-jaśminowy", name: "Ryż jaśminowy", allergens: [] },
+          { id: "kuskus", name: "Kuskus z warzywami", allergens: ["gluten"] },
+          { id: "grillowane-warzywa", name: "Grillowane warzywa", allergens: [] },
+        ],
+      },
+      {
+        id: "salatki-vege",
+        name: "Sałatki",
+        minSelections: 1,
+        maxSelections: 2,
+        options: [
+          { id: "quinoa-bowl", name: "Quinoa bowl", allergens: [] },
+          { id: "tabouleh", name: "Tabouleh", allergens: ["gluten"] },
+          { id: "caprese", name: "Caprese", allergens: ["mleko"] },
+        ],
+      },
+    ],
+  },
+];
+
+// Helper to get products by category
+export const getProductsByCategory = (categoryId: string): Product[] => {
+  return products.filter(p => p.category === categoryId);
+};
+
+// Helper to get product by ID
+export const getProductById = (productId: string): Product | undefined => {
+  return products.find(p => p.id === productId);
+};
