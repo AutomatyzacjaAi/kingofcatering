@@ -6,6 +6,8 @@ export type SimpleProduct = {
   id: string;
   name: string;
   description: string;
+  longDescription?: string; // detailed description for modal
+  image?: string; // image path
   contents: string[]; // what's included
   allergens: string[];
   pricePerUnit: number;
@@ -122,6 +124,8 @@ export const products: Product[] = [
     id: "patera-serow",
     name: "Patera Serów Europejskich",
     description: "Dla 7-8 osób. W środku znajdziesz 32 pyszności.",
+    longDescription: "Wyselekcjonowane sery z najlepszych europejskich serowarni. Idealna na eleganckie przyjęcia i spotkania biznesowe. Podawana na łupkowej desce z dodatkami.",
+    image: "/products/patera-serow.jpg",
     contents: [
       "Brie francuski 150g",
       "Camembert z ziołami 150g", 
@@ -143,6 +147,8 @@ export const products: Product[] = [
     id: "patera-wedlin",
     name: "Patera Wędlin Premium",
     description: "Dla 8-10 osób. Wyselekcjonowane wędliny z całej Europy.",
+    longDescription: "Ręcznie krojone wędliny najwyższej jakości z renomowanych wytwórni. Szynka parmeńska dojrzewająca 24 miesiące, autentyczne chorizo i bresaola.",
+    image: "/products/patera-wedlin.jpg",
     contents: [
       "Szynka parmeńska 24-miesięczna 200g",
       "Salami Milano 150g",
@@ -163,6 +169,8 @@ export const products: Product[] = [
     id: "patera-owocow-morza",
     name: "Patera Owoców Morza",
     description: "Dla 6-8 osób. Świeże owoce morza na lodzie.",
+    longDescription: "Świeże owoce morza serwowane na kruszonym lodzie. Krewetki tygrysie, premium łosoś wędzony i tuńczyk sashimi grade. Udekorowane kaparami i świeżym koperkiem.",
+    image: "/products/patera-owocow-morza.jpg",
     contents: [
       "Krewetki tygrysie 300g",
       "Łosoś wędzony 200g",
@@ -183,6 +191,8 @@ export const products: Product[] = [
     id: "patera-antipasto",
     name: "Antipasto Włoskie",
     description: "Dla 6-8 osób. Smak słonecznej Italii.",
+    longDescription: "Kompozycja włoskich przysmaków rodem z Toskanii. Suszone pomidory w oliwie extra virgin, mozzarella di bufala z certyfikatem DOP i świeżo pieczona focaccia z rozmarynem.",
+    image: "/products/patera-antipasto.jpg",
     contents: [
       "Suszone pomidory w oliwie 150g",
       "Oliwki mix 200g",

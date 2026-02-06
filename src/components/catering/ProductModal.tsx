@@ -48,7 +48,7 @@ export function ProductModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col">
+      <DialogContent hideCloseButton className="h-[100dvh] max-h-[100dvh] w-full max-w-full sm:max-w-full m-0 p-0 rounded-none border-0 flex flex-col">
         {/* Custom Header */}
         <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
@@ -117,6 +117,25 @@ function SimpleProductContent({
 }) {
   return (
     <div className="space-y-6">
+      {/* Hero Image */}
+      {product.image && (
+        <div className="relative -mx-4 -mt-4">
+          <img 
+            src={product.image} 
+            alt={product.name}
+            className="w-full h-48 object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        </div>
+      )}
+
+      {/* Long Description */}
+      {product.longDescription && (
+        <p className="text-muted-foreground">
+          {product.longDescription}
+        </p>
+      )}
+
       {/* Price and Quantity */}
       <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
         <div>
