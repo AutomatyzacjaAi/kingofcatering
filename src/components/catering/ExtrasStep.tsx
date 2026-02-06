@@ -32,7 +32,7 @@ type ExtrasStepProps = {
   selectedWaiterService: string | null;
   waiterCount: number;
   onExtraChange: (extraId: string, quantity: number) => void;
-  onPackagingChange: (packagingId: string, personCount: number) => void;
+  onPackagingChange: (packagingId: string | null, personCount: number) => void;
   onWaiterServiceChange: (serviceId: string | null, count: number) => void;
   guestCount: number;
 };

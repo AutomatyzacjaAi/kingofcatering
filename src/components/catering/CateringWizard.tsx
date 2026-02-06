@@ -146,6 +146,8 @@ export function CateringWizard() {
         onExpandableVariantChange={updateExpandableVariant}
         onConfigurableChange={updateConfigurable}
         onExtraChange={updateExtra}
+        onPackagingChange={updatePackaging}
+        onWaiterServiceChange={updateWaiterService}
       />
       <div className="pb-safe">
         {renderStep()}
