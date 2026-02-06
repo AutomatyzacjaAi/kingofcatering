@@ -227,11 +227,6 @@ function ExtrasListSection({
                   ) : (
                     <span className="text-2xl">{extra.icon}</span>
                   )}
-                  {isSelected && (
-                    <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 text-primary-foreground" />
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -423,11 +418,6 @@ function PackagingSection({
                     />
                   ) : (
                     <span className="text-2xl">{option.icon}</span>
-                  )}
-                  {isSelected && (
-                    <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 text-primary-foreground" />
-                    </div>
                   )}
                 </div>
 
@@ -665,11 +655,6 @@ function WaiterServiceSection({
                     />
                   ) : (
                     <span className="text-2xl">{option.icon}</span>
-                  )}
-                  {isSelected && (
-                    <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 text-primary-foreground" />
-                    </div>
                   )}
                 </div>
 
