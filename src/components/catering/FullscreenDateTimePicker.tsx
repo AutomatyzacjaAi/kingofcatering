@@ -79,7 +79,7 @@ export function FullscreenDateTimePicker({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center md:p-4">
-      <div className="bg-background flex flex-col w-full h-full md:w-auto md:h-auto md:max-h-[90vh] md:max-w-md md:rounded-2xl md:shadow-2xl overflow-hidden">
+      <div className="bg-background flex flex-col w-full h-full md:w-auto md:h-auto md:max-h-[90vh] md:min-w-[480px] md:max-w-xl md:rounded-2xl md:shadow-2xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <button onClick={onClose} className="p-2 -m-2">
