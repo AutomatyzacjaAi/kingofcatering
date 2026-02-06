@@ -103,19 +103,19 @@ export const categories: Category[] = [
     id: "patery",
     name: "Patery",
     description: "Gotowe kompozycje na każdą okazję",
-    icon: "🧀",
+    icon: "Salad",
   },
   {
     id: "mini",
     name: "Mini",
     description: "Małe przekąski z wieloma wariantami",
-    icon: "🥟",
+    icon: "Cookie",
   },
   {
     id: "zestawy",
     name: "Zestawy",
     description: "Pełne menu do konfiguracji",
-    icon: "🍽️",
+    icon: "UtensilsCrossed",
   },
 ];
 
