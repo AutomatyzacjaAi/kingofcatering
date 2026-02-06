@@ -165,6 +165,7 @@ function ExtrasListSection({
       {extras.map((extra) => {
         const quantity = selectedExtras[extra.id] || 0;
         const isSelected = quantity > 0;
+        const hasImage = extra.image;
 
         return (
           <Card
@@ -179,11 +180,19 @@ function ExtrasListSection({
               <div className="flex items-center gap-3">
                 <div
                   className={cn(
-                    "w-14 h-14 rounded-lg flex items-center justify-center shrink-0 relative",
-                    isSelected ? "bg-primary/10" : "bg-muted"
+                    "w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden",
+                    !hasImage && (isSelected ? "bg-primary/10" : "bg-muted")
                   )}
                 >
-                  <span className="text-2xl">{extra.icon}</span>
+                  {hasImage ? (
+                    <img 
+                      src={extra.image} 
+                      alt={extra.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl">{extra.icon}</span>
+                  )}
                   {isSelected && (
                     <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                       <Check className="w-3 h-3 text-primary-foreground" />
@@ -257,29 +266,35 @@ function ExtraItemModal({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 pt-16 space-y-6">
-            <div className="w-20 h-20 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center">
-              <span className="text-4xl">{item.icon}</span>
+          {/* Hero Image */}
+          {item.image ? (
+            <div className="relative">
+              <img src={item.image} alt={item.name} className="w-full h-56 object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
             </div>
+          ) : (
+            <div className="pt-16 flex justify-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <span className="text-4xl">{item.icon}</span>
+              </div>
+            </div>
+          )}
 
-            <div className="text-center">
+          <div className="p-4 space-y-6">
+            {/* Title & Description */}
+            <div>
               <h2 className="text-xl font-bold">{item.name}</h2>
               <p className="text-muted-foreground mt-1">{item.description}</p>
               {item.longDescription && (
-                <p className="text-sm text-muted-foreground mt-3">
-                  {item.longDescription}
-                </p>
+                <p className="text-sm text-muted-foreground mt-2">{item.longDescription}</p>
               )}
             </div>
 
+            {/* Price & Quantity */}
             <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
               <div>
-                <span className="text-2xl font-bold">
-                  {item.price.toFixed(0)} zł
-                </span>
-                <span className="text-muted-foreground ml-1">
-                  / {item.unitLabel}
-                </span>
+                <span className="text-2xl font-bold">{item.price.toFixed(0)} zł</span>
+                <span className="text-muted-foreground ml-1">/ {item.unitLabel}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -290,9 +305,7 @@ function ExtraItemModal({
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
-                <span className="w-12 text-center text-xl font-bold">
-                  {quantity}
-                </span>
+                <span className="w-12 text-center text-xl font-bold">{quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
@@ -302,12 +315,27 @@ function ExtraItemModal({
                 </Button>
               </div>
             </div>
+
+            {/* Contents */}
+            {item.contents && item.contents.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3">W zestawie:</h3>
+                <div className="space-y-2">
+                  {item.contents.map((content, idx) => (
+                    <div key={idx} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
+                      <span className="text-sm">{content}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="p-4 border-t border-border bg-background shrink-0">
           <Button onClick={onClose} className="w-full" size="lg">
-            Gotowe
+            Dodaj
           </Button>
         </div>
       </DialogContent>
