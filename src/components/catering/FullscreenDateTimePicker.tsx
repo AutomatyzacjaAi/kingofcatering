@@ -103,7 +103,7 @@ export function FullscreenDateTimePicker({
         </div>
 
         {/* Calendar */}
-        <div className="flex justify-center p-4">
+        <div className="px-4 py-2">
           <Calendar
             mode="single"
             selected={tempDate}
@@ -118,7 +118,7 @@ export function FullscreenDateTimePicker({
               busy: "bg-destructive/20 text-destructive hover:bg-destructive/30",
               available: "bg-primary/10 text-primary hover:bg-primary/20",
             }}
-            className="rounded-lg border p-3 pointer-events-auto"
+            className="w-full pointer-events-auto"
             classNames={{
               months: "flex flex-col",
               month: "space-y-3",
@@ -126,14 +126,14 @@ export function FullscreenDateTimePicker({
               caption_label: "text-base font-semibold",
               nav: "space-x-1 flex items-center",
               nav_button: "h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center",
-              nav_button_previous: "absolute left-1",
-              nav_button_next: "absolute right-1",
+              nav_button_previous: "absolute left-0",
+              nav_button_next: "absolute right-0",
               table: "w-full border-collapse",
-              head_row: "flex",
-              head_cell: "text-muted-foreground rounded-md w-10 font-normal text-xs",
-              row: "flex w-full mt-1",
-              cell: "h-10 w-10 text-center text-sm p-0 relative",
-              day: "h-10 w-10 p-0 font-normal rounded-full transition-colors",
+              head_row: "flex justify-between",
+              head_cell: "text-muted-foreground flex-1 text-center font-normal text-xs",
+              row: "flex w-full mt-1 justify-between",
+              cell: "h-12 flex-1 text-center text-sm p-0 relative flex items-center justify-center",
+              day: "h-12 w-full p-0 font-normal rounded-full transition-colors flex items-center justify-center",
               day_selected: "bg-primary text-primary-foreground hover:bg-primary",
               day_today: "ring-2 ring-primary",
               day_outside: "text-muted-foreground opacity-50",
