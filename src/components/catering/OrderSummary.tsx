@@ -25,7 +25,6 @@ import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ProductModal } from "./ProductModal";
-import { AdminPanel } from "./AdminPanel";
 
 // Map payment method ids to Lucide icons
 const paymentIcons: Record<string, React.ReactNode> = {
@@ -461,11 +460,6 @@ export function OrderSummary({
             * Cena szacunkowa - potwierdzimy szczegóły telefonicznie
           </p>
         </div>
-      </div>
-
-      {/* Admin Panel - mockup */}
-      <div className="mt-8">
-        <AdminPanel />
       </div>
     </div>
   );
