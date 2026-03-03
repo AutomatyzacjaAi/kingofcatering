@@ -339,7 +339,7 @@ function ConfigurableProductContent({
           )}
         </div>
 
-        {quantity > 0 && product.optionGroups.map((group) => {
+        {product.optionGroups.map((group) => {
           const selected = selectedOptions[group.id] || [];
           
           return (
@@ -383,12 +383,6 @@ function ConfigurableProductContent({
             </div>
           );
         })}
-        
-        {quantity === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            Dodaj liczbę osób, aby skonfigurować zestaw
-          </p>
-        )}
       </div>
     </div>
   );
