@@ -1,24 +1,14 @@
 
-## Zmiany w kalendarzu - pełna szerokość, bez ramki
 
-### Co zmieniam
+## Problem
 
-Kalendarz w `FullscreenDateTimePicker.tsx` będzie wyglądał jak integralna część ekranu zamiast "wklejonego" elementu.
+Na desktopie modal ma `md:rounded-2xl`, ale zdjecia hero wewnatrz (`img` w `SimpleProductContent`, `ExpandableProductContent`, `ConfigurableProductContent`) nie maja zaokraglonych gornych rogow — przez co kwadratowy obraz "odstaje" od zaokraglonego modala. Ten sam problem na dole — przycisk "Dodaj" w kontenerze bez zaokraglonych dolnych rogow.
 
-### Szczegóły techniczne
+## Rozwiazanie
 
-**Plik: `src/components/catering/FullscreenDateTimePicker.tsx`**
+1. **Zdjecia hero** — dodac `md:rounded-t-2xl` do wszystkich trzech `<img>` w `ProductModal.tsx` (linie ok. 101, 157, 237) oraz do ich wrappera `<div className="relative">`.
 
-1. **Usunięcie kontenera centrującego** (linia 106):
-   - Zmiana z `<div className="flex justify-center p-4">` na `<div className="px-4 py-2">`
+2. **Dolny pasek z przyciskiem "Dodaj"** — dodac `md:rounded-b-2xl` do `<div className="p-4 border-t ...">` (linia ok. 85).
 
-2. **Usunięcie ramki i zaokrągleń z kalendarza** (linia 121):
-   - Zmiana z `className="rounded-lg border p-3 pointer-events-auto"` na `className="w-full pointer-events-auto"`
+To 4 drobne zmiany CSS w jednym pliku, bez zmian logiki.
 
-3. **Rozciągnięcie komórek na całą szerokość**:
-   - `head_cell`: zmiana z `w-10` na `flex-1 text-center`
-   - `cell`: zmiana z `h-10 w-10` na `h-12 flex-1`
-   - `day`: zmiana z `h-10 w-10` na `h-12 w-full`
-   - `row`: dodanie `justify-between`
-
-Kalendarz wypełni całą szerokość ekranu, dni będą równomiernie rozłożone, a całość będzie wyglądać jak natywna część interfejsu.
