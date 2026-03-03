@@ -85,7 +85,7 @@ export function ProductModal({
           )}
         </div>
 
-        <div className="p-4 border-t border-border bg-background shrink-0">
+        <div className="p-4 border-t border-border bg-background shrink-0 md:rounded-b-2xl">
           <Button onClick={handleClose} className="w-full" size="lg">
             Dodaj
           </Button>
@@ -108,7 +108,7 @@ function SimpleProductContent({
     <div>
       {product.image && (
         <div className="relative">
-          <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
+          <img src={product.image} alt={product.name} className="w-full h-56 object-cover md:rounded-t-2xl" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
       )}
@@ -176,7 +176,7 @@ function ExpandableProductContent({
     <div>
       {product.image && (
         <div className="relative">
-          <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
+          <img src={product.image} alt={product.name} className="w-full h-56 object-cover md:rounded-t-2xl" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
       )}
@@ -266,7 +266,7 @@ function ConfigurableProductContent({
     <div>
       {product.image && (
         <div className="relative">
-          <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
+          <img src={product.image} alt={product.name} className="w-full h-56 object-cover md:rounded-t-2xl" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
       )}
