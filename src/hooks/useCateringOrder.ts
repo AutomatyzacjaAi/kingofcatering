@@ -312,11 +312,4 @@ export function useCateringOrder() {
     updateOrder,
     resetOrder,
   };
-    getSuggestedQuantity,
-    nextStep,
-    prevStep,
-    goToStep,
-    updateOrder,
-    resetOrder,
-  };
 }
