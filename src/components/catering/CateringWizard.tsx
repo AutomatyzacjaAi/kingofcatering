@@ -17,6 +17,7 @@ export function CateringWizard() {
     updateExpandableVariant,
     updateConfigurable,
     updateServingTime,
+    updateProductNotes,
     updateExtra,
     updatePackaging,
     updateWaiterService,
@@ -72,10 +73,12 @@ export function CateringWizard() {
             expandableQuantities={order.expandableQuantities}
             configurableData={order.configurableData}
             servingTimes={order.servingTimes}
+            productNotes={order.productNotes}
             onSimpleQuantityChange={updateSimpleQuantity}
             onExpandableVariantChange={updateExpandableVariant}
             onConfigurableChange={updateConfigurable}
             onServingTimeChange={updateServingTime}
+            onProductNotesChange={updateProductNotes}
           />
         );
       case 2:
