@@ -444,6 +444,8 @@ function ConfigurableProductContent({
             </div>
           );
         })}
+
+        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
       </div>
     </div>
   );
