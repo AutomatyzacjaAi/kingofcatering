@@ -136,7 +136,7 @@ const SettingsFormView = () => {
         <p className="text-muted-foreground text-sm">Zarządzaj kategoriami produktów i ich dostępnością dla rodzajów wydarzeń</p>
       </div>
 
-      <div className="space-y-6 max-w-3xl">
+      <div className="space-y-6">
         {/* Categories */}
         <Card>
           <CardHeader>

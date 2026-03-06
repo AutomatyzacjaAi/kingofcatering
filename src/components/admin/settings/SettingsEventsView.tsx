@@ -133,7 +133,7 @@ const SettingsEventsView = () => {
         <p className="text-muted-foreground text-sm">Zarządzaj typami wydarzeń dostępnymi w formularzu zamówienia</p>
       </div>
 
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Lista wydarzeń</CardTitle>
