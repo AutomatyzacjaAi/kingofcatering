@@ -10,7 +10,7 @@ type LucideIconName = keyof typeof icons;
 const popularIcons: LucideIconName[] = [
   "Heart", "Gift", "Briefcase", "Music", "CalendarDays", "Presentation",
   "PartyPopper", "Cake", "GlassWater", "Utensils", "Baby", "Church",
-  "Building2", "Mic2", "Trophy", "Star", "Users", "Handshake",
+  "Building2", "Mic", "Trophy", "Star", "Users", "Handshake",
   "Sparkles", "Wine", "TreePine", "Sun", "Moon", "Camera",
   "Palette", "Flower2", "Crown", "Gem", "Ribbon", "Flag",
   "Mic", "GraduationCap", "Plane", "Tent", "Drama", "Glasses",
