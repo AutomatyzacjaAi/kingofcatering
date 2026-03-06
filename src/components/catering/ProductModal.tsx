@@ -71,6 +71,8 @@ export function ProductModal({
               onQuantityChange={(qty) => onSimpleQuantityChange?.(product.id, qty)}
               servingTime={servingTime}
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
+              notes={productNotes}
+              onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
             />
           )}
           {product.type === "expandable" && (
@@ -82,6 +84,8 @@ export function ProductModal({
               }
               servingTime={servingTime}
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
+              notes={productNotes}
+              onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
             />
           )}
           {product.type === "configurable" && (
@@ -95,6 +99,8 @@ export function ProductModal({
               }
               servingTime={servingTime}
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
+              notes={productNotes}
+              onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
             />
           )}
         </div>
@@ -186,12 +192,16 @@ function SimpleProductContent({
   onQuantityChange,
   servingTime,
   onServingTimeChange,
+  notes,
+  onNotesChange,
 }: {
   product: SimpleProduct;
   quantity: number;
   onQuantityChange: (qty: number) => void;
   servingTime: string;
   onServingTimeChange: (time: string) => void;
+  notes: string;
+  onNotesChange: (n: string) => void;
 }) {
   return (
     <div>
@@ -248,7 +258,7 @@ function SimpleProductContent({
           </div>
         )}
 
-        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
+        <ServingTimeAndNotes time={servingTime} onTimeChange={onServingTimeChange} notes={notes} onNotesChange={onNotesChange} />
       </div>
     </div>
   );
@@ -260,12 +270,16 @@ function ExpandableProductContent({
   onVariantQuantityChange,
   servingTime,
   onServingTimeChange,
+  notes,
+  onNotesChange,
 }: {
   product: ExpandableProduct;
   quantities: Record<string, number>;
   onVariantQuantityChange: (variantId: string, qty: number) => void;
   servingTime: string;
   onServingTimeChange: (time: string) => void;
+  notes: string;
+  onNotesChange: (n: string) => void;
 }) {
   return (
     <div>
@@ -319,7 +333,7 @@ function ExpandableProductContent({
           );
         })}
 
-        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
+        <ServingTimeAndNotes time={servingTime} onTimeChange={onServingTimeChange} notes={notes} onNotesChange={onNotesChange} />
       </div>
     </div>
   );
@@ -333,6 +347,8 @@ function ConfigurableProductContent({
   onOptionsChange,
   servingTime,
   onServingTimeChange,
+  notes,
+  onNotesChange,
 }: {
   product: ConfigurableProduct;
   quantity: number;
@@ -341,6 +357,8 @@ function ConfigurableProductContent({
   onOptionsChange: (groupId: string, optionIds: string[]) => void;
   servingTime: string;
   onServingTimeChange: (time: string) => void;
+  notes: string;
+  onNotesChange: (n: string) => void;
 }) {
   const toggleOption = (groupId: string, optionId: string) => {
     const group = product.optionGroups.find(g => g.id === groupId);
@@ -485,7 +503,7 @@ function ConfigurableProductContent({
           );
         })}
 
-        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
+        <ServingTimeAndNotes time={servingTime} onTimeChange={onServingTimeChange} notes={notes} onNotesChange={onNotesChange} />
       </div>
     </div>
   );
