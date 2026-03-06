@@ -107,11 +107,20 @@ export function ProductModal({
 
 // Shared serving time picker
 function ServingTimePicker({ value, onChange }: { value: string; onChange: (time: string) => void }) {
-  const timeSlots: string[] = [];
-  for (let h = 8; h <= 22; h++) {
-    timeSlots.push(`${h.toString().padStart(2, "0")}:00`);
-    timeSlots.push(`${h.toString().padStart(2, "0")}:30`);
-  }
+  const hours = Array.from({ length: 15 }, (_, i) => (i + 8).toString().padStart(2, "0"));
+  const minutes = ["00", "15", "30", "45"];
+
+  const [selectedHour, selectedMinute] = value ? value.split(":") : ["", ""];
+
+  const handleHourChange = (h: string) => {
+    const m = selectedMinute || "00";
+    onChange(`${h}:${m}`);
+  };
+
+  const handleMinuteChange = (m: string) => {
+    const h = selectedHour || "08";
+    onChange(`${h}:${m}`);
+  };
 
   return (
     <div className="p-4 bg-muted/50 rounded-xl">
@@ -119,22 +128,28 @@ function ServingTimePicker({ value, onChange }: { value: string; onChange: (time
         <Clock className="w-4 h-4 text-muted-foreground" />
         <h3 className="font-semibold text-sm">Godzina podania</h3>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {timeSlots.map((time) => (
-          <button
-            key={time}
-            type="button"
-            onClick={() => onChange(value === time ? "" : time)}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
-              value === time
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background border-border text-foreground hover:border-primary/50"
-            )}
-          >
-            {time}
-          </button>
-        ))}
+      <div className="flex items-center gap-2">
+        <select
+          value={selectedHour}
+          onChange={(e) => handleHourChange(e.target.value)}
+          className="flex-1 h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="" disabled>Godz.</option>
+          {hours.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+        <span className="text-lg font-bold text-muted-foreground">:</span>
+        <select
+          value={selectedMinute}
+          onChange={(e) => handleMinuteChange(e.target.value)}
+          className="flex-1 h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="" disabled>Min.</option>
+          {minutes.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
       </div>
     </div>
   );
