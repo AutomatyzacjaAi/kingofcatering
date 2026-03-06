@@ -201,6 +201,17 @@ export function useCateringOrder() {
     });
   }, []);
 
+  // Serving time per product
+  const updateServingTime = useCallback((productId: string, time: string) => {
+    setOrder((prev) => ({
+      ...prev,
+      servingTimes: {
+        ...prev.servingTimes,
+        [productId]: time,
+      },
+    }));
+  }, []);
+
   // Extras handlers
   const updateExtra = useCallback((extraId: string, quantity: number) => {
     setOrder((prev) => ({
