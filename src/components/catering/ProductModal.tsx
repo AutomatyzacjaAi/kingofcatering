@@ -291,12 +291,16 @@ function ConfigurableProductContent({
   selectedOptions,
   onQuantityChange,
   onOptionsChange,
+  servingTime,
+  onServingTimeChange,
 }: {
   product: ConfigurableProduct;
   quantity: number;
   selectedOptions: Record<string, string[]>;
   onQuantityChange: (qty: number) => void;
   onOptionsChange: (groupId: string, optionIds: string[]) => void;
+  servingTime: string;
+  onServingTimeChange: (time: string) => void;
 }) {
   const toggleOption = (groupId: string, optionId: string) => {
     const group = product.optionGroups.find(g => g.id === groupId);
