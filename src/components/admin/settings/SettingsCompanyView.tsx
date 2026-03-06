@@ -20,7 +20,7 @@ const SettingsCompanyView = () => {
         <p className="text-muted-foreground text-sm">Podstawowe informacje o firmie</p>
       </div>
 
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Informacje ogólne</CardTitle>
