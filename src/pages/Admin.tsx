@@ -7,6 +7,7 @@ import SettingsOrdersView from "@/components/admin/settings/SettingsOrdersView";
 import SettingsEventsView from "@/components/admin/settings/SettingsEventsView";
 import SettingsCalendarView from "@/components/admin/settings/SettingsCalendarView";
 import SettingsDishesView from "@/components/admin/settings/SettingsDishesView";
+import SettingsFormView from "@/components/admin/settings/SettingsFormView";
 
 const Admin = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>("orders");
@@ -22,6 +23,7 @@ const Admin = () => {
         {activeSection === "settings-events" && <SettingsEventsView />}
         {activeSection === "settings-calendar" && <SettingsCalendarView />}
         {activeSection === "settings-dishes" && <SettingsDishesView />}
+        {activeSection === "settings-form" && <SettingsFormView />}
       </main>
     </div>
   );
