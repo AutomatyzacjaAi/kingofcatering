@@ -6,34 +6,79 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { type ClientData, mockClients as initialClients } from "@/data/clientsData";
+import ClientDetailView from "./ClientDetailView";
+import ClientFormView from "./ClientFormView";
+import { toast } from "@/components/ui/sonner";
 
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  orders: number;
-  totalSpent: string;
-  lastOrder: string;
-}
-
-const mockClients: Client[] = [
-  { id: "1", name: "Anna Kowalska", email: "anna.k@email.pl", phone: "+48 500 100 200", orders: 5, totalSpent: "8 420,00 zł", lastOrder: "28 sty 2026" },
-  { id: "2", name: "Jan Nowak", email: "jan.nowak@email.pl", phone: "+48 600 300 400", orders: 2, totalSpent: "1 200,00 zł", lastOrder: "21 sty 2026" },
-  { id: "3", name: "Maria Wiśniewska", email: "maria.w@email.pl", phone: "+48 700 500 600", orders: 8, totalSpent: "22 350,00 zł", lastOrder: "28 sty 2026" },
-  { id: "4", name: "Piotr Zieliński", email: "piotr.z@email.pl", phone: "+48 800 700 800", orders: 1, totalSpent: "246,00 zł", lastOrder: "21 sty 2026" },
-  { id: "5", name: "Katarzyna Wójcik", email: "k.wojcik@email.pl", phone: "+48 510 220 330", orders: 3, totalSpent: "4 890,00 zł", lastOrder: "26 sty 2026" },
-  { id: "6", name: "Tomasz Kamiński", email: "t.kaminski@email.pl", phone: "+48 660 440 550", orders: 12, totalSpent: "45 200,00 zł", lastOrder: "13 sty 2026" },
-];
+type View = "list" | "detail" | "add" | "edit";
 
 const ClientsView = () => {
+  const [view, setView] = useState<View>("list");
+  const [clients, setClients] = useState<ClientData[]>(initialClients);
+  const [selectedClient, setSelectedClient] = useState<ClientData | null>(null);
   const [search, setSearch] = useState("");
 
-  const filtered = mockClients.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase())
+  const filtered = clients.filter((c) =>
+    `${c.firstName} ${c.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+    c.email.toLowerCase().includes(search.toLowerCase()) ||
+    c.companyName.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleView = (client: ClientData) => {
+    setSelectedClient(client);
+    setView("detail");
+  };
+
+  const handleEdit = (client: ClientData) => {
+    setSelectedClient(client);
+    setView("edit");
+  };
+
+  const handleAdd = () => {
+    setSelectedClient(null);
+    setView("add");
+  };
+
+  const handleSave = (client: ClientData) => {
+    setClients((prev) => {
+      const exists = prev.find((c) => c.id === client.id);
+      if (exists) {
+        return prev.map((c) => (c.id === client.id ? client : c));
+      }
+      return [...prev, client];
+    });
+    setSelectedClient(client);
+    setView("detail");
+    toast.success(view === "edit" ? "Klient zaktualizowany" : "Klient dodany");
+  };
+
+  const handleDelete = (client: ClientData) => {
+    setClients((prev) => prev.filter((c) => c.id !== client.id));
+    toast.success("Klient usunięty");
+  };
+
+  const handleBack = () => {
+    setView("list");
+    setSelectedClient(null);
+  };
+
+  // Sub-views
+  if (view === "detail" && selectedClient) {
+    return <ClientDetailView client={selectedClient} onBack={handleBack} onEdit={handleEdit} />;
+  }
+
+  if (view === "add" || (view === "edit" && selectedClient)) {
+    return (
+      <ClientFormView
+        client={view === "edit" ? selectedClient : null}
+        onBack={handleBack}
+        onSave={handleSave}
+      />
+    );
+  }
+
+  // List view
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -41,7 +86,7 @@ const ClientsView = () => {
           <h1 className="text-2xl font-bold text-foreground">Klienci</h1>
           <p className="text-muted-foreground text-sm">Zarządzaj bazą klientów</p>
         </div>
-        <Button className="gap-2">+ Dodaj klienta</Button>
+        <Button className="gap-2" onClick={handleAdd}>+ Dodaj klienta</Button>
       </div>
 
       <div className="relative max-w-md mb-4">
@@ -60,6 +105,7 @@ const ClientsView = () => {
             <TableRow className="hover:bg-transparent">
               <TableHead className="font-semibold text-foreground">Klient</TableHead>
               <TableHead className="font-semibold text-foreground">Telefon</TableHead>
+              <TableHead className="font-semibold text-foreground">Firma</TableHead>
               <TableHead className="font-semibold text-foreground">Zamówienia</TableHead>
               <TableHead className="font-semibold text-foreground">Łączna kwota</TableHead>
               <TableHead className="font-semibold text-foreground">Ostatnie zamówienie</TableHead>
@@ -68,32 +114,38 @@ const ClientsView = () => {
           </TableHeader>
           <TableBody>
             {filtered.map((client) => (
-              <TableRow key={client.id}>
+              <TableRow key={client.id} className="cursor-pointer" onClick={() => handleView(client)}>
                 <TableCell>
                   <div>
-                    <div className="font-medium text-foreground">{client.name}</div>
+                    <div className="font-medium text-foreground">{client.firstName} {client.lastName}</div>
                     <div className="text-xs text-muted-foreground">{client.email}</div>
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{client.phone}</TableCell>
+                <TableCell className="text-muted-foreground">{client.companyName || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{client.orders}</TableCell>
                 <TableCell className="font-semibold text-foreground">{client.totalSpent}</TableCell>
                 <TableCell className="text-muted-foreground">{client.lastOrder}</TableCell>
                 <TableCell>
-                  <div className="flex items-center justify-end gap-1">
-                    {[Eye, Pencil, Trash2].map((Icon, i) => (
-                      <button
-                        key={i}
-                        className={cn(
-                          "p-1.5 rounded-md transition-colors",
-                          Icon === Trash2
-                            ? "text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        )}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleView(client)}
+                      className="p-1.5 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(client)}
+                      className="p-1.5 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(client)}
+                      className="p-1.5 rounded-md transition-colors text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </TableCell>
               </TableRow>
