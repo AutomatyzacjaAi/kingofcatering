@@ -23,6 +23,8 @@ type ProductModalProps = {
   onConfigurableChange?: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
   servingTime?: string;
   onServingTimeChange?: (productId: string, time: string) => void;
+  productNotes?: string;
+  onProductNotesChange?: (productId: string, notes: string) => void;
 };
 
 export function ProductModal({
@@ -38,6 +40,8 @@ export function ProductModal({
   onConfigurableChange,
   servingTime = "",
   onServingTimeChange,
+  productNotes = "",
+  onProductNotesChange,
 }: ProductModalProps) {
   if (!product) return null;
 
@@ -67,6 +71,8 @@ export function ProductModal({
               onQuantityChange={(qty) => onSimpleQuantityChange?.(product.id, qty)}
               servingTime={servingTime}
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
+              notes={productNotes}
+              onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
             />
           )}
           {product.type === "expandable" && (
@@ -78,6 +84,8 @@ export function ProductModal({
               }
               servingTime={servingTime}
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
+              notes={productNotes}
+              onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
             />
           )}
           {product.type === "configurable" && (
@@ -91,6 +99,8 @@ export function ProductModal({
               }
               servingTime={servingTime}
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
+              notes={productNotes}
+              onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
             />
           )}
         </div>
@@ -105,51 +115,72 @@ export function ProductModal({
   );
 }
 
-// Shared serving time picker
-function ServingTimePicker({ value, onChange }: { value: string; onChange: (time: string) => void }) {
+// Shared serving time + notes picker
+function ServingTimeAndNotes({ 
+  time, 
+  onTimeChange, 
+  notes, 
+  onNotesChange 
+}: { 
+  time: string; 
+  onTimeChange: (t: string) => void;
+  notes: string;
+  onNotesChange: (n: string) => void;
+}) {
   const hours = Array.from({ length: 15 }, (_, i) => (i + 8).toString().padStart(2, "0"));
   const minutes = ["00", "15", "30", "45"];
 
-  const [selectedHour, selectedMinute] = value ? value.split(":") : ["", ""];
+  const [selectedHour, selectedMinute] = time ? time.split(":") : ["", ""];
 
   const handleHourChange = (h: string) => {
     const m = selectedMinute || "00";
-    onChange(`${h}:${m}`);
+    onTimeChange(`${h}:${m}`);
   };
 
   const handleMinuteChange = (m: string) => {
     const h = selectedHour || "08";
-    onChange(`${h}:${m}`);
+    onTimeChange(`${h}:${m}`);
   };
 
   return (
-    <div className="p-4 bg-muted/50 rounded-xl">
-      <div className="flex items-center gap-2 mb-3">
-        <Clock className="w-4 h-4 text-muted-foreground" />
-        <h3 className="font-semibold text-sm">Godzina podania</h3>
+    <div className="p-4 bg-muted/50 rounded-xl space-y-4">
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Clock className="w-4 h-4 text-muted-foreground" />
+          <h3 className="font-semibold text-sm">Godzina podania</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedHour}
+            onChange={(e) => handleHourChange(e.target.value)}
+            className="flex-1 h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="" disabled>Godz.</option>
+            {hours.map((h) => (
+              <option key={h} value={h}>{h}</option>
+            ))}
+          </select>
+          <span className="text-lg font-bold text-muted-foreground">:</span>
+          <select
+            value={selectedMinute}
+            onChange={(e) => handleMinuteChange(e.target.value)}
+            className="flex-1 h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="" disabled>Min.</option>
+            {minutes.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <select
-          value={selectedHour}
-          onChange={(e) => handleHourChange(e.target.value)}
-          className="flex-1 h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="" disabled>Godz.</option>
-          {hours.map((h) => (
-            <option key={h} value={h}>{h}</option>
-          ))}
-        </select>
-        <span className="text-lg font-bold text-muted-foreground">:</span>
-        <select
-          value={selectedMinute}
-          onChange={(e) => handleMinuteChange(e.target.value)}
-          className="flex-1 h-10 rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="" disabled>Min.</option>
-          {minutes.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
+      <div>
+        <h3 className="font-semibold text-sm mb-2">Uwagi</h3>
+        <textarea
+          value={notes}
+          onChange={(e) => onNotesChange(e.target.value)}
+          placeholder="Dodatkowe uwagi do tego produktu..."
+          className="w-full min-h-[80px] rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none placeholder:text-muted-foreground"
+        />
       </div>
     </div>
   );
@@ -161,12 +192,16 @@ function SimpleProductContent({
   onQuantityChange,
   servingTime,
   onServingTimeChange,
+  notes,
+  onNotesChange,
 }: {
   product: SimpleProduct;
   quantity: number;
   onQuantityChange: (qty: number) => void;
   servingTime: string;
   onServingTimeChange: (time: string) => void;
+  notes: string;
+  onNotesChange: (n: string) => void;
 }) {
   return (
     <div>
@@ -223,7 +258,7 @@ function SimpleProductContent({
           </div>
         )}
 
-        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
+        <ServingTimeAndNotes time={servingTime} onTimeChange={onServingTimeChange} notes={notes} onNotesChange={onNotesChange} />
       </div>
     </div>
   );
@@ -235,12 +270,16 @@ function ExpandableProductContent({
   onVariantQuantityChange,
   servingTime,
   onServingTimeChange,
+  notes,
+  onNotesChange,
 }: {
   product: ExpandableProduct;
   quantities: Record<string, number>;
   onVariantQuantityChange: (variantId: string, qty: number) => void;
   servingTime: string;
   onServingTimeChange: (time: string) => void;
+  notes: string;
+  onNotesChange: (n: string) => void;
 }) {
   return (
     <div>
@@ -294,7 +333,7 @@ function ExpandableProductContent({
           );
         })}
 
-        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
+        <ServingTimeAndNotes time={servingTime} onTimeChange={onServingTimeChange} notes={notes} onNotesChange={onNotesChange} />
       </div>
     </div>
   );
@@ -308,6 +347,8 @@ function ConfigurableProductContent({
   onOptionsChange,
   servingTime,
   onServingTimeChange,
+  notes,
+  onNotesChange,
 }: {
   product: ConfigurableProduct;
   quantity: number;
@@ -316,6 +357,8 @@ function ConfigurableProductContent({
   onOptionsChange: (groupId: string, optionIds: string[]) => void;
   servingTime: string;
   onServingTimeChange: (time: string) => void;
+  notes: string;
+  onNotesChange: (n: string) => void;
 }) {
   const toggleOption = (groupId: string, optionId: string) => {
     const group = product.optionGroups.find(g => g.id === groupId);
@@ -460,7 +503,7 @@ function ConfigurableProductContent({
           );
         })}
 
-        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
+        <ServingTimeAndNotes time={servingTime} onTimeChange={onServingTimeChange} notes={notes} onNotesChange={onNotesChange} />
       </div>
     </div>
   );
