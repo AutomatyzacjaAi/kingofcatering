@@ -44,7 +44,7 @@ const defaultEvents: EventType[] = [
 // ===== ICON PICKER (reused) =====
 const popularIcons: LucideIconName[] = [
   "Salad", "Cookie", "UtensilsCrossed", "Pizza", "Sandwich", "Soup",
-  "Beef", "Fish", "Egg", "Apple", "CakeSlice", "IceCream",
+  "Beef", "Fish", "Egg", "Apple", "CakeSlice", "Candy",
   "Wine", "Coffee", "GlassWater", "Drumstick", "Popcorn", "Cherry",
 ];
 
