@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { Plus, Minus, AlertTriangle, X } from "lucide-react";
+import { Plus, Minus, AlertTriangle, X, Clock } from "lucide-react";
 import type { Product, SimpleProduct, ExpandableProduct, ConfigurableProduct } from "@/data/products";
 
 type ProductModalProps = {
@@ -21,6 +21,8 @@ type ProductModalProps = {
   configurableQuantity?: number;
   configurableOptions?: Record<string, string[]>;
   onConfigurableChange?: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
+  servingTime?: string;
+  onServingTimeChange?: (productId: string, time: string) => void;
 };
 
 export function ProductModal({
@@ -34,6 +36,8 @@ export function ProductModal({
   configurableQuantity = 0,
   configurableOptions = {},
   onConfigurableChange,
+  servingTime = "",
+  onServingTimeChange,
 }: ProductModalProps) {
   if (!product) return null;
 
@@ -61,6 +65,8 @@ export function ProductModal({
               product={product}
               quantity={simpleQuantity}
               onQuantityChange={(qty) => onSimpleQuantityChange?.(product.id, qty)}
+              servingTime={servingTime}
+              onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
             />
           )}
           {product.type === "expandable" && (
@@ -70,6 +76,8 @@ export function ProductModal({
               onVariantQuantityChange={(variantId, qty) => 
                 onExpandableVariantChange?.(product.id, variantId, qty)
               }
+              servingTime={servingTime}
+              onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
             />
           )}
           {product.type === "configurable" && (
@@ -81,6 +89,8 @@ export function ProductModal({
               onOptionsChange={(groupId, optionIds) => 
                 onConfigurableChange?.(product.id, configurableQuantity, groupId, optionIds)
               }
+              servingTime={servingTime}
+              onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
             />
           )}
         </div>
@@ -95,14 +105,53 @@ export function ProductModal({
   );
 }
 
+// Shared serving time picker
+function ServingTimePicker({ value, onChange }: { value: string; onChange: (time: string) => void }) {
+  const timeSlots: string[] = [];
+  for (let h = 8; h <= 22; h++) {
+    timeSlots.push(`${h.toString().padStart(2, "0")}:00`);
+    timeSlots.push(`${h.toString().padStart(2, "0")}:30`);
+  }
+
+  return (
+    <div className="p-4 bg-muted/50 rounded-xl">
+      <div className="flex items-center gap-2 mb-3">
+        <Clock className="w-4 h-4 text-muted-foreground" />
+        <h3 className="font-semibold text-sm">Godzina podania</h3>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {timeSlots.map((time) => (
+          <button
+            key={time}
+            type="button"
+            onClick={() => onChange(value === time ? "" : time)}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
+              value === time
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background border-border text-foreground hover:border-primary/50"
+            )}
+          >
+            {time}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SimpleProductContent({
   product,
   quantity,
   onQuantityChange,
+  servingTime,
+  onServingTimeChange,
 }: {
   product: SimpleProduct;
   quantity: number;
   onQuantityChange: (qty: number) => void;
+  servingTime: string;
+  onServingTimeChange: (time: string) => void;
 }) {
   return (
     <div>
@@ -158,6 +207,8 @@ function SimpleProductContent({
             </span>
           </div>
         )}
+
+        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
       </div>
     </div>
   );
@@ -167,10 +218,14 @@ function ExpandableProductContent({
   product,
   quantities,
   onVariantQuantityChange,
+  servingTime,
+  onServingTimeChange,
 }: {
   product: ExpandableProduct;
   quantities: Record<string, number>;
   onVariantQuantityChange: (variantId: string, qty: number) => void;
+  servingTime: string;
+  onServingTimeChange: (time: string) => void;
 }) {
   return (
     <div>
@@ -223,6 +278,8 @@ function ExpandableProductContent({
             </div>
           );
         })}
+
+        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
       </div>
     </div>
   );
@@ -234,12 +291,16 @@ function ConfigurableProductContent({
   selectedOptions,
   onQuantityChange,
   onOptionsChange,
+  servingTime,
+  onServingTimeChange,
 }: {
   product: ConfigurableProduct;
   quantity: number;
   selectedOptions: Record<string, string[]>;
   onQuantityChange: (qty: number) => void;
   onOptionsChange: (groupId: string, optionIds: string[]) => void;
+  servingTime: string;
+  onServingTimeChange: (time: string) => void;
 }) {
   const toggleOption = (groupId: string, optionId: string) => {
     const group = product.optionGroups.find(g => g.id === groupId);
@@ -383,6 +444,8 @@ function ConfigurableProductContent({
             </div>
           );
         })}
+
+        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
       </div>
     </div>
   );

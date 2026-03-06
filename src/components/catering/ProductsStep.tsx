@@ -15,18 +15,22 @@ type ProductsStepProps = {
   simpleQuantities: Record<string, number>;
   expandableQuantities: Record<string, Record<string, number>>;
   configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>;
+  servingTimes: Record<string, string>;
   onSimpleQuantityChange: (productId: string, quantity: number) => void;
   onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
   onConfigurableChange: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
+  onServingTimeChange: (productId: string, time: string) => void;
 };
 
 export function ProductsStep({
   simpleQuantities,
   expandableQuantities,
   configurableData,
+  servingTimes,
   onSimpleQuantityChange,
   onExpandableVariantChange,
   onConfigurableChange,
+  onServingTimeChange,
 }: ProductsStepProps) {
   const [activeCategory, setActiveCategory] = useState(categories[0].id);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -162,6 +166,8 @@ export function ProductsStep({
         configurableQuantity={selectedProduct?.type === "configurable" ? configurableData[selectedProduct.id]?.quantity || 0 : 0}
         configurableOptions={selectedProduct?.type === "configurable" ? configurableData[selectedProduct.id]?.options || {} : {}}
         onConfigurableChange={onConfigurableChange}
+        servingTime={selectedProduct ? servingTimes[selectedProduct.id] || "" : ""}
+        onServingTimeChange={onServingTimeChange}
       />
     </div>
   );
