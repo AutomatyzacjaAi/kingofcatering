@@ -19,6 +19,7 @@ export type CateringOrder = {
   configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>;
   // Serving times per product
   servingTimes: Record<string, string>;
+  productNotes: Record<string, string>;
   // Extras
   selectedExtras: Record<string, number>;
   selectedPackaging: string | null;
@@ -49,6 +50,7 @@ const initialOrder: CateringOrder = {
   expandableQuantities: {},
   configurableData: {},
   servingTimes: {},
+  productNotes: {},
   selectedExtras: {},
   selectedPackaging: null,
   packagingPersonCount: 0,
@@ -212,6 +214,17 @@ export function useCateringOrder() {
     }));
   }, []);
 
+  // Product notes
+  const updateProductNotes = useCallback((productId: string, notes: string) => {
+    setOrder((prev) => ({
+      ...prev,
+      productNotes: {
+        ...prev.productNotes,
+        [productId]: notes,
+      },
+    }));
+  }, []);
+
   // Extras handlers
   const updateExtra = useCallback((extraId: string, quantity: number) => {
     setOrder((prev) => ({
@@ -301,6 +314,7 @@ export function useCateringOrder() {
     updateExpandableVariant,
     updateConfigurable,
     updateServingTime,
+    updateProductNotes,
     updateExtra,
     updatePackaging,
     updateWaiterService,
