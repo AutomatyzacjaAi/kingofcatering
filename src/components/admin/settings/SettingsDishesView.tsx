@@ -79,6 +79,18 @@ interface ConfigurableSet {
   groups: ConfigGroup[];
 }
 
+// Extra item (e.g. dekoracja, podgrzewacze, świece LED)
+interface ExtraItem {
+  id: string;
+  name: string;
+  description: string;
+  image: string | null;
+  priceNetto: number;
+  vatRate: number;
+  priceBrutto: number;
+  foodCost: number;
+}
+
 // ===== MOCK DATA =====
 const mockIngredients: Ingredient[] = [
   { id: "i1", name: "Kurczak", unit: "g", allergens: [], pricePerUnit: 0.025 },
