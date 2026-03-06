@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { Plus, Minus, AlertTriangle, X } from "lucide-react";
+import { Plus, Minus, AlertTriangle, X, Clock } from "lucide-react";
 import type { Product, SimpleProduct, ExpandableProduct, ConfigurableProduct } from "@/data/products";
 
 type ProductModalProps = {
@@ -21,6 +21,8 @@ type ProductModalProps = {
   configurableQuantity?: number;
   configurableOptions?: Record<string, string[]>;
   onConfigurableChange?: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
+  servingTime?: string;
+  onServingTimeChange?: (productId: string, time: string) => void;
 };
 
 export function ProductModal({
@@ -34,6 +36,8 @@ export function ProductModal({
   configurableQuantity = 0,
   configurableOptions = {},
   onConfigurableChange,
+  servingTime = "",
+  onServingTimeChange,
 }: ProductModalProps) {
   if (!product) return null;
 
@@ -61,6 +65,8 @@ export function ProductModal({
               product={product}
               quantity={simpleQuantity}
               onQuantityChange={(qty) => onSimpleQuantityChange?.(product.id, qty)}
+              servingTime={servingTime}
+              onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
             />
           )}
           {product.type === "expandable" && (
@@ -70,6 +76,8 @@ export function ProductModal({
               onVariantQuantityChange={(variantId, qty) => 
                 onExpandableVariantChange?.(product.id, variantId, qty)
               }
+              servingTime={servingTime}
+              onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
             />
           )}
           {product.type === "configurable" && (
@@ -81,6 +89,8 @@ export function ProductModal({
               onOptionsChange={(groupId, optionIds) => 
                 onConfigurableChange?.(product.id, configurableQuantity, groupId, optionIds)
               }
+              servingTime={servingTime}
+              onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
             />
           )}
         </div>
