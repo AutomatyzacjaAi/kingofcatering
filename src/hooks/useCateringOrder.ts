@@ -17,6 +17,8 @@ export type CateringOrder = {
   simpleQuantities: Record<string, number>;
   expandableQuantities: Record<string, Record<string, number>>;
   configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>;
+  // Serving times per product
+  servingTimes: Record<string, string>;
   // Extras
   selectedExtras: Record<string, number>;
   selectedPackaging: string | null;
