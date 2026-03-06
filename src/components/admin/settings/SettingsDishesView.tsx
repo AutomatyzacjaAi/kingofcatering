@@ -169,6 +169,12 @@ const mockConfigSets: ConfigurableSet[] = [
   },
 ];
 
+const mockExtras: ExtraItem[] = [
+  { id: "ex1", name: "Dekoracja stołu", description: "Elegancka dekoracja kwiatowa na stół", image: null, priceNetto: 120, vatRate: 23, priceBrutto: 147.60, foodCost: 45 },
+  { id: "ex2", name: "Świece LED", description: "Zestaw 10 świec LED na stół", image: null, priceNetto: 35, vatRate: 23, priceBrutto: 43.05, foodCost: 12 },
+  { id: "ex3", name: "Podgrzewacze", description: "Podgrzewacze do dań w zestawach", image: null, priceNetto: 80, vatRate: 23, priceBrutto: 98.40, foodCost: 30 },
+];
+
 const VAT_RATES = [0, 5, 8, 23];
 
 // ===== IMAGE UPLOAD PLACEHOLDER =====
