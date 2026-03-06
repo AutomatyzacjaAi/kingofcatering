@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Pencil, Search, Apple, CookingPot, UtensilsCrossed, X, Check, ImagePlus, Package, Settings2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, Apple, CookingPot, UtensilsCrossed, X, Check, ImagePlus, Package, Settings2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
