@@ -1,32 +1,116 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2, GripVertical, icons } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type LucideIconName = keyof typeof icons;
+
+const popularIcons: LucideIconName[] = [
+  "Heart", "Gift", "Briefcase", "Music", "CalendarDays", "Presentation",
+  "PartyPopper", "Cake", "GlassWater", "Utensils", "Baby", "Church",
+  "Building2", "Mic2", "Trophy", "Star", "Users", "Handshake",
+  "Sparkles", "Wine", "TreePine", "Sun", "Moon", "Camera",
+  "Palette", "Flower2", "Crown", "Gem", "Ribbon", "Flag",
+];
 
 interface EventType {
   id: string;
   name: string;
-  icon: string;
+  icon: LucideIconName;
 }
 
 const defaultEvents: EventType[] = [
-  { id: "1", name: "Wesele", icon: "💒" },
-  { id: "2", name: "Konferencja", icon: "🎤" },
-  { id: "3", name: "Urodziny", icon: "🎂" },
-  { id: "4", name: "Spotkanie firmowe", icon: "💼" },
-  { id: "5", name: "Impreza", icon: "🎉" },
-  { id: "6", name: "Inne", icon: "📋" },
+  { id: "1", name: "Wesele", icon: "Heart" },
+  { id: "2", name: "Konferencja", icon: "Presentation" },
+  { id: "3", name: "Urodziny", icon: "Gift" },
+  { id: "4", name: "Spotkanie firmowe", icon: "Briefcase" },
+  { id: "5", name: "Impreza", icon: "Music" },
+  { id: "6", name: "Inne", icon: "CalendarDays" },
 ];
+
+const IconPicker = ({ value, onChange }: { value: LucideIconName; onChange: (icon: LucideIconName) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const CurrentIcon = icons[value];
+
+  const allIcons = search.trim()
+    ? (Object.keys(icons) as LucideIconName[]).filter((name) =>
+        name.toLowerCase().includes(search.toLowerCase())
+      ).slice(0, 40)
+    : popularIcons;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors",
+          open && "bg-muted ring-1 ring-primary"
+        )}
+      >
+        <CurrentIcon className="w-4 h-4 text-foreground" />
+      </button>
+
+      {open && (
+        <div className="absolute top-11 left-0 z-50 w-72 bg-popover border border-border rounded-xl shadow-lg p-3 space-y-2">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Szukaj ikony..."
+            className="h-8 text-xs"
+            autoFocus
+          />
+          <div className="grid grid-cols-8 gap-1 max-h-40 overflow-y-auto">
+            {allIcons.map((name) => {
+              const Icon = icons[name];
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => { onChange(name); setOpen(false); setSearch(""); }}
+                  className={cn(
+                    "w-8 h-8 rounded-md flex items-center justify-center hover:bg-accent transition-colors",
+                    value === name && "bg-primary text-primary-foreground"
+                  )}
+                  title={name}
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              );
+            })}
+          </div>
+          {allIcons.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-2">Brak wyników</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SettingsEventsView = () => {
   const [events, setEvents] = useState<EventType[]>(defaultEvents);
   const [newEventName, setNewEventName] = useState("");
+  const [newEventIcon, setNewEventIcon] = useState<LucideIconName>("CalendarDays");
 
   const addEvent = () => {
     if (!newEventName.trim()) return;
-    setEvents([...events, { id: Date.now().toString(), name: newEventName.trim(), icon: "📋" }]);
+    setEvents([...events, { id: Date.now().toString(), name: newEventName.trim(), icon: newEventIcon }]);
     setNewEventName("");
+    setNewEventIcon("CalendarDays");
   };
 
   const removeEvent = (id: string) => {
@@ -35,6 +119,10 @@ const SettingsEventsView = () => {
 
   const updateEventName = (id: string, name: string) => {
     setEvents(events.map((e) => (e.id === id ? { ...e, name } : e)));
+  };
+
+  const updateEventIcon = (id: string, icon: LucideIconName) => {
+    setEvents(events.map((e) => (e.id === id ? { ...e, icon } : e)));
   };
 
   return (
@@ -48,13 +136,13 @@ const SettingsEventsView = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Lista wydarzeń</CardTitle>
-            <CardDescription>Dodawaj, edytuj i usuwaj typy wydarzeń</CardDescription>
+            <CardDescription>Dodawaj, edytuj i usuwaj typy wydarzeń. Kliknij ikonę, aby ją zmienić.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {events.map((event) => (
               <div key={event.id} className="flex items-center gap-3 group">
                 <GripVertical className="w-4 h-4 text-muted-foreground/40 cursor-grab" />
-                <span className="text-lg">{event.icon}</span>
+                <IconPicker value={event.icon} onChange={(icon) => updateEventIcon(event.id, icon)} />
                 <Input
                   value={event.name}
                   onChange={(e) => updateEventName(event.id, e.target.value)}
@@ -71,7 +159,7 @@ const SettingsEventsView = () => {
 
             <div className="flex items-center gap-3 pt-3 border-t border-border">
               <div className="w-4" />
-              <span className="text-lg">📋</span>
+              <IconPicker value={newEventIcon} onChange={setNewEventIcon} />
               <Input
                 value={newEventName}
                 onChange={(e) => setNewEventName(e.target.value)}
