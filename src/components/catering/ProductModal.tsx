@@ -105,14 +105,53 @@ export function ProductModal({
   );
 }
 
+// Shared serving time picker
+function ServingTimePicker({ value, onChange }: { value: string; onChange: (time: string) => void }) {
+  const timeSlots: string[] = [];
+  for (let h = 8; h <= 22; h++) {
+    timeSlots.push(`${h.toString().padStart(2, "0")}:00`);
+    timeSlots.push(`${h.toString().padStart(2, "0")}:30`);
+  }
+
+  return (
+    <div className="p-4 bg-muted/50 rounded-xl">
+      <div className="flex items-center gap-2 mb-3">
+        <Clock className="w-4 h-4 text-muted-foreground" />
+        <h3 className="font-semibold text-sm">Godzina podania</h3>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {timeSlots.map((time) => (
+          <button
+            key={time}
+            type="button"
+            onClick={() => onChange(value === time ? "" : time)}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
+              value === time
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background border-border text-foreground hover:border-primary/50"
+            )}
+          >
+            {time}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SimpleProductContent({
   product,
   quantity,
   onQuantityChange,
+  servingTime,
+  onServingTimeChange,
 }: {
   product: SimpleProduct;
   quantity: number;
   onQuantityChange: (qty: number) => void;
+  servingTime: string;
+  onServingTimeChange: (time: string) => void;
 }) {
   return (
     <div>
@@ -168,6 +207,8 @@ function SimpleProductContent({
             </span>
           </div>
         )}
+
+        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
       </div>
     </div>
   );
@@ -177,10 +218,14 @@ function ExpandableProductContent({
   product,
   quantities,
   onVariantQuantityChange,
+  servingTime,
+  onServingTimeChange,
 }: {
   product: ExpandableProduct;
   quantities: Record<string, number>;
   onVariantQuantityChange: (variantId: string, qty: number) => void;
+  servingTime: string;
+  onServingTimeChange: (time: string) => void;
 }) {
   return (
     <div>
@@ -233,6 +278,8 @@ function ExpandableProductContent({
             </div>
           );
         })}
+
+        <ServingTimePicker value={servingTime} onChange={onServingTimeChange} />
       </div>
     </div>
   );
