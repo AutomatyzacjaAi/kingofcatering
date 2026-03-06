@@ -1007,21 +1007,210 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
   );
 };
 
+// ===== EXTRAS TAB =====
+const ExtrasTab = ({ extras, setExtras }: { extras: ExtraItem[]; setExtras: (v: ExtraItem[]) => void }) => {
+  const [search, setSearch] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [formName, setFormName] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formImage, setFormImage] = useState<string | null>(null);
+  const [formPriceNetto, setFormPriceNetto] = useState("");
+  const [formVat, setFormVat] = useState(23);
+  const [formPriceBrutto, setFormPriceBrutto] = useState("");
+  const [formFoodCost, setFormFoodCost] = useState("");
+
+  const filtered = extras.filter((e) => e.name.toLowerCase().includes(search.toLowerCase()));
+
+  const calcBrutto = (netto: number, vat: number) => +(netto * (1 + vat / 100)).toFixed(2);
+  const calcNetto = (brutto: number, vat: number) => +(brutto / (1 + vat / 100)).toFixed(2);
+
+  const handleNettoChange = (val: string) => {
+    setFormPriceNetto(val);
+    const n = parseFloat(val);
+    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, formVat).toString());
+  };
+  const handleBruttoChange = (val: string) => {
+    setFormPriceBrutto(val);
+    const b = parseFloat(val);
+    if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString());
+  };
+  const handleVatChange = (val: string) => {
+    const vat = parseInt(val);
+    setFormVat(vat);
+    const n = parseFloat(formPriceNetto);
+    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString());
+  };
+
+  const resetForm = () => {
+    setFormName(""); setFormDesc(""); setFormImage(null); setFormPriceNetto("");
+    setFormVat(23); setFormPriceBrutto(""); setFormFoodCost("");
+    setShowForm(false); setEditingId(null);
+  };
+
+  const saveExtra = () => {
+    if (!formName.trim()) return;
+    const extra: ExtraItem = {
+      id: editingId || Date.now().toString(),
+      name: formName.trim(),
+      description: formDesc.trim(),
+      image: formImage,
+      priceNetto: parseFloat(formPriceNetto) || 0,
+      vatRate: formVat,
+      priceBrutto: parseFloat(formPriceBrutto) || 0,
+      foodCost: parseFloat(formFoodCost) || 0,
+    };
+    if (editingId) {
+      setExtras(extras.map((e) => e.id === editingId ? extra : e));
+    } else {
+      setExtras([...extras, extra]);
+    }
+    resetForm();
+  };
+
+  const startEdit = (extra: ExtraItem) => {
+    setEditingId(extra.id); setFormName(extra.name); setFormDesc(extra.description);
+    setFormImage(extra.image); setFormPriceNetto(extra.priceNetto.toString());
+    setFormVat(extra.vatRate); setFormPriceBrutto(extra.priceBrutto.toString());
+    setFormFoodCost(extra.foodCost.toString()); setShowForm(true);
+  };
+
+  const removeExtra = (id: string) => setExtras(extras.filter((e) => e.id !== id));
+
+  const foodCostMargin = (extra: ExtraItem) => {
+    if (extra.priceNetto <= 0) return null;
+    return ((extra.foodCost / extra.priceNetto) * 100).toFixed(0);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Szukaj dodatku..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
+          <Plus className="w-4 h-4 mr-1" />
+          Dodaj dodatek
+        </Button>
+      </div>
+
+      {showForm && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">{editingId ? "Edytuj dodatek" : "Nowy dodatek"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <ImageUpload image={formImage} onChange={setFormImage} />
+              <div className="flex-1 space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Nazwa</Label>
+                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Dekoracja stołu" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Opis</Label>
+                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Krótki opis dodatku..." />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Cena netto (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} placeholder="0.00" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">VAT</Label>
+                <Select value={formVat.toString()} onValueChange={handleVatChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {VAT_RATES.map((rate) => (<SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena brutto (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} placeholder="0.00" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Food cost (zł)</Label>
+                <Input type="number" step="0.01" value={formFoodCost} onChange={(e) => setFormFoodCost(e.target.value)} placeholder="0.00" />
+              </div>
+            </div>
+
+            {parseFloat(formFoodCost) > 0 && parseFloat(formPriceNetto) > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Food cost: <span className="font-semibold text-foreground">{((parseFloat(formFoodCost) / parseFloat(formPriceNetto)) * 100).toFixed(0)}%</span> ceny netto
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button size="sm" onClick={saveExtra} disabled={!formName.trim()}>
+                {editingId ? "Zapisz" : "Dodaj"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={resetForm}>Anuluj</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-1.5">
+        {filtered.map((extra) => (
+          <div key={extra.id} className="flex items-center justify-between px-4 py-3 rounded-lg bg-muted/30 group hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-3">
+              {extra.image ? (
+                <img src={extra.image} alt="" className="w-10 h-10 rounded-md object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+              <div>
+                <span className="text-sm font-medium">{extra.name}</span>
+                {extra.description && <p className="text-xs text-muted-foreground">{extra.description}</p>}
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right text-xs">
+                <div className="font-semibold text-foreground">{extra.priceBrutto.toFixed(2)} zł</div>
+                <div className="text-muted-foreground">{extra.priceNetto.toFixed(2)} netto • VAT {extra.vatRate}%</div>
+              </div>
+              {extra.foodCost > 0 && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                  FC: {extra.foodCost.toFixed(2)} zł ({foodCostMargin(extra)}%)
+                </Badge>
+              )}
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => startEdit(extra)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                <button onClick={() => removeExtra(extra.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && !showForm && <p className="text-sm text-muted-foreground text-center py-6">Brak dodatków</p>}
+      </div>
+    </div>
+  );
+};
+
 // ===== MAIN =====
 const SettingsDishesView = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>(mockIngredients);
   const [dishes, setDishes] = useState<Dish[]>(mockDishes);
   const [bundles, setBundles] = useState<Bundle[]>(mockBundles);
   const [configSets, setConfigSets] = useState<ConfigurableSet[]>(mockConfigSets);
+  const [extras, setExtras] = useState<ExtraItem[]>(mockExtras);
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Dania</h1>
-        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami i zestawami</p>
+        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami, zestawami i dodatkami</p>
       </div>
 
-      <Tabs defaultValue="ingredients" className="max-w-4xl">
+      <Tabs defaultValue="ingredients">
         <TabsList className="mb-4">
           <TabsTrigger value="ingredients" className="gap-1.5">
             <Apple className="w-3.5 h-3.5" />
@@ -1039,6 +1228,10 @@ const SettingsDishesView = () => {
             <Settings2 className="w-3.5 h-3.5" />
             Zestawy
           </TabsTrigger>
+          <TabsTrigger value="extras" className="gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            Dodatki
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
@@ -1052,6 +1245,9 @@ const SettingsDishesView = () => {
         </TabsContent>
         <TabsContent value="configsets">
           <ConfigSetsTab configSets={configSets} setConfigSets={setConfigSets} dishes={dishes} />
+        </TabsContent>
+        <TabsContent value="extras">
+          <ExtrasTab extras={extras} setExtras={setExtras} />
         </TabsContent>
       </Tabs>
     </div>
