@@ -48,6 +48,7 @@ const initialOrder: CateringOrder = {
   simpleQuantities: {},
   expandableQuantities: {},
   configurableData: {},
+  servingTimes: {},
   selectedExtras: {},
   selectedPackaging: null,
   packagingPersonCount: 0,
