@@ -12,11 +12,17 @@ import { cn } from "@/lib/utils";
 // ===== TYPES =====
 type UnitType = "g" | "ml" | "szt.";
 
+const ALLERGEN_OPTIONS = [
+  "gluten", "mleko", "jaja", "ryby", "skorupiaki", "soja",
+  "orzechy", "sezam", "seler", "gorczyca", "łubin", "mięczaki",
+];
+
 interface Ingredient {
   id: string;
   name: string;
   unit: UnitType;
-  pricePerUnit: number; // price per 1g, 1ml or 1szt.
+  allergens: string[];
+  pricePerUnit: number;
 }
 
 interface DishIngredient {
@@ -44,15 +50,15 @@ interface DishSet {
 
 // ===== MOCK DATA =====
 const mockIngredients: Ingredient[] = [
-  { id: "i1", name: "Kurczak", unit: "g", pricePerUnit: 0.025 },
-  { id: "i2", name: "Mozzarella", unit: "g", pricePerUnit: 0.04 },
-  { id: "i3", name: "Pomidory suszone", unit: "g", pricePerUnit: 0.06 },
-  { id: "i4", name: "Szpinak", unit: "g", pricePerUnit: 0.03 },
-  { id: "i5", name: "Oliwa z oliwek", unit: "ml", pricePerUnit: 0.05 },
-  { id: "i6", name: "Łosoś", unit: "g", pricePerUnit: 0.08 },
-  { id: "i7", name: "Ryż", unit: "g", pricePerUnit: 0.008 },
-  { id: "i8", name: "Awokado", unit: "szt.", pricePerUnit: 4.5 },
-  { id: "i9", name: "Mleko kokosowe", unit: "ml", pricePerUnit: 0.012 },
+  { id: "i1", name: "Kurczak", unit: "g", allergens: [], pricePerUnit: 0.025 },
+  { id: "i2", name: "Mozzarella", unit: "g", allergens: ["mleko"], pricePerUnit: 0.04 },
+  { id: "i3", name: "Pomidory suszone", unit: "g", allergens: [], pricePerUnit: 0.06 },
+  { id: "i4", name: "Szpinak", unit: "g", allergens: [], pricePerUnit: 0.03 },
+  { id: "i5", name: "Oliwa z oliwek", unit: "ml", allergens: [], pricePerUnit: 0.05 },
+  { id: "i6", name: "Łosoś", unit: "g", allergens: ["ryby"], pricePerUnit: 0.08 },
+  { id: "i7", name: "Ryż", unit: "g", allergens: [], pricePerUnit: 0.008 },
+  { id: "i8", name: "Awokado", unit: "szt.", allergens: [], pricePerUnit: 4.5 },
+  { id: "i9", name: "Mleko kokosowe", unit: "ml", allergens: ["mleko"], pricePerUnit: 0.012 },
 ];
 
 const mockDishes: Dish[] = [
@@ -96,10 +102,17 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
   const [newName, setNewName] = useState("");
   const [newUnit, setNewUnit] = useState<UnitType>("g");
   const [newPrice, setNewPrice] = useState("");
+  const [newAllergens, setNewAllergens] = useState<string[]>([]);
 
   const filtered = ingredients.filter((i) =>
     i.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const toggleAllergen = (allergen: string) => {
+    setNewAllergens((prev) =>
+      prev.includes(allergen) ? prev.filter((a) => a !== allergen) : [...prev, allergen]
+    );
+  };
 
   const addIngredient = () => {
     if (!newName.trim()) return;
@@ -109,12 +122,14 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
         id: Date.now().toString(),
         name: newName.trim(),
         unit: newUnit,
+        allergens: newAllergens,
         pricePerUnit: parseFloat(newPrice) || 0,
       },
     ]);
     setNewName("");
     setNewUnit("g");
     setNewPrice("");
+    setNewAllergens([]);
     setShowForm(false);
   };
 
@@ -161,6 +176,26 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
                 <Input type="number" step="0.001" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0.00" />
               </div>
             </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Alergeny</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {ALLERGEN_OPTIONS.map((allergen) => (
+                  <button
+                    key={allergen}
+                    type="button"
+                    onClick={() => toggleAllergen(allergen)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                      newAllergens.includes(allergen)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
+                    )}
+                  >
+                    {allergen}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={addIngredient} disabled={!newName.trim()}>Dodaj</Button>
               <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Anuluj</Button>
@@ -177,6 +212,9 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
               <span className="text-sm font-medium">{ingredient.name}</span>
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">{ingredient.unit}</Badge>
               <span className="text-xs text-muted-foreground">{ingredient.pricePerUnit.toFixed(3)} zł/{ingredient.unit}</span>
+              {ingredient.allergens.map((a) => (
+                <Badge key={a} variant="secondary" className="text-[10px] px-1.5 py-0">{a}</Badge>
+              ))}
             </div>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
