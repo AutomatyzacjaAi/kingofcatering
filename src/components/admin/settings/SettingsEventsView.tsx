@@ -13,6 +13,7 @@ const popularIcons: LucideIconName[] = [
   "Building2", "Mic2", "Trophy", "Star", "Users", "Handshake",
   "Sparkles", "Wine", "TreePine", "Sun", "Moon", "Camera",
   "Palette", "Flower2", "Crown", "Gem", "Ribbon", "Flag",
+  "Mic", "GraduationCap", "Plane", "Tent", "Drama", "Glasses",
 ];
 
 interface EventType {
