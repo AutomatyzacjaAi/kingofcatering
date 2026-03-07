@@ -1,17 +1,18 @@
 import { useState } from "react";
-import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText } from "lucide-react";
+import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AdminSection = "orders" | "clients" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form";
+export type AdminSection = "orders" | "clients" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
   onSectionChange: (section: AdminSection) => void;
 }
 
-const mainNavItems: { id: "orders" | "clients"; icon: typeof ClipboardList; label: string }[] = [
+const mainNavItems: { id: "orders" | "clients" | "reports"; icon: typeof ClipboardList; label: string }[] = [
   { id: "orders", icon: ClipboardList, label: "Zamówienia" },
   { id: "clients", icon: Users, label: "Klienci" },
+  { id: "reports", icon: BarChart3, label: "Raporty" },
 ];
 
 const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: string }[] = [
