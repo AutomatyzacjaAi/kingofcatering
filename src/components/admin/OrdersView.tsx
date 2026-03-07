@@ -147,10 +147,25 @@ const mockOrders: Order[] = [
     amount: "14 970,00 zł", amountNum: 14970, status: "Potwierdzone", notes: "Faktura na firmę",
     createdAt: "2 sty 2026",
     items: [
-      { name: "Zestaw nr 2 Premium", quantity: 100, unit: "os.", pricePerUnit: 95, total: 9500 },
-      { name: "Obsługa kelnerska 8h", quantity: 3, unit: "szt.", pricePerUnit: 450, total: 1350 },
-      { name: "Patera Owoców Morza", quantity: 5, unit: "szt.", pricePerUnit: 680, total: 3400 },
-      { name: "Dekoracja stołu", quantity: 5, unit: "szt.", pricePerUnit: 142, total: 710 },
+      { name: "Zestaw nr 2 Premium", quantity: 100, unit: "os.", pricePerUnit: 95, total: 9500, type: "configurable", foodCostPerUnit: 32,
+        subItems: [
+          { name: "Polędwica wołowa z sosem z zielonym pieprzem", quantity: 100, unit: "os.", foodCostPerUnit: 12 },
+          { name: "Kaczka konfitowana z jabłkami", quantity: 100, unit: "os.", foodCostPerUnit: 10 },
+          { name: "Tatar z łososia z awokado", quantity: 100, unit: "os.", foodCostPerUnit: 6 },
+          { name: "Crème brûlée", quantity: 100, unit: "os.", foodCostPerUnit: 3 },
+          { name: "Panna cotta z malinami", quantity: 100, unit: "os.", foodCostPerUnit: 2.5 },
+        ]
+      },
+      { name: "Obsługa kelnerska 8h", quantity: 3, unit: "szt.", pricePerUnit: 450, total: 1350, type: "service" },
+      { name: "Patera Owoców Morza", quantity: 5, unit: "szt.", pricePerUnit: 680, total: 3400, type: "simple", foodCostPerUnit: 220,
+        subItems: [
+          { name: "Krewetki tygrysie", quantity: 1500, unit: "g", foodCostPerUnit: 0.09 },
+          { name: "Łosoś wędzony", quantity: 1000, unit: "g", foodCostPerUnit: 0.06 },
+          { name: "Tuńczyk sashimi", quantity: 750, unit: "g", foodCostPerUnit: 0.1 },
+          { name: "Kawior czerwony", quantity: 250, unit: "g", foodCostPerUnit: 0.25 },
+        ]
+      },
+      { name: "Dekoracja stołu", quantity: 5, unit: "szt.", pricePerUnit: 142, total: 710, type: "extra", foodCostPerUnit: 45 },
     ],
   },
   {
@@ -159,9 +174,17 @@ const mockOrders: Order[] = [
     amount: "4 648,00 zł", amountNum: 4648, status: "W realizacji", notes: "",
     createdAt: "6 sty 2026",
     items: [
-      { name: "Zestaw nr 1 Klasyczny", quantity: 50, unit: "os.", pricePerUnit: 70, total: 3500 },
-      { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900 },
-      { name: "Opakowanie jednorazowe", quantity: 1, unit: "szt.", pricePerUnit: 248, total: 248 },
+      { name: "Zestaw nr 1 Klasyczny", quantity: 50, unit: "os.", pricePerUnit: 70, total: 3500, type: "configurable", foodCostPerUnit: 22,
+        subItems: [
+          { name: "Roladki z indyka ze szpinakiem", quantity: 50, unit: "os.", foodCostPerUnit: 8 },
+          { name: "Staropolski schabowy", quantity: 50, unit: "os.", foodCostPerUnit: 6 },
+          { name: "Ziemniaki opiekane z rozmarynem", quantity: 50, unit: "os.", foodCostPerUnit: 2 },
+          { name: "Ryż z warzywami", quantity: 50, unit: "os.", foodCostPerUnit: 1.5 },
+          { name: "Sałatka grecka", quantity: 50, unit: "os.", foodCostPerUnit: 3 },
+        ]
+      },
+      { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900, type: "simple", foodCostPerUnit: 135 },
+      { name: "Opakowanie jednorazowe", quantity: 1, unit: "szt.", pricePerUnit: 248, total: 248, type: "extra", foodCostPerUnit: 60 },
     ],
   },
 ];
