@@ -2,6 +2,7 @@ import { useState } from "react";
 import AdminSidebar, { type AdminSection } from "@/components/admin/AdminSidebar";
 import OrdersView from "@/components/admin/OrdersView";
 import ClientsView from "@/components/admin/ClientsView";
+import ReportsView from "@/components/admin/ReportsView";
 import SettingsCompanyView from "@/components/admin/settings/SettingsCompanyView";
 import SettingsOrdersView from "@/components/admin/settings/SettingsOrdersView";
 import SettingsEventsView from "@/components/admin/settings/SettingsEventsView";
@@ -18,6 +19,7 @@ const Admin = () => {
       <main className="flex-1 p-8 overflow-auto">
         {activeSection === "orders" && <OrdersView />}
         {activeSection === "clients" && <ClientsView />}
+        {activeSection === "reports" && <ReportsView />}
         {activeSection === "settings-company" && <SettingsCompanyView />}
         {activeSection === "settings-orders" && <SettingsOrdersView />}
         {activeSection === "settings-events" && <SettingsEventsView />}
