@@ -275,7 +275,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showOffer && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">📄 Oferta</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Oferta</CardTitle>
             <CardDescription>{order.client} · {order.event || "Wydarzenie"} · {order.date}</CardDescription>
           </CardHeader>
           <CardContent>
