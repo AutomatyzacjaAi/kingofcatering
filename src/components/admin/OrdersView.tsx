@@ -18,6 +18,9 @@ interface OrderItem {
   unit: string;
   pricePerUnit: number;
   total: number;
+  type?: "simple" | "bundle" | "configurable" | "extra" | "service";
+  subItems?: { name: string; quantity: number; unit: string; foodCostPerUnit?: number }[];
+  foodCostPerUnit?: number;
 }
 
 interface Order {
