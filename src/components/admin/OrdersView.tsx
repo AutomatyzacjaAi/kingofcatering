@@ -535,15 +535,79 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc }: { order: Orde
   );
 };
 
+// ===== AVAILABLE PRODUCTS (mock catalog for adding) =====
+const availableProducts: { name: string; unit: string; defaultPrice: number; type: OrderItem["type"] }[] = [
+  { name: "Patera Serów Europejskich", unit: "szt.", defaultPrice: 450, type: "simple" },
+  { name: "Patera Wędlin Premium", unit: "szt.", defaultPrice: 520, type: "simple" },
+  { name: "Patera Owoców Morza", unit: "szt.", defaultPrice: 680, type: "simple" },
+  { name: "Antipasto Włoskie", unit: "szt.", defaultPrice: 380, type: "simple" },
+  { name: "Tacos z kurczakiem", unit: "szt.", defaultPrice: 18, type: "simple" },
+  { name: "Tacos z wieprzowiną", unit: "szt.", defaultPrice: 18, type: "simple" },
+  { name: "Tacos vege", unit: "szt.", defaultPrice: 18, type: "simple" },
+  { name: "Mini Burger Klasyczny", unit: "szt.", defaultPrice: 15, type: "simple" },
+  { name: "Mini Burger Vege", unit: "szt.", defaultPrice: 15, type: "simple" },
+  { name: "Sushi Nigiri Sake", unit: "szt.", defaultPrice: 8, type: "simple" },
+  { name: "Sushi Nigiri Maguro", unit: "szt.", defaultPrice: 10, type: "simple" },
+  { name: "Zestaw nr 1 Klasyczny", unit: "os.", defaultPrice: 70, type: "configurable" },
+  { name: "Zestaw nr 2 Premium", unit: "os.", defaultPrice: 95, type: "configurable" },
+  { name: "Zestaw Wegetariański", unit: "os.", defaultPrice: 60, type: "configurable" },
+  { name: "Obsługa kelnerska 4h", unit: "szt.", defaultPrice: 251, type: "service" },
+  { name: "Obsługa kelnerska 8h", unit: "szt.", defaultPrice: 450, type: "service" },
+  { name: "Obsługa kelnerska 12h", unit: "szt.", defaultPrice: 650, type: "service" },
+  { name: "Dekoracja stołu", unit: "szt.", defaultPrice: 142, type: "extra" },
+  { name: "Opakowanie jednorazowe", unit: "szt.", defaultPrice: 30, type: "extra" },
+  { name: "LED świece", unit: "szt.", defaultPrice: 25, type: "extra" },
+  { name: "Podgrzewacze", unit: "szt.", defaultPrice: 45, type: "extra" },
+];
+
 // ===== ORDER EDIT VIEW =====
 const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => void; onSave: (o: Order) => void }) => {
   const [status, setStatus] = useState<OrderStatus>(order.status);
   const [notes, setNotes] = useState(order.notes);
   const [deliveryAddress, setDeliveryAddress] = useState(order.deliveryAddress);
+  const [items, setItems] = useState<OrderItem[]>(order.items.map(i => ({ ...i })));
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
+
+  const updateItem = (index: number, field: "quantity" | "pricePerUnit", value: number) => {
+    setItems(prev => prev.map((item, i) => {
+      if (i !== index) return item;
+      const updated = { ...item, [field]: value };
+      updated.total = updated.quantity * updated.pricePerUnit;
+      return updated;
+    }));
+  };
+
+  const removeItem = (index: number) => {
+    setItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addProduct = (product: typeof availableProducts[0]) => {
+    setItems(prev => [...prev, {
+      name: product.name,
+      quantity: 1,
+      unit: product.unit,
+      pricePerUnit: product.defaultPrice,
+      total: product.defaultPrice,
+      type: product.type,
+    }]);
+    setShowAddProduct(false);
+    setAddSearch("");
+  };
+
+  const totalAmount = items.reduce((s, i) => s + i.total, 0);
 
   const handleSave = () => {
-    onSave({ ...order, status, notes, deliveryAddress });
+    onSave({
+      ...order, status, notes, deliveryAddress, items,
+      amount: fmtNum(totalAmount) + " zł",
+      amountNum: totalAmount,
+    });
   };
+
+  const filteredProducts = availableProducts.filter(p =>
+    p.name.toLowerCase().includes(addSearch.toLowerCase())
+  );
 
   return (
     <div>
@@ -558,29 +622,133 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
       </div>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">Status zamówienia</CardTitle></CardHeader>
-          <CardContent>
-            <Select value={status} onValueChange={(v) => setStatus(v as OrderStatus)}>
-              <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {allStatuses.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Status</CardTitle></CardHeader>
+            <CardContent>
+              <Select value={status} onValueChange={(v) => setStatus(v as OrderStatus)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {allStatuses.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Adres dostawy</CardTitle></CardHeader>
+            <CardContent>
+              <Input value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Uwagi</CardTitle></CardHeader>
+            <CardContent>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Uwagi..." />
+            </CardContent>
+          </Card>
+        </div>
 
+        {/* Items editing */}
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">Adres dostawy</CardTitle></CardHeader>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Pozycje zamówienia</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setShowAddProduct(!showAddProduct)}>
+                {showAddProduct ? <X className="w-4 h-4 mr-1" /> : <span className="mr-1">+</span>}
+                {showAddProduct ? "Anuluj" : "Dodaj pozycję"}
+              </Button>
+            </div>
+          </CardHeader>
           <CardContent>
-            <Input value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
-          </CardContent>
-        </Card>
+            {/* Add product panel */}
+            {showAddProduct && (
+              <div className="mb-4 p-4 rounded-lg border border-border bg-muted/30">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Szukaj produktu..."
+                    value={addSearch}
+                    onChange={(e) => setAddSearch(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {filteredProducts.map((product) => (
+                    <button
+                      key={product.name}
+                      onClick={() => addProduct(product)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
+                    >
+                      <span className="font-medium text-foreground">{product.name}</span>
+                      <span className="text-muted-foreground text-xs">{fmtNum(product.defaultPrice)} zł / {product.unit}</span>
+                    </button>
+                  ))}
+                  {filteredProducts.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-3">Nie znaleziono produktów</p>
+                  )}
+                </div>
+              </div>
+            )}
 
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">Uwagi</CardTitle></CardHeader>
-          <CardContent>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Dodatkowe uwagi do zamówienia..." />
+            {/* Items table */}
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-foreground">Produkt</TableHead>
+                  <TableHead className="font-semibold text-foreground text-center w-32">Ilość</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right w-40">Cena jedn.</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right w-32">Razem</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center gap-1 justify-center">
+                        <Input
+                          type="number"
+                          min={1}
+                          value={item.quantity}
+                          onChange={(e) => updateItem(i, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-20 h-8 text-center text-sm"
+                        />
+                        <span className="text-xs text-muted-foreground">{item.unit}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={item.pricePerUnit}
+                          onChange={(e) => updateItem(i, "pricePerUnit", Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="w-28 h-8 text-right text-sm"
+                        />
+                        <span className="text-xs text-muted-foreground">zł</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">{fmtNum(item.total)} zł</TableCell>
+                    <TableCell>
+                      <button
+                        onClick={() => removeItem(i)}
+                        className="p-1.5 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="hover:bg-transparent border-t-2">
+                  <TableCell colSpan={3} className="text-right font-semibold text-foreground">Suma:</TableCell>
+                  <TableCell className="text-right font-bold text-primary text-lg">{fmtNum(totalAmount)} zł</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
