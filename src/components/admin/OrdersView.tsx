@@ -100,8 +100,16 @@ const mockOrders: Order[] = [
     amount: "3 276,00 zł", amountNum: 3276, status: "Zrealizowane", notes: "Dekoracja stołu premium",
     createdAt: "5 sty 2026",
     items: [
-      { name: "Zestaw nr 2 Premium", quantity: 30, unit: "os.", pricePerUnit: 95, total: 2850 },
-      { name: "Dekoracja stołu", quantity: 3, unit: "szt.", pricePerUnit: 142, total: 426 },
+      { name: "Zestaw nr 2 Premium", quantity: 30, unit: "os.", pricePerUnit: 95, total: 2850, type: "configurable", foodCostPerUnit: 32,
+        subItems: [
+          { name: "Polędwica wołowa z sosem z zielonym pieprzem", quantity: 30, unit: "os.", foodCostPerUnit: 12 },
+          { name: "Łosoś grillowany z masłem czosnkowym", quantity: 30, unit: "os.", foodCostPerUnit: 9 },
+          { name: "Carpaccio z polędwicy", quantity: 30, unit: "os.", foodCostPerUnit: 6 },
+          { name: "Crème brûlée", quantity: 30, unit: "os.", foodCostPerUnit: 3 },
+          { name: "Fondant czekoladowy", quantity: 30, unit: "os.", foodCostPerUnit: 2 },
+        ]
+      },
+      { name: "Dekoracja stołu", quantity: 3, unit: "szt.", pricePerUnit: 142, total: 426, type: "extra", foodCostPerUnit: 45 },
     ],
   },
   {
