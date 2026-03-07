@@ -193,12 +193,12 @@ const mockOrders: Order[] = [
 
 // ===== DOCUMENT TYPES =====
 type DocType = "offer" | "shopping-list" | "kitchen" | "food-cost" | "full";
-const docLabels: Record<DocType, { label: string; icon: string }> = {
-  "offer": { label: "Oferta", icon: "📄" },
-  "shopping-list": { label: "Lista zakupów", icon: "🛒" },
-  "kitchen": { label: "Rozpiska na kuchnię", icon: "👨‍🍳" },
-  "food-cost": { label: "Food cost", icon: "💰" },
-  "full": { label: "Wszystko w jednym", icon: "📋" },
+const docLabels: Record<DocType, { label: string; Icon: LucideIcon }> = {
+  "offer": { label: "Oferta", Icon: FileText },
+  "shopping-list": { label: "Lista zakupów", Icon: ShoppingCart },
+  "kitchen": { label: "Rozpiska na kuchnię", Icon: CookingPot },
+  "food-cost": { label: "Food cost", Icon: Calculator },
+  "full": { label: "Wszystko w jednym", Icon: ClipboardList },
 };
 
 const fmtNum = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
