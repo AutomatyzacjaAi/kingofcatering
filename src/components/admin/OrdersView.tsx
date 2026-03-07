@@ -866,8 +866,9 @@ const OrdersView = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [view, setView] = useState<"list" | "detail" | "edit" | "summary">("list");
+  const [view, setView] = useState<"list" | "detail" | "edit" | "summary" | "document">("list");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedDocType, setSelectedDocType] = useState<DocType>("offer");
 
   const filtered = orders.filter((o) => {
     const matchSearch =
@@ -888,8 +889,17 @@ const OrdersView = () => {
     setView("detail");
   };
 
+  const handleGenerateDoc = (type: DocType) => {
+    setSelectedDocType(type);
+    setView("document");
+  };
+
+  if (view === "document" && selectedOrder) {
+    return <OrderDocumentView order={selectedOrder} docType={selectedDocType} onBack={() => setView("detail")} />;
+  }
+
   if (view === "detail" && selectedOrder) {
-    return <OrderDetailView order={selectedOrder} onBack={goBack} onEdit={() => setView("edit")} />;
+    return <OrderDetailView order={selectedOrder} onBack={goBack} onEdit={() => setView("edit")} onGenerateDoc={handleGenerateDoc} />;
   }
 
   if (view === "edit" && selectedOrder) {
