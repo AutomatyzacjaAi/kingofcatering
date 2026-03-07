@@ -377,7 +377,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showFoodCost && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">💰 Food cost</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> Food cost</CardTitle>
             <CardDescription>Analiza kosztów i marży</CardDescription>
           </CardHeader>
           <CardContent>
