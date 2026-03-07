@@ -128,7 +128,17 @@ const mockOrders: Order[] = [
     amount: "402,00 zł", amountNum: 402, status: "Zrealizowane", notes: "",
     createdAt: "12 sty 2026",
     items: [
-      { name: "Patera Serów Europejskich", quantity: 1, unit: "szt.", pricePerUnit: 450, total: 450 },
+      { name: "Patera Serów Europejskich", quantity: 1, unit: "szt.", pricePerUnit: 450, total: 450, type: "simple", foodCostPerUnit: 135,
+        subItems: [
+          { name: "Brie francuski", quantity: 150, unit: "g", foodCostPerUnit: 0.045 },
+          { name: "Camembert z ziołami", quantity: 150, unit: "g", foodCostPerUnit: 0.04 },
+          { name: "Gouda długo dojrzewająca", quantity: 200, unit: "g", foodCostPerUnit: 0.035 },
+          { name: "Roquefort", quantity: 100, unit: "g", foodCostPerUnit: 0.08 },
+          { name: "Winogrona", quantity: 200, unit: "g", foodCostPerUnit: 0.012 },
+          { name: "Orzechy włoskie", quantity: 100, unit: "g", foodCostPerUnit: 0.06 },
+          { name: "Miód akacjowy", quantity: 50, unit: "ml", foodCostPerUnit: 0.04 },
+        ]
+      },
     ],
   },
   {
