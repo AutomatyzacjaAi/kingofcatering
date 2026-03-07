@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator } from "lucide-react";
+import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -189,8 +190,247 @@ const mockOrders: Order[] = [
   },
 ];
 
+// ===== DOCUMENT TYPES =====
+type DocType = "offer" | "shopping-list" | "kitchen" | "food-cost" | "full";
+const docLabels: Record<DocType, { label: string; icon: string }> = {
+  "offer": { label: "Oferta", icon: "📄" },
+  "shopping-list": { label: "Lista zakupów", icon: "🛒" },
+  "kitchen": { label: "Rozpiska na kuchnię", icon: "👨‍🍳" },
+  "food-cost": { label: "Food cost", icon: "💰" },
+  "full": { label: "Wszystko w jednym", icon: "📋" },
+};
+
+const fmtNum = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// ===== ORDER DOCUMENT VIEW =====
+const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: DocType; onBack: () => void }) => {
+  const showOffer = docType === "offer" || docType === "full";
+  const showShoppingList = docType === "shopping-list" || docType === "full";
+  const showKitchen = docType === "kitchen" || docType === "full";
+  const showFoodCost = docType === "food-cost" || docType === "full";
+
+  // Aggregate ingredients
+  const ingredientMap: Record<string, { name: string; totalQty: number; unit: string }> = {};
+  order.items.forEach((item) => {
+    if (item.subItems) {
+      item.subItems.forEach((sub) => {
+        const key = `${sub.name}__${sub.unit}`;
+        if (!ingredientMap[key]) ingredientMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit };
+        ingredientMap[key].totalQty += sub.quantity;
+      });
+    }
+  });
+  const ingredients = Object.values(ingredientMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+
+  // Dishes for kitchen
+  type DishEntry = { name: string; totalQty: number; unit: string; source: string };
+  const dishMap: Record<string, DishEntry> = {};
+  order.items.forEach((item) => {
+    if (item.type === "service" || item.type === "extra") return;
+    if ((item.type === "configurable" || item.type === "bundle") && item.subItems) {
+      item.subItems.forEach((sub) => {
+        const key = sub.name;
+        if (!dishMap[key]) dishMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit, source: item.name };
+        dishMap[key].totalQty += sub.quantity;
+      });
+    } else {
+      const key = item.name;
+      if (!dishMap[key]) dishMap[key] = { name: item.name, totalQty: 0, unit: item.unit, source: "" };
+      dishMap[key].totalQty += item.quantity;
+    }
+  });
+  const dishes = Object.values(dishMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+
+  // Food cost
+  const foodCostItems = order.items.filter((i) => i.type !== "service" && i.foodCostPerUnit).map((item) => ({
+    name: item.name, quantity: item.quantity, unit: item.unit,
+    foodCostPerUnit: item.foodCostPerUnit!, totalFoodCost: item.foodCostPerUnit! * item.quantity,
+    revenue: item.total, margin: item.total > 0 ? ((item.total - item.foodCostPerUnit! * item.quantity) / item.total) * 100 : 0,
+  }));
+  const totalFC = foodCostItems.reduce((s, i) => s + i.totalFoodCost, 0);
+  const totalRev = foodCostItems.reduce((s, i) => s + i.revenue, 0);
+  const totalMargin = totalRev > 0 ? ((totalRev - totalFC) / totalRev) * 100 : 0;
+
+  return (
+    <div>
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="outline" size="sm" onClick={onBack}>
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Powrót
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-foreground">
+            {docType === "full" ? "Pełna dokumentacja" : docLabels[docType].label} — {order.id}
+          </h1>
+          <p className="text-muted-foreground text-sm">{order.client} · {order.date}</p>
+        </div>
+        <Button variant="outline" size="sm">
+          <Printer className="w-4 h-4 mr-1" />
+          Drukuj
+        </Button>
+      </div>
+
+      {/* OFERTA */}
+      {showOffer && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">📄 Oferta</CardTitle>
+            <CardDescription>{order.client} · {order.event || "Wydarzenie"} · {order.date}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm space-y-1 mb-4">
+              <p><span className="text-muted-foreground">Adres dostawy:</span> {order.deliveryAddress}</p>
+              {order.notes && <p><span className="text-muted-foreground">Uwagi:</span> {order.notes}</p>}
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-foreground">Pozycja</TableHead>
+                  <TableHead className="font-semibold text-foreground text-center">Ilość</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">Cena jedn.</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">Razem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {order.items.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{fmtNum(item.pricePerUnit)} zł</TableCell>
+                    <TableCell className="text-right font-semibold">{fmtNum(item.total)} zł</TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="hover:bg-transparent border-t-2">
+                  <TableCell colSpan={3} className="text-right font-semibold">Suma:</TableCell>
+                  <TableCell className="text-right font-bold text-primary text-lg">{order.amount}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* LISTA ZAKUPÓW */}
+      {showShoppingList && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">🛒 Lista zakupów</CardTitle>
+            <CardDescription>Składniki do zakupu</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {ingredients.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">Brak danych o składnikach</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold text-foreground">Składnik</TableHead>
+                    <TableHead className="font-semibold text-foreground text-right">Ilość</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ingredients.map((ing, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{ing.name}</TableCell>
+                      <TableCell className="text-right">{fmtNum(ing.totalQty)} {ing.unit}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ROZPISKA NA KUCHNIĘ */}
+      {showKitchen && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">👨‍🍳 Rozpiska na kuchnię</CardTitle>
+            <CardDescription>Dania do przygotowania (zestawy rozbite na pozycje)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-foreground">Danie</TableHead>
+                  <TableHead className="font-semibold text-foreground text-muted-foreground">Źródło</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">Ilość</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dishes.map((dish, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{dish.name}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{dish.source || "—"}</TableCell>
+                    <TableCell className="text-right">{dish.totalQty} {dish.unit}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* FOOD COST */}
+      {showFoodCost && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">💰 Food cost</CardTitle>
+            <CardDescription>Analiza kosztów i marży</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-foreground">Produkt</TableHead>
+                  <TableHead className="font-semibold text-foreground text-center">Ilość</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">FC/jedn.</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">FC łącznie</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">Przychód</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">Marża</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {foodCostItems.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{fmtNum(item.foodCostPerUnit)} zł</TableCell>
+                    <TableCell className="text-right">{fmtNum(item.totalFoodCost)} zł</TableCell>
+                    <TableCell className="text-right">{fmtNum(item.revenue)} zł</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant="outline" className={cn("text-xs",
+                        item.margin >= 60 ? "border-emerald-300 text-emerald-700 bg-emerald-50" :
+                        item.margin >= 40 ? "border-yellow-300 text-yellow-700 bg-yellow-50" :
+                        "border-red-300 text-red-700 bg-red-50"
+                      )}>{item.margin.toFixed(1)}%</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="hover:bg-transparent border-t-2">
+                  <TableCell colSpan={3} className="text-right font-semibold">Suma:</TableCell>
+                  <TableCell className="text-right font-bold">{fmtNum(totalFC)} zł</TableCell>
+                  <TableCell className="text-right font-bold text-primary">{fmtNum(totalRev)} zł</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="outline" className={cn("text-xs font-bold",
+                      totalMargin >= 60 ? "border-emerald-300 text-emerald-700 bg-emerald-50" :
+                      totalMargin >= 40 ? "border-yellow-300 text-yellow-700 bg-yellow-50" :
+                      "border-red-300 text-red-700 bg-red-50"
+                    )}>{totalMargin.toFixed(1)}%</Badge>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
 // ===== ORDER DETAIL VIEW =====
-const OrderDetailView = ({ order, onBack, onEdit }: { order: Order; onBack: () => void; onEdit: () => void }) => {
+const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc }: { order: Order; onBack: () => void; onEdit: () => void; onGenerateDoc: (type: DocType) => void }) => {
   return (
     <div>
       <div className="flex items-center gap-4 mb-6">
@@ -203,6 +443,23 @@ const OrderDetailView = ({ order, onBack, onEdit }: { order: Order; onBack: () =
           <p className="text-muted-foreground text-sm">Utworzono: {order.createdAt}</p>
         </div>
         <Badge className={cn("text-xs border", statusColors[order.status])}>{order.status}</Badge>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <FileDown className="w-4 h-4 mr-1" />
+              Generuj
+              <ChevronDown className="w-3 h-3 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {(Object.keys(docLabels) as DocType[]).map((type) => (
+              <DropdownMenuItem key={type} onClick={() => onGenerateDoc(type)} className="cursor-pointer">
+                <span className="mr-2">{docLabels[type].icon}</span>
+                {docLabels[type].label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button size="sm" onClick={onEdit}>
           <Pencil className="w-4 h-4 mr-1" />
           Edytuj
@@ -210,35 +467,24 @@ const OrderDetailView = ({ order, onBack, onEdit }: { order: Order; onBack: () =
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Client info */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Klient</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base">Klient</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div><span className="text-muted-foreground">Imię i nazwisko:</span> <span className="font-medium">{order.client}</span></div>
             <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{order.email}</span></div>
             <div><span className="text-muted-foreground">Telefon:</span> <span className="font-medium">{order.phone}</span></div>
           </CardContent>
         </Card>
-
-        {/* Event info */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Wydarzenie</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base">Wydarzenie</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div><span className="text-muted-foreground">Typ:</span> <span className="font-medium">{order.event || "Nie podano"}</span></div>
             <div><span className="text-muted-foreground">Data:</span> <span className="font-medium">{order.date}</span></div>
             <div><span className="text-muted-foreground">Adres dostawy:</span> <span className="font-medium">{order.deliveryAddress}</span></div>
           </CardContent>
         </Card>
-
-        {/* Summary */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Podsumowanie</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base">Podsumowanie</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div><span className="text-muted-foreground">Pozycji:</span> <span className="font-medium">{order.items.length}</span></div>
             <div><span className="text-muted-foreground">Kwota:</span> <span className="font-semibold text-primary text-lg">{order.amount}</span></div>
@@ -252,11 +498,8 @@ const OrderDetailView = ({ order, onBack, onEdit }: { order: Order; onBack: () =
         </Card>
       </div>
 
-      {/* Items table */}
       <Card className="mt-6">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Pozycje zamówienia</CardTitle>
-        </CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base">Pozycje zamówienia</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -623,8 +866,9 @@ const OrdersView = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [view, setView] = useState<"list" | "detail" | "edit" | "summary">("list");
+  const [view, setView] = useState<"list" | "detail" | "edit" | "summary" | "document">("list");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedDocType, setSelectedDocType] = useState<DocType>("offer");
 
   const filtered = orders.filter((o) => {
     const matchSearch =
@@ -645,8 +889,17 @@ const OrdersView = () => {
     setView("detail");
   };
 
+  const handleGenerateDoc = (type: DocType) => {
+    setSelectedDocType(type);
+    setView("document");
+  };
+
+  if (view === "document" && selectedOrder) {
+    return <OrderDocumentView order={selectedOrder} docType={selectedDocType} onBack={() => setView("detail")} />;
+  }
+
   if (view === "detail" && selectedOrder) {
-    return <OrderDetailView order={selectedOrder} onBack={goBack} onEdit={() => setView("edit")} />;
+    return <OrderDetailView order={selectedOrder} onBack={goBack} onEdit={() => setView("edit")} onGenerateDoc={handleGenerateDoc} />;
   }
 
   if (view === "edit" && selectedOrder) {
