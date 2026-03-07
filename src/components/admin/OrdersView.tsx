@@ -347,7 +347,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showKitchen && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">👨‍🍳 Rozpiska na kuchnię</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><CookingPot className="w-5 h-5 text-primary" /> Rozpiska na kuchnię</CardTitle>
             <CardDescription>Dania do przygotowania (zestawy rozbite na pozycje)</CardDescription>
           </CardHeader>
           <CardContent>
