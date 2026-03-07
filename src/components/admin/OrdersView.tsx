@@ -118,8 +118,8 @@ const mockOrders: Order[] = [
     amount: "246,00 zł", amountNum: 246, status: "Anulowane", notes: "Klient zrezygnował",
     createdAt: "8 sty 2026",
     items: [
-      { name: "Tacos z kurczakiem", quantity: 12, unit: "szt.", pricePerUnit: 18, total: 216 },
-      { name: "Opakowanie jednorazowe", quantity: 1, unit: "szt.", pricePerUnit: 30, total: 30 },
+      { name: "Tacos z kurczakiem", quantity: 12, unit: "szt.", pricePerUnit: 18, total: 216, type: "simple", foodCostPerUnit: 6 },
+      { name: "Opakowanie jednorazowe", quantity: 1, unit: "szt.", pricePerUnit: 30, total: 30, type: "extra", foodCostPerUnit: 8 },
     ],
   },
   {
