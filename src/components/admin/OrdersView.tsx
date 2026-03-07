@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown } from "lucide-react";
+import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import type { LucideIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -192,12 +193,12 @@ const mockOrders: Order[] = [
 
 // ===== DOCUMENT TYPES =====
 type DocType = "offer" | "shopping-list" | "kitchen" | "food-cost" | "full";
-const docLabels: Record<DocType, { label: string; icon: string }> = {
-  "offer": { label: "Oferta", icon: "📄" },
-  "shopping-list": { label: "Lista zakupów", icon: "🛒" },
-  "kitchen": { label: "Rozpiska na kuchnię", icon: "👨‍🍳" },
-  "food-cost": { label: "Food cost", icon: "💰" },
-  "full": { label: "Wszystko w jednym", icon: "📋" },
+const docLabels: Record<DocType, { label: string; Icon: LucideIcon }> = {
+  "offer": { label: "Oferta", Icon: FileText },
+  "shopping-list": { label: "Lista zakupów", Icon: ShoppingCart },
+  "kitchen": { label: "Rozpiska na kuchnię", Icon: CookingPot },
+  "food-cost": { label: "Food cost", Icon: Calculator },
+  "full": { label: "Wszystko w jednym", Icon: ClipboardList },
 };
 
 const fmtNum = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -274,7 +275,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showOffer && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">📄 Oferta</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Oferta</CardTitle>
             <CardDescription>{order.client} · {order.event || "Wydarzenie"} · {order.date}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -314,7 +315,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showShoppingList && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">🛒 Lista zakupów</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><ShoppingCart className="w-5 h-5 text-primary" /> Lista zakupów</CardTitle>
             <CardDescription>Składniki do zakupu</CardDescription>
           </CardHeader>
           <CardContent>
@@ -346,7 +347,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showKitchen && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">👨‍🍳 Rozpiska na kuchnię</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><CookingPot className="w-5 h-5 text-primary" /> Rozpiska na kuchnię</CardTitle>
             <CardDescription>Dania do przygotowania (zestawy rozbite na pozycje)</CardDescription>
           </CardHeader>
           <CardContent>
@@ -376,7 +377,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showFoodCost && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">💰 Food cost</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> Food cost</CardTitle>
             <CardDescription>Analiza kosztów i marży</CardDescription>
           </CardHeader>
           <CardContent>
@@ -452,12 +453,15 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc }: { order: Orde
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            {(Object.keys(docLabels) as DocType[]).map((type) => (
-              <DropdownMenuItem key={type} onClick={() => onGenerateDoc(type)} className="cursor-pointer">
-                <span className="mr-2">{docLabels[type].icon}</span>
-                {docLabels[type].label}
-              </DropdownMenuItem>
-            ))}
+            {(Object.keys(docLabels) as DocType[]).map((type) => {
+              const DocIcon = docLabels[type].Icon;
+              return (
+                <DropdownMenuItem key={type} onClick={() => onGenerateDoc(type)} className="cursor-pointer">
+                  <DocIcon className="w-4 h-4 mr-2" />
+                  {docLabels[type].label}
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
         <Button size="sm" onClick={onEdit}>
