@@ -349,25 +349,75 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
   );
 };
 
-// ===== SUMMARY MODAL =====
+// ===== SUMMARY VIEW =====
 const SummaryView = ({ orders, onBack }: { orders: Order[]; onBack: () => void }) => {
-  // Aggregate all items across filtered orders
   const activeOrders = orders.filter((o) => o.status !== "Anulowane" && o.status !== "Zrealizowane");
 
-  const itemAggregation: Record<string, { name: string; totalQty: number; unit: string; totalValue: number }> = {};
+  // 1. LISTA ZAKUPÓW - aggregate raw ingredients from subItems
+  const ingredientMap: Record<string, { name: string; totalQty: number; unit: string }> = {};
   activeOrders.forEach((order) => {
     order.items.forEach((item) => {
-      const key = item.name;
-      if (!itemAggregation[key]) {
-        itemAggregation[key] = { name: item.name, totalQty: 0, unit: item.unit, totalValue: 0 };
+      if (item.subItems) {
+        item.subItems.forEach((sub) => {
+          const key = `${sub.name}__${sub.unit}`;
+          if (!ingredientMap[key]) {
+            ingredientMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit };
+          }
+          ingredientMap[key].totalQty += sub.quantity;
+        });
       }
-      itemAggregation[key].totalQty += item.quantity;
-      itemAggregation[key].totalValue += item.total;
     });
   });
+  const ingredients = Object.values(ingredientMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
 
-  const aggregatedItems = Object.values(itemAggregation).sort((a, b) => b.totalValue - a.totalValue);
-  const totalValue = aggregatedItems.reduce((sum, i) => sum + i.totalValue, 0);
+  // 2. LISTA DAŃ - for bundles/configurable show sub-items, for simple show the product
+  type DishEntry = { name: string; totalQty: number; unit: string; source: string };
+  const dishMap: Record<string, DishEntry> = {};
+  activeOrders.forEach((order) => {
+    order.items.forEach((item) => {
+      if (item.type === "service" || item.type === "extra") return;
+      if ((item.type === "configurable" || item.type === "bundle") && item.subItems) {
+        item.subItems.forEach((sub) => {
+          const key = `${sub.name}__dish`;
+          if (!dishMap[key]) {
+            dishMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit, source: item.name };
+          }
+          dishMap[key].totalQty += sub.quantity;
+        });
+      } else {
+        const key = `${item.name}__dish`;
+        if (!dishMap[key]) {
+          dishMap[key] = { name: item.name, totalQty: 0, unit: item.unit, source: "" };
+        }
+        dishMap[key].totalQty += item.quantity;
+      }
+    });
+  });
+  const dishes = Object.values(dishMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+
+  // 3. FOOD COST
+  type FoodCostEntry = { name: string; quantity: number; unit: string; foodCostPerUnit: number; totalFoodCost: number; revenue: number; margin: number };
+  const foodCostItems: FoodCostEntry[] = [];
+  activeOrders.forEach((order) => {
+    order.items.forEach((item) => {
+      if (item.type === "service" || !item.foodCostPerUnit) return;
+      foodCostItems.push({
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        foodCostPerUnit: item.foodCostPerUnit,
+        totalFoodCost: item.foodCostPerUnit * item.quantity,
+        revenue: item.total,
+        margin: item.total > 0 ? ((item.total - item.foodCostPerUnit * item.quantity) / item.total) * 100 : 0,
+      });
+    });
+  });
+  const totalRevenue = foodCostItems.reduce((s, i) => s + i.revenue, 0);
+  const totalFoodCost = foodCostItems.reduce((s, i) => s + i.totalFoodCost, 0);
+  const totalMargin = totalRevenue > 0 ? ((totalRevenue - totalFoodCost) / totalRevenue) * 100 : 0;
+  const totalValue = activeOrders.reduce((s, o) => s + o.amountNum, 0);
+
+  const fmtNum = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div>
@@ -388,7 +438,8 @@ const SummaryView = ({ orders, onBack }: { orders: Order[]; onBack: () => void }
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      {/* Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">Aktywne zamówienia</p>
@@ -398,46 +449,144 @@ const SummaryView = ({ orders, onBack }: { orders: Order[]; onBack: () => void }
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">Łączna wartość</p>
-            <p className="text-3xl font-bold text-primary">{totalValue.toLocaleString("pl-PL", { minimumFractionDigits: 2 })} zł</p>
+            <p className="text-3xl font-bold text-primary">{fmtNum(totalValue)} zł</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Unikalnych produktów</p>
-            <p className="text-3xl font-bold text-foreground">{aggregatedItems.length}</p>
+            <p className="text-sm text-muted-foreground">Food cost</p>
+            <p className="text-3xl font-bold text-foreground">{fmtNum(totalFoodCost)} zł</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Marża</p>
+            <p className={cn("text-3xl font-bold", totalMargin >= 60 ? "text-emerald-600" : totalMargin >= 40 ? "text-yellow-600" : "text-red-600")}>
+              {totalMargin.toFixed(1)}%
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Shopping list */}
-      <Card>
+      {/* 1. LISTA ZAKUPÓW */}
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-primary" />
             Lista zakupów
           </CardTitle>
-          <CardDescription>Zagregowane produkty ze wszystkich aktywnych zamówień</CardDescription>
+          <CardDescription>Zagregowane składniki ze wszystkich aktywnych zamówień</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {ingredients.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">Brak danych o składnikach w zamówieniach</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-semibold text-foreground">Składnik</TableHead>
+                  <TableHead className="font-semibold text-foreground text-right">Łączna ilość</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ingredients.map((ing, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{ing.name}</TableCell>
+                    <TableCell className="text-right">{fmtNum(ing.totalQty)} {ing.unit}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 2. LISTA DAŃ */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <UtensilsCrossed className="w-5 h-5 text-primary" />
+            Lista dań
+          </CardTitle>
+          <CardDescription>Wszystkie dania do przygotowania (zestawy i pakiety rozbite na pozycje)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="font-semibold text-foreground">Danie</TableHead>
+                <TableHead className="font-semibold text-foreground text-muted-foreground">Źródło</TableHead>
+                <TableHead className="font-semibold text-foreground text-right">Ilość</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dishes.map((dish, i) => (
+                <TableRow key={i}>
+                  <TableCell className="font-medium">{dish.name}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{dish.source || "—"}</TableCell>
+                  <TableCell className="text-right">{dish.totalQty} {dish.unit}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* 3. FOOD COST */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-primary" />
+            Food cost
+          </CardTitle>
+          <CardDescription>Analiza kosztów surowców i marży</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="font-semibold text-foreground">Produkt</TableHead>
-                <TableHead className="font-semibold text-foreground text-center">Łączna ilość</TableHead>
-                <TableHead className="font-semibold text-foreground text-right">Wartość</TableHead>
+                <TableHead className="font-semibold text-foreground text-center">Ilość</TableHead>
+                <TableHead className="font-semibold text-foreground text-right">FC/jedn.</TableHead>
+                <TableHead className="font-semibold text-foreground text-right">FC łącznie</TableHead>
+                <TableHead className="font-semibold text-foreground text-right">Przychód</TableHead>
+                <TableHead className="font-semibold text-foreground text-right">Marża</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {aggregatedItems.map((item, i) => (
+              {foodCostItems.map((item, i) => (
                 <TableRow key={i}>
                   <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="text-center">{item.totalQty} {item.unit}</TableCell>
-                  <TableCell className="text-right font-semibold">{item.totalValue.toLocaleString("pl-PL", { minimumFractionDigits: 2 })} zł</TableCell>
+                  <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{fmtNum(item.foodCostPerUnit)} zł</TableCell>
+                  <TableCell className="text-right">{fmtNum(item.totalFoodCost)} zł</TableCell>
+                  <TableCell className="text-right">{fmtNum(item.revenue)} zł</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="outline" className={cn(
+                      "text-xs",
+                      item.margin >= 60 ? "border-emerald-300 text-emerald-700 bg-emerald-50" :
+                      item.margin >= 40 ? "border-yellow-300 text-yellow-700 bg-yellow-50" :
+                      "border-red-300 text-red-700 bg-red-50"
+                    )}>
+                      {item.margin.toFixed(1)}%
+                    </Badge>
+                  </TableCell>
                 </TableRow>
               ))}
               <TableRow className="hover:bg-transparent border-t-2">
-                <TableCell colSpan={2} className="text-right font-semibold">Suma:</TableCell>
-                <TableCell className="text-right font-bold text-primary text-lg">{totalValue.toLocaleString("pl-PL", { minimumFractionDigits: 2 })} zł</TableCell>
+                <TableCell colSpan={3} className="text-right font-semibold">Suma:</TableCell>
+                <TableCell className="text-right font-bold">{fmtNum(totalFoodCost)} zł</TableCell>
+                <TableCell className="text-right font-bold text-primary">{fmtNum(totalRevenue)} zł</TableCell>
+                <TableCell className="text-right">
+                  <Badge variant="outline" className={cn(
+                    "text-xs font-bold",
+                    totalMargin >= 60 ? "border-emerald-300 text-emerald-700 bg-emerald-50" :
+                    totalMargin >= 40 ? "border-yellow-300 text-yellow-700 bg-yellow-50" :
+                    "border-red-300 text-red-700 bg-red-50"
+                  )}>
+                    {totalMargin.toFixed(1)}%
+                  </Badge>
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -445,7 +594,7 @@ const SummaryView = ({ orders, onBack }: { orders: Order[]; onBack: () => void }
       </Card>
 
       {/* Per-order breakdown */}
-      <Card className="mt-6">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Rozbicie na zamówienia</CardTitle>
         </CardHeader>
