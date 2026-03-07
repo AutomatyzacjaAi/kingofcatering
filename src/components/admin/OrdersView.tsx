@@ -453,12 +453,15 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc }: { order: Orde
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            {(Object.keys(docLabels) as DocType[]).map((type) => (
-              <DropdownMenuItem key={type} onClick={() => onGenerateDoc(type)} className="cursor-pointer">
-                <span className="mr-2">{docLabels[type].icon}</span>
-                {docLabels[type].label}
-              </DropdownMenuItem>
-            ))}
+            {(Object.keys(docLabels) as DocType[]).map((type) => {
+              const DocIcon = docLabels[type].Icon;
+              return (
+                <DropdownMenuItem key={type} onClick={() => onGenerateDoc(type)} className="cursor-pointer">
+                  <DocIcon className="w-4 h-4 mr-2" />
+                  {docLabels[type].label}
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
         <Button size="sm" onClick={onEdit}>
