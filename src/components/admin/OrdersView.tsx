@@ -56,11 +56,33 @@ const mockOrders: Order[] = [
     amount: "2 211,00 zł", amountNum: 2211, status: "Nowe", notes: "Bez orzechów - alergia",
     createdAt: "15 sty 2026",
     items: [
-      { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900 },
-      { name: "Patera Wędlin Premium", quantity: 1, unit: "szt.", pricePerUnit: 520, total: 520 },
-      { name: "Mini Burgery - Klasyczny", quantity: 20, unit: "szt.", pricePerUnit: 15, total: 300 },
-      { name: "Sushi Nigiri Sake", quantity: 30, unit: "szt.", pricePerUnit: 8, total: 240 },
-      { name: "Obsługa kelnerska 4h", quantity: 1, unit: "szt.", pricePerUnit: 251, total: 251 },
+      { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900, type: "simple", foodCostPerUnit: 135,
+        subItems: [
+          { name: "Brie francuski", quantity: 300, unit: "g", foodCostPerUnit: 0.045 },
+          { name: "Camembert z ziołami", quantity: 300, unit: "g", foodCostPerUnit: 0.04 },
+          { name: "Gouda długo dojrzewająca", quantity: 400, unit: "g", foodCostPerUnit: 0.035 },
+          { name: "Roquefort", quantity: 200, unit: "g", foodCostPerUnit: 0.08 },
+          { name: "Winogrona", quantity: 400, unit: "g", foodCostPerUnit: 0.012 },
+          { name: "Orzechy włoskie", quantity: 200, unit: "g", foodCostPerUnit: 0.06 },
+          { name: "Miód akacjowy", quantity: 100, unit: "ml", foodCostPerUnit: 0.04 },
+        ]
+      },
+      { name: "Patera Wędlin Premium", quantity: 1, unit: "szt.", pricePerUnit: 520, total: 520, type: "simple", foodCostPerUnit: 180,
+        subItems: [
+          { name: "Szynka parmeńska", quantity: 200, unit: "g", foodCostPerUnit: 0.12 },
+          { name: "Salami Milano", quantity: 150, unit: "g", foodCostPerUnit: 0.06 },
+          { name: "Chorizo Iberico", quantity: 150, unit: "g", foodCostPerUnit: 0.07 },
+          { name: "Oliwki Kalamata", quantity: 150, unit: "g", foodCostPerUnit: 0.03 },
+        ]
+      },
+      { name: "Mini Burgery", quantity: 20, unit: "szt.", pricePerUnit: 15, total: 300, type: "bundle", foodCostPerUnit: 5.5,
+        subItems: [
+          { name: "Mini Burger Klasyczny", quantity: 12, unit: "szt.", foodCostPerUnit: 5.5 },
+          { name: "Mini Burger Vege", quantity: 8, unit: "szt.", foodCostPerUnit: 4.2 },
+        ]
+      },
+      { name: "Sushi Nigiri Sake", quantity: 30, unit: "szt.", pricePerUnit: 8, total: 240, type: "simple", foodCostPerUnit: 3.2 },
+      { name: "Obsługa kelnerska 4h", quantity: 1, unit: "szt.", pricePerUnit: 251, total: 251, type: "service" },
     ],
   },
   {
