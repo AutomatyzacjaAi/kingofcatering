@@ -315,7 +315,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
       {showShoppingList && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">🛒 Lista zakupów</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><ShoppingCart className="w-5 h-5 text-primary" /> Lista zakupów</CardTitle>
             <CardDescription>Składniki do zakupu</CardDescription>
           </CardHeader>
           <CardContent>
