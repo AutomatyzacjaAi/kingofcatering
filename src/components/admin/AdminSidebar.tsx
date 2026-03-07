@@ -9,9 +9,10 @@ interface AdminSidebarProps {
   onSectionChange: (section: AdminSection) => void;
 }
 
-const mainNavItems: { id: "orders" | "clients"; icon: typeof ClipboardList; label: string }[] = [
+const mainNavItems: { id: "orders" | "clients" | "reports"; icon: typeof ClipboardList; label: string }[] = [
   { id: "orders", icon: ClipboardList, label: "Zamówienia" },
   { id: "clients", icon: Users, label: "Klienci" },
+  { id: "reports", icon: BarChart3, label: "Raporty" },
 ];
 
 const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: string }[] = [
