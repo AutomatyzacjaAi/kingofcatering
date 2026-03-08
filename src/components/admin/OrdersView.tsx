@@ -1979,10 +1979,19 @@ const OrdersView = () => {
   }, [fetchOrders]);
 
   const filtered = orders.filter((o) => {
-    const matchSearch =
-      o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.client.toLowerCase().includes(search.toLowerCase()) ||
-      o.email.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase().trim();
+    const matchSearch = !q ||
+      o.id.toLowerCase().includes(q) ||
+      o.client.toLowerCase().includes(q) ||
+      o.email.toLowerCase().includes(q) ||
+      o.phone.toLowerCase().includes(q) ||
+      o.event.toLowerCase().includes(q) ||
+      o.date.toLowerCase().includes(q) ||
+      o.status.toLowerCase().includes(q) ||
+      o.amount.toLowerCase().includes(q) ||
+      o.deliveryAddress.toLowerCase().includes(q) ||
+      o.notes.toLowerCase().includes(q) ||
+      o.items.some(item => item.name.toLowerCase().includes(q));
     const matchStatus = statusFilter === "all" || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
