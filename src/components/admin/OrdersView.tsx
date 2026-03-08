@@ -776,30 +776,140 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }:
   );
 };
 
-// ===== AVAILABLE PRODUCTS (mock catalog for adding) =====
-const availableProducts: { name: string; unit: string; defaultPrice: number; type: OrderItem["type"] }[] = [
-  { name: "Patera Serów Europejskich", unit: "szt.", defaultPrice: 450, type: "simple" },
-  { name: "Patera Wędlin Premium", unit: "szt.", defaultPrice: 520, type: "simple" },
-  { name: "Patera Owoców Morza", unit: "szt.", defaultPrice: 680, type: "simple" },
-  { name: "Antipasto Włoskie", unit: "szt.", defaultPrice: 380, type: "simple" },
-  { name: "Tacos z kurczakiem", unit: "szt.", defaultPrice: 18, type: "simple" },
-  { name: "Tacos z wieprzowiną", unit: "szt.", defaultPrice: 18, type: "simple" },
-  { name: "Tacos vege", unit: "szt.", defaultPrice: 18, type: "simple" },
-  { name: "Mini Burger Klasyczny", unit: "szt.", defaultPrice: 15, type: "simple" },
-  { name: "Mini Burger Vege", unit: "szt.", defaultPrice: 15, type: "simple" },
-  { name: "Sushi Nigiri Sake", unit: "szt.", defaultPrice: 8, type: "simple" },
-  { name: "Sushi Nigiri Maguro", unit: "szt.", defaultPrice: 10, type: "simple" },
-  { name: "Zestaw nr 1 Klasyczny", unit: "os.", defaultPrice: 70, type: "configurable" },
-  { name: "Zestaw nr 2 Premium", unit: "os.", defaultPrice: 95, type: "configurable" },
-  { name: "Zestaw Wegetariański", unit: "os.", defaultPrice: 60, type: "configurable" },
-  { name: "Obsługa kelnerska 4h", unit: "szt.", defaultPrice: 251, type: "service" },
-  { name: "Obsługa kelnerska 8h", unit: "szt.", defaultPrice: 450, type: "service" },
-  { name: "Obsługa kelnerska 12h", unit: "szt.", defaultPrice: 650, type: "service" },
-  { name: "Dekoracja stołu", unit: "szt.", defaultPrice: 142, type: "extra" },
-  { name: "Opakowanie jednorazowe", unit: "szt.", defaultPrice: 30, type: "extra" },
-  { name: "LED świece", unit: "szt.", defaultPrice: 25, type: "extra" },
-  { name: "Podgrzewacze", unit: "szt.", defaultPrice: 45, type: "extra" },
-];
+// ===== DYNAMIC PRODUCT CATALOG =====
+type CatalogProduct = { id: string; name: string; unit: string; defaultPrice: number; type: OrderItem["type"]; variants?: { id: string; name: string; price: number }[]; optionGroups?: { id: string; name: string; minSelections: number; maxSelections: number; options: { id: string; name: string }[] }[] };
+
+function useCatalogProducts() {
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
+  useEffect(() => {
+    const fetch = async () => {
+      const [dishesRes, bundlesRes, setsRes, extrasRes] = await Promise.all([
+        supabase.from("dishes").select("id, name, unit_label, price_per_unit, price_brutto").order("name"),
+        supabase.from("bundles").select("id, name, base_price, bundle_variants(id, name, price, sort_order)").order("name"),
+        supabase.from("configurable_sets").select("id, name, price_per_person, config_groups(id, name, min_selections, max_selections, sort_order, config_group_options(id, name, sort_order))").order("name"),
+        supabase.from("extras").select("id, name, price, unit_label, category").order("name"),
+      ]);
+      const items: CatalogProduct[] = [];
+      for (const d of dishesRes.data ?? []) {
+        items.push({ id: d.id, name: d.name, unit: d.unit_label || "szt.", defaultPrice: Number(d.price_per_unit ?? d.price_brutto), type: "simple" });
+      }
+      for (const b of bundlesRes.data ?? []) {
+        const variants = ((b.bundle_variants as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((v: any) => ({ id: v.id, name: v.name, price: Number(v.price) }));
+        items.push({ id: b.id, name: b.name, unit: "szt.", defaultPrice: Number(b.base_price), type: "bundle", variants });
+      }
+      for (const s of setsRes.data ?? []) {
+        const optionGroups = ((s.config_groups as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((g: any) => ({
+          id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections,
+          options: ((g.config_group_options as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((o: any) => ({ id: o.id, name: o.name })),
+        }));
+        items.push({ id: s.id, name: s.name, unit: "os.", defaultPrice: Number(s.price_per_person), type: "configurable", optionGroups });
+      }
+      for (const e of extrasRes.data ?? []) {
+        const t = e.category === "obsluga" ? "service" as const : "extra" as const;
+        items.push({ id: e.id, name: e.name, unit: e.unit_label || "szt.", defaultPrice: Number(e.price), type: t });
+      }
+      setCatalog(items);
+    };
+    fetch();
+  }, []);
+  return catalog;
+}
+
+// ===== SUB-ITEM SELECTOR (for bundles & configurable sets) =====
+const SubItemSelector = ({ product, onConfirm, onCancel }: {
+  product: CatalogProduct;
+  onConfirm: (subItems: OrderItem["subItems"]) => void;
+  onCancel: () => void;
+}) => {
+  // For bundles: select which variants
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, number>>({});
+  // For configurable: select options per group
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
+
+  if (product.type === "bundle" && product.variants) {
+    const handleConfirm = () => {
+      const subs = Object.entries(selectedVariants)
+        .filter(([, qty]) => qty > 0)
+        .map(([vId, qty]) => {
+          const v = product.variants!.find(v => v.id === vId)!;
+          return { name: v.name, quantity: qty, unit: "szt." };
+        });
+      onConfirm(subs);
+    };
+    return (
+      <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2 mt-2">
+        <p className="text-sm font-semibold text-foreground">Wybierz warianty: {product.name}</p>
+        {product.variants.map(v => (
+          <div key={v.id} className="flex items-center justify-between gap-2">
+            <span className="text-sm flex-1">{v.name} <span className="text-muted-foreground text-xs">({fmtNum(v.price)} zł)</span></span>
+            <Input type="number" min={0} value={selectedVariants[v.id] || 0}
+              onChange={(e) => setSelectedVariants(prev => ({ ...prev, [v.id]: Math.max(0, parseInt(e.target.value) || 0) }))}
+              className="w-16 h-7 text-xs text-center" />
+          </div>
+        ))}
+        <div className="flex gap-2 pt-1">
+          <Button size="sm" onClick={handleConfirm} disabled={Object.values(selectedVariants).every(q => q === 0)}>
+            <Check className="w-3 h-3 mr-1" />Dodaj
+          </Button>
+          <Button size="sm" variant="outline" onClick={onCancel}>Anuluj</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (product.type === "configurable" && product.optionGroups) {
+    const toggleOption = (groupId: string, optionId: string, maxSel: number) => {
+      setSelectedOptions(prev => {
+        const current = prev[groupId] || [];
+        if (current.includes(optionId)) return { ...prev, [groupId]: current.filter(id => id !== optionId) };
+        if (current.length >= maxSel) return prev;
+        return { ...prev, [groupId]: [...current, optionId] };
+      });
+    };
+    const handleConfirm = () => {
+      const subs: OrderItem["subItems"] = [];
+      for (const g of product.optionGroups!) {
+        const ids = selectedOptions[g.id] || [];
+        for (const id of ids) {
+          const opt = g.options.find(o => o.id === id);
+          if (opt) subs!.push({ name: `${g.name}: ${opt.name}`, quantity: 1, unit: "szt." });
+        }
+      }
+      onConfirm(subs);
+    };
+    const allGroupsSatisfied = product.optionGroups.every(g => (selectedOptions[g.id] || []).length >= g.minSelections);
+    return (
+      <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-3 mt-2">
+        <p className="text-sm font-semibold text-foreground">Konfiguruj: {product.name}</p>
+        {product.optionGroups.map(g => (
+          <div key={g.id}>
+            <p className="text-xs font-medium text-muted-foreground mb-1">{g.name} (min {g.minSelections}, max {g.maxSelections})</p>
+            <div className="flex flex-wrap gap-1.5">
+              {g.options.map(o => {
+                const isSelected = (selectedOptions[g.id] || []).includes(o.id);
+                return (
+                  <button key={o.id} onClick={() => toggleOption(g.id, o.id, g.maxSelections)}
+                    className={cn("px-2.5 py-1 rounded-full text-xs border transition-colors",
+                      isSelected ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:border-primary/50"
+                    )}
+                  >{o.name}</button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        <div className="flex gap-2 pt-1">
+          <Button size="sm" onClick={handleConfirm} disabled={!allGroupsSatisfied}>
+            <Check className="w-3 h-3 mr-1" />Dodaj
+          </Button>
+          <Button size="sm" variant="outline" onClick={onCancel}>Anuluj</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
 
 // ===== ORDER EDIT VIEW =====
 const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => void; onSave: (o: Order) => void }) => {
