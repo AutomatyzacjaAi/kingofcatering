@@ -883,7 +883,6 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
 };
 
 // ===== SUMMARY SHEET =====
-type SummaryDocType = "zamowienia" | "lista-zakupow" | "lista-dan" | "food-cost";
 const summaryDocLabels: Record<SummaryDocType, { label: string; Icon: LucideIcon }> = {
   "zamowienia": { label: "Lista zamówień", Icon: FileText },
   "lista-zakupow": { label: "Lista zakupów", Icon: ShoppingCart },
