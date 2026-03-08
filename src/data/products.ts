@@ -212,7 +212,6 @@ export const products: Product[] = [
     image: "/products/tacos.jpg",
     basePrice: 18,
     minQuantity: 8,
-    icon: "🌮",
     category: "mini",
     variants: [
       {
