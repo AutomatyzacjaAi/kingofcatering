@@ -29,6 +29,7 @@ type OrderSummaryProps = {
   packagingOptions: PackagingOption[];
   waiterServiceOptions: WaiterServiceOption[];
   paymentMethods: PaymentMethod[];
+  minOrderValue?: number;
 };
 
 export function OrderSummary({ 
