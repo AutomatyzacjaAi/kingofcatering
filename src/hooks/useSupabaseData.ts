@@ -6,7 +6,7 @@ import type {
   EventType, Category,
 } from "@/data/products";
 import type {
-  ExtraItem, PackagingOption, WaiterServiceOption, PaymentMethod,
+  ExtraItem, PackagingOption, WaiterServiceOption, PaymentMethod, ExtrasCategory,
 } from "@/data/extras";
 
 // ─── Fetch helpers ───────────────────────────────────────────────

@@ -37,32 +37,10 @@ export type WaiterServiceOption = {
 export type ExtrasCategory = {
   id: string;
   name: string;
+  slug: string;
   description: string;
   required?: boolean;
 };
-
-// ============= EXTRAS CATEGORIES =============
-
-export const extrasCategories: ExtrasCategory[] = [
-  {
-    id: "dodatki",
-    name: "Dodatki",
-    description: "Dodatkowe usługi",
-    required: false,
-  },
-  {
-    id: "pakowanie",
-    name: "Pakowanie",
-    description: "Wybierz sposób pakowania",
-    required: true,
-  },
-  {
-    id: "obsluga",
-    name: "Obsługa",
-    description: "Obsługa kelnerska",
-    required: false,
-  },
-];
 
 // ============= EXTRAS - ADDITIONAL SERVICES =============
 
