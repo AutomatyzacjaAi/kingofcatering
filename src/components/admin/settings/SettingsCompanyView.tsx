@@ -18,6 +18,7 @@ const SettingsCompanyView = () => {
   const [bankAccount, setBankAccount] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
