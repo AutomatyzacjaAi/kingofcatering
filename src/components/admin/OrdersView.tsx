@@ -60,7 +60,7 @@ const allStatuses: OrderStatus[] = ["Nowe", "Nowe zamówienie", "Nowa oferta", "
 
 const mockOrders: Order[] = [
   {
-    id: "ZAM-KOC8L7K", client: "Anna Kowalska", email: "anna.k@email.pl", phone: "+48 500 111 222",
+    id: "ZAM-KOC8L7K", dbId: "", clientId: null, client: "Anna Kowalska", email: "anna.k@email.pl", phone: "+48 500 111 222",
     event: "Urodziny", date: "28 sty 2026", deliveryAddress: "ul. Kwiatowa 5, Warszawa",
     amount: "2 211,00 zł", amountNum: 2211, status: "Nowe", notes: "Bez orzechów - alergia",
     createdAt: "15 sty 2026",
