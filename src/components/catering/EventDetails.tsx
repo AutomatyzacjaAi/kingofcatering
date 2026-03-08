@@ -30,6 +30,7 @@ type EventDetailsProps = {
   onEventTimeChange: (time: string) => void;
   eventTypes: EventType[];
   blockedDates: Date[];
+  minLeadDays?: number;
 };
 
 export function EventDetails({
