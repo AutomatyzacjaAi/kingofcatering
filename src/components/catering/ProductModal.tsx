@@ -429,7 +429,7 @@ function ConfigurableProductContent({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Suma:</span>
                 <span className="text-lg font-bold text-primary">
-                  {(quantity * product.pricePerPerson).toFixed(2)} zł
+                  {(quantity * effectivePrice).toFixed(2)} zł
                 </span>
               </div>
             </div>
