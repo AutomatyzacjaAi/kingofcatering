@@ -409,6 +409,7 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
     setEditingId(dish.id); setFormName(dish.name); setFormImage(dish.image);
     setFormPriceNetto(dish.priceNetto.toString()); setFormVat(dish.vatRate);
     setFormPriceBrutto(dish.priceBrutto.toString()); setFormIngredients([...dish.ingredients]);
+    setFormDietaryTags([...(dish.dietaryTags || [])]);
     setShowForm(true);
   };
 
