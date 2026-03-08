@@ -46,6 +46,7 @@ export function EventDetails({
   onEventTimeChange,
   eventTypes,
   blockedDates,
+  minLeadDays = 0,
 }: EventDetailsProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 

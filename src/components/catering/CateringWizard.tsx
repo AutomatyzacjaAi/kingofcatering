@@ -247,6 +247,7 @@ export function CateringWizard() {
             packagingOptions={packagingOptions}
             waiterServiceOptions={waiterServiceOptions}
             paymentMethods={paymentMethods}
+            minOrderValue={orderConfig.minOrderValue}
           />
         );
       default:
