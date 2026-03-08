@@ -7,6 +7,7 @@ export type ExtraItem = {
   longDescription?: string;
   image?: string;
   price: number;
+  priceOnSite?: number | null;
   unitLabel: string;
   contents?: string[];
   extrasCategoryId?: string;
