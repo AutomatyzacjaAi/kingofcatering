@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +14,11 @@ import type {
   ExtraItem,
   PackagingOption,
   WaiterServiceOption,
+  ExtrasCategory,
 } from "@/data/extras";
-import { extrasCategories } from "@/data/extras";
 
 type ExtrasStepProps = {
+  extrasCategories: ExtrasCategory[];
   selectedExtras: Record<string, number>;
   selectedPackaging: string | null;
   packagingPersonCount: number;
@@ -33,6 +34,7 @@ type ExtrasStepProps = {
 };
 
 export function ExtrasStep({
+  extrasCategories,
   selectedExtras,
   selectedPackaging,
   packagingPersonCount,
@@ -46,17 +48,74 @@ export function ExtrasStep({
   packagingOptions,
   waiterServiceOptions,
 }: ExtrasStepProps) {
-  const [activeCategory, setActiveCategory] = useState(extrasCategories[0].id);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedExtraItem, setSelectedExtraItem] = useState<ExtraItem | null>(null);
   const [selectedPackagingOption, setSelectedPackagingOption] = useState<PackagingOption | null>(null);
   const [selectedWaiterOption, setSelectedWaiterOption] = useState<WaiterServiceOption | null>(null);
 
+  // Set first category as active when categories load
+  const effectiveActiveCategory = activeCategory ?? extrasCategories[0]?.id ?? null;
+
+  // Group extras/packaging/waiter by their extras_category_id
+  const extrasByCategory = useMemo(() => {
+    const map: Record<string, ExtraItem[]> = {};
+    for (const item of extraItems) {
+      const catId = item.extrasCategoryId;
+      if (catId) {
+        if (!map[catId]) map[catId] = [];
+        map[catId].push(item);
+      }
+    }
+    return map;
+  }, [extraItems]);
+
+  const packagingByCategory = useMemo(() => {
+    const map: Record<string, PackagingOption[]> = {};
+    for (const item of packagingOptions) {
+      const catId = item.extrasCategoryId;
+      if (catId) {
+        if (!map[catId]) map[catId] = [];
+        map[catId].push(item);
+      }
+    }
+    return map;
+  }, [packagingOptions]);
+
+  const waiterByCategory = useMemo(() => {
+    const map: Record<string, WaiterServiceOption[]> = {};
+    for (const item of waiterServiceOptions) {
+      const catId = item.extrasCategoryId;
+      if (catId) {
+        if (!map[catId]) map[catId] = [];
+        map[catId].push(item);
+      }
+    }
+    return map;
+  }, [waiterServiceOptions]);
+
   const getTotalItemsInCategory = (categoryId: string) => {
-    if (categoryId === "dodatki") return Object.values(selectedExtras).filter(q => q > 0).length;
-    if (categoryId === "pakowanie") return selectedPackaging ? 1 : 0;
-    if (categoryId === "obsluga") return selectedWaiterService ? 1 : 0;
-    return 0;
+    let count = 0;
+    const extras = extrasByCategory[categoryId] || [];
+    count += extras.filter(e => (selectedExtras[e.id] || 0) > 0).length;
+    const pkgs = packagingByCategory[categoryId] || [];
+    count += pkgs.filter(p => selectedPackaging === p.id).length;
+    const waiters = waiterByCategory[categoryId] || [];
+    count += waiters.filter(w => selectedWaiterService === w.id).length;
+    return count;
   };
+
+  if (extrasCategories.length === 0) {
+    return (
+      <div className="pb-24 px-4 py-8">
+        <p className="text-sm text-muted-foreground text-center">Brak kategorii dodatków</p>
+      </div>
+    );
+  }
+
+  const currentCategory = extrasCategories.find(c => c.id === effectiveActiveCategory);
+  const currentExtras = extrasByCategory[effectiveActiveCategory] || [];
+  const currentPackaging = packagingByCategory[effectiveActiveCategory] || [];
+  const currentWaiter = waiterByCategory[effectiveActiveCategory] || [];
 
   return (
     <div className="pb-24">
@@ -64,7 +123,7 @@ export function ExtrasStep({
         <div className="flex overflow-x-auto no-scrollbar px-4">
           {extrasCategories.map((category) => {
             const itemCount = getTotalItemsInCategory(category.id);
-            const isActive = activeCategory === category.id;
+            const isActive = effectiveActiveCategory === category.id;
             return (
               <button
                 key={category.id}
@@ -76,7 +135,6 @@ export function ExtrasStep({
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span className="text-sm">{category.name}</span>
                 <span className="text-sm">{category.name}</span>
                 {category.required && !itemCount && (
                   <Badge variant="destructive" className="text-xs px-1.5 py-0">!</Badge>
@@ -96,14 +154,23 @@ export function ExtrasStep({
       </div>
 
       <div className="px-4 py-4 md:px-6 lg:px-8">
-        {activeCategory === "dodatki" && (
-          <ExtrasListSection extras={extraItems} selectedExtras={selectedExtras} onExtraClick={(extra) => setSelectedExtraItem(extra)} />
+        {/* Regular extras (quantity-based) */}
+        {currentExtras.length > 0 && (
+          <ExtrasListSection extras={currentExtras} selectedExtras={selectedExtras} onExtraClick={(extra) => setSelectedExtraItem(extra)} />
         )}
-        {activeCategory === "pakowanie" && (
-          <PackagingSection options={packagingOptions} selectedId={selectedPackaging} onOptionClick={(option) => setSelectedPackagingOption(option)} />
+
+        {/* Packaging options (single select) */}
+        {currentPackaging.length > 0 && (
+          <PackagingSection options={currentPackaging} selectedId={selectedPackaging} onOptionClick={(option) => setSelectedPackagingOption(option)} />
         )}
-        {activeCategory === "obsluga" && (
-          <WaiterServiceSection options={waiterServiceOptions} selectedId={selectedWaiterService} onOptionClick={(option) => setSelectedWaiterOption(option)} onNoServiceClick={() => onWaiterServiceChange(null, 0)} />
+
+        {/* Waiter service options (single select + count) */}
+        {currentWaiter.length > 0 && (
+          <WaiterServiceSection options={currentWaiter} selectedId={selectedWaiterService} onOptionClick={(option) => setSelectedWaiterOption(option)} onNoServiceClick={() => onWaiterServiceChange(null, 0)} />
+        )}
+
+        {currentExtras.length === 0 && currentPackaging.length === 0 && currentWaiter.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-6">Brak pozycji w tej kategorii</p>
         )}
       </div>
 
