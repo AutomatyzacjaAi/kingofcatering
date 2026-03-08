@@ -195,7 +195,6 @@ async function fetchExtras(): Promise<{
         image: e.image_url ?? undefined,
         duration: e.duration ?? "4h",
         price: Number(e.price),
-        icon: e.icon ?? "👤",
         contents: (e.contents as string[]) ?? [],
       });
     }
