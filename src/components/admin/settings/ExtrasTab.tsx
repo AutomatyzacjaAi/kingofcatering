@@ -91,6 +91,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
   const [formDuration, setFormDuration] = useState("");
   const [formContents, setFormContents] = useState("");
   const [formFoodCost, setFormFoodCost] = useState("");
+  const [formPriceOnSite, setFormPriceOnSite] = useState("");
 
   const filtered = extras.filter(e => e.name.toLowerCase().includes(search.toLowerCase()));
 
