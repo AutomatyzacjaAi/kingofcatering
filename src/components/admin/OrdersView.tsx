@@ -1853,7 +1853,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                     <span>Produkty</span>
                     <span>{fmtNum(totalAmount)} zł</span>
                   </div>
-                  {deliveryCost > 0 && (
+                  {cateringType === "wyjazdowy" && deliveryCost > 0 && (
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Dostawa</span>
                       <span>{fmtNum(deliveryCost)} zł</span>
@@ -1861,7 +1861,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                   )}
                   <div className="flex justify-between">
                     <span className="text-sm font-bold">Razem</span>
-                    <span className="text-sm font-bold text-primary">{fmtNum(totalAmount + deliveryCost)} zł</span>
+                    <span className="text-sm font-bold text-primary">{fmtNum(totalAmount + (cateringType === "wyjazdowy" ? deliveryCost : 0))} zł</span>
                   </div>
                 </div>
               </div>
