@@ -310,6 +310,14 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
                     <TableCell className="text-right font-semibold">{fmtNum(item.total)} zł</TableCell>
                   </TableRow>
                 ))}
+                {order.deliveryCost > 0 && (
+                  <TableRow>
+                    <TableCell className="font-medium">Dostawa</TableCell>
+                    <TableCell className="text-center">1</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{fmtNum(order.deliveryCost)} zł</TableCell>
+                    <TableCell className="text-right font-semibold">{fmtNum(order.deliveryCost)} zł</TableCell>
+                  </TableRow>
+                )}
                 <TableRow className="hover:bg-transparent border-t-2">
                   <TableCell colSpan={3} className="text-right font-semibold">Suma:</TableCell>
                   <TableCell className="text-right font-bold text-primary text-lg">{order.amount}</TableCell>
