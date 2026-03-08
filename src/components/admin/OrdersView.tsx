@@ -50,7 +50,6 @@ interface Order {
 }
 
 const statusColors: Record<OrderStatus, string> = {
-  "Nowe": "bg-blue-50 text-blue-700 border-blue-200",
   "Nowe zamówienie": "bg-blue-50 text-blue-700 border-blue-200",
   "Nowa oferta": "bg-purple-50 text-purple-700 border-purple-200",
   "Potwierdzone": "bg-green-50 text-green-700 border-green-200",
@@ -59,7 +58,7 @@ const statusColors: Record<OrderStatus, string> = {
   "Anulowane": "bg-red-50 text-red-700 border-red-200",
 };
 
-const allStatuses: OrderStatus[] = ["Nowe", "Nowe zamówienie", "Nowa oferta", "Potwierdzone", "W realizacji", "Zrealizowane", "Anulowane"];
+const allStatuses: OrderStatus[] = ["Nowe zamówienie", "Nowa oferta", "Potwierdzone", "W realizacji", "Zrealizowane", "Anulowane"];
 
 const mockOrders: Order[] = [
   {
