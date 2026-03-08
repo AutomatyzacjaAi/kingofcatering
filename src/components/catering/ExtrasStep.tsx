@@ -227,8 +227,9 @@ function ExtrasListSection({
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground text-sm">{extra.name}</h3>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{extra.description}</p>
-                  <span className="text-sm font-bold text-primary">{extra.price.toFixed(0)} zł / {extra.unitLabel}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-sm font-bold text-primary">{extra.price.toFixed(0)} zł / {extra.unitLabel}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {quantity > 0 && <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">{quantity}</Badge>}
