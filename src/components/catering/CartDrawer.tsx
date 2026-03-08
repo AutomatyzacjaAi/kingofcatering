@@ -28,7 +28,7 @@ export function CartDrawer({
   products, extraItems, packagingOptions, waiterServiceOptions,
 }: CartDrawerProps) {
   const ct = order.cateringType;
-  type CartItem = { key: string; name: string; price: number; quantity: number; type: "simple" | "expandable" | "configurable" | "extra" | "packaging" | "waiter"; productId: string; variantId?: string; isReadOnly?: boolean; };
+  type CartItem = { key: string; name: string; price: number; quantity: number; type: "simple" | "expandable" | "configurable" | "extra" | "packaging" | "waiter"; productId: string; variantId?: string; isReadOnly?: boolean; details?: string[] };
   
   const cartItems: CartItem[] = [];
   
@@ -44,10 +44,12 @@ export function CartDrawer({
   for (const [productId, variants] of Object.entries(order.expandableQuantities)) {
     const product = products.find(p => p.id === productId);
     if (product && product.type === "expandable") {
+      const selectedVariants: string[] = [];
       for (const [variantId, qty] of Object.entries(variants)) {
         if (qty > 0) {
           const variant = product.variants.find(v => v.id === variantId);
           if (variant) {
+            selectedVariants.push(`${variant.name} ×${qty}`);
             cartItems.push({ key: `${productId}-${variantId}`, name: variant.name, price: getVariantPrice(variant, ct), quantity: qty, type: "expandable", productId, variantId });
           }
         }
@@ -59,7 +61,20 @@ export function CartDrawer({
     if (data.quantity > 0) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "configurable") {
-        cartItems.push({ key: productId, name: product.name, price: getConfigurablePrice(product, ct), quantity: data.quantity, type: "configurable", productId });
+        // Build details from selected options
+        const details: string[] = [];
+        for (const group of product.optionGroups) {
+          const selectedIds = data.options[group.id] || [];
+          if (selectedIds.length > 0) {
+            const optionNames = selectedIds
+              .map(id => group.options.find(o => o.id === id)?.name)
+              .filter(Boolean);
+            if (optionNames.length > 0) {
+              details.push(`${group.name}: ${optionNames.join(", ")}`);
+            }
+          }
+        }
+        cartItems.push({ key: productId, name: product.name, price: getConfigurablePrice(product, ct), quantity: data.quantity, type: "configurable", productId, details });
       }
     }
   }
