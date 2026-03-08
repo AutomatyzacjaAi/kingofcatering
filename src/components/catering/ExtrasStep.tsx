@@ -156,7 +156,7 @@ function ExtrasListSection({
             <CardContent className="p-3">
               <div className="flex items-center gap-3">
                 <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                  {hasImage ? <img src={extra.image} alt={extra.name} className="w-full h-full object-cover" /> : <span className="text-2xl">{extra.icon}</span>}
+                  {hasImage ? <img src={extra.image} alt={extra.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground text-sm">{extra.name}</h3>
