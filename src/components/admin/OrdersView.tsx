@@ -922,81 +922,12 @@ const SummarySheet = ({ open, onClose, orders }: { open: boolean; onClose: () =>
     return true;
   });
 
-  const generateCSV = () => {
-    let csv = "";
-    const sep = ";";
-
-    if (docType === "zamowienia") {
-      csv = ["Nr zamówienia", "Klient", "Wydarzenie", "Data", "Kwota", "Status", "Pozycje"].join(sep) + "\n";
-      filteredOrders.forEach(o => {
-        const itemNames = o.items.map(i => `${i.name} x${i.quantity}`).join(", ");
-        csv += [o.id, o.client, o.event || "-", o.date, o.amount, o.status, `"${itemNames}"`].join(sep) + "\n";
-      });
-    } else if (docType === "lista-zakupow") {
-      const ingredientMap: Record<string, { name: string; totalQty: number; unit: string }> = {};
-      filteredOrders.forEach(o => {
-        o.items.forEach(item => {
-          if (item.subItems) {
-            item.subItems.forEach(sub => {
-              const key = `${sub.name}__${sub.unit}`;
-              if (!ingredientMap[key]) ingredientMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit };
-              ingredientMap[key].totalQty += sub.quantity;
-            });
-          }
-        });
-      });
-      const ingredients = Object.values(ingredientMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
-      csv = ["Składnik", "Ilość", "Jednostka"].join(sep) + "\n";
-      ingredients.forEach(i => { csv += [i.name, fmtNum(i.totalQty), i.unit].join(sep) + "\n"; });
-    } else if (docType === "lista-dan") {
-      type DishEntry = { name: string; totalQty: number; unit: string; source: string };
-      const dishMap: Record<string, DishEntry> = {};
-      filteredOrders.forEach(o => {
-        o.items.forEach(item => {
-          if (item.type === "service" || item.type === "extra") return;
-          if ((item.type === "configurable" || item.type === "bundle") && item.subItems) {
-            item.subItems.forEach(sub => {
-              const key = `${sub.name}__dish`;
-              if (!dishMap[key]) dishMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit, source: item.name };
-              dishMap[key].totalQty += sub.quantity;
-            });
-          } else {
-            const key = `${item.name}__dish`;
-            if (!dishMap[key]) dishMap[key] = { name: item.name, totalQty: 0, unit: item.unit, source: "" };
-            dishMap[key].totalQty += item.quantity;
-          }
-        });
-      });
-      const dishes = Object.values(dishMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
-      csv = ["Danie", "Ilość", "Jednostka", "Źródło"].join(sep) + "\n";
-      dishes.forEach(d => { csv += [d.name, d.totalQty, d.unit, d.source || "-"].join(sep) + "\n"; });
-    } else if (docType === "food-cost") {
-      csv = ["Produkt", "Ilość", "Jednostka", "FC/jedn.", "FC łącznie", "Przychód", "Marża %"].join(sep) + "\n";
-      filteredOrders.forEach(o => {
-        o.items.forEach(item => {
-          if (item.type === "service" || !item.foodCostPerUnit) return;
-          const totalFC = item.foodCostPerUnit * item.quantity;
-          const margin = item.total > 0 ? ((item.total - totalFC) / item.total) * 100 : 0;
-          csv += [item.name, item.quantity, item.unit, fmtNum(item.foodCostPerUnit), fmtNum(totalFC), fmtNum(item.total), margin.toFixed(1) + "%"].join(sep) + "\n";
-        });
-      });
-    }
-
-    return csv;
-  };
-
   const handleDownload = () => {
-    const csv = generateCSV();
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const dateStr = new Date().toISOString().slice(0, 10);
-    a.download = `${docType}_${dateStr}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Plik pobrany");
+    const dateFromStr = dateFrom ? dateFrom.toLocaleDateString("pl-PL") : "";
+    const dateToStr = dateTo ? dateTo.toLocaleDateString("pl-PL") : "";
+    const dateRange = dateFromStr || dateToStr ? `${dateFromStr} - ${dateToStr}` : "Wszystkie daty";
+    generateSummaryPdf(filteredOrders, docType, dateRange);
+    toast.success("PDF pobrany");
   };
 
   return (
