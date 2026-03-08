@@ -1364,6 +1364,8 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
   const [items, setItems] = useState<OrderItem[]>([]);
   const [showProducts, setShowProducts] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [configuringProduct, setConfiguringProduct] = useState<CatalogProduct | null>(null);
+  const catalogProducts = useCatalogProducts();
 
   useEffect(() => {
     if (!open) return;
@@ -1394,11 +1396,28 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
     setClientName(""); setClientEmail(""); setClientPhone("");
   };
 
-  const addProduct = (product: typeof availableProducts[0]) => {
+  const addProduct = (product: CatalogProduct) => {
+    if ((product.type === "bundle" && product.variants && product.variants.length > 0) ||
+        (product.type === "configurable" && product.optionGroups && product.optionGroups.length > 0)) {
+      setConfiguringProduct(product);
+      return;
+    }
     setItems(prev => [...prev, {
       name: product.name, quantity: 1, unit: product.unit,
       pricePerUnit: product.defaultPrice, total: product.defaultPrice, type: product.type,
     }]);
+    setShowProducts(false);
+    setProductSearch("");
+  };
+
+  const handleSubItemConfirm = (subItems: OrderItem["subItems"]) => {
+    if (!configuringProduct) return;
+    setItems(prev => [...prev, {
+      name: configuringProduct.name, quantity: 1, unit: configuringProduct.unit,
+      pricePerUnit: configuringProduct.defaultPrice, total: configuringProduct.defaultPrice,
+      type: configuringProduct.type, subItems,
+    }]);
+    setConfiguringProduct(null);
     setShowProducts(false);
     setProductSearch("");
   };
@@ -1416,7 +1435,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
   const totalAmount = items.reduce((s, i) => s + i.total, 0);
 
-  const filteredProducts = availableProducts.filter(p =>
+  const filteredCatalogAdd = catalogProducts.filter(p =>
     p.name.toLowerCase().includes(productSearch.toLowerCase())
   );
 
