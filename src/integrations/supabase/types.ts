@@ -759,6 +759,38 @@ export type Database = {
         }
         Relationships: []
       }
+      order_food_cost_extras: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          name: string
+          order_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          name: string
+          order_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_food_cost_extras_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_item_sub_items: {
         Row: {
           food_cost_per_unit: number | null
