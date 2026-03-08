@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useCateringOrder } from "@/hooks/useCateringOrder";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { submitOrder } from "@/lib/submitOrder";
@@ -20,6 +21,7 @@ export function CateringWizard() {
     paymentMethods,
     blockedDates,
     deliveryConfig,
+    eventCategoryMappings,
   } = useSupabaseData();
 
   const {
