@@ -163,7 +163,7 @@ export function OrderSummary({
     }
     setIsSubmitting(true);
     try {
-      await onSubmit();
+      await onSubmit("offer");
       setIsSubmitted(true);
       toast({ title: "Zapytanie wysłane! 🎉", description: "Skontaktujemy się w ciągu 24h." });
     } catch {

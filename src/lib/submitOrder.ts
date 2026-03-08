@@ -4,6 +4,8 @@ import type { Product } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption } from "@/data/extras";
 import { getSimplePrice, getVariantPrice, getConfigurablePrice, getExtraPrice, getPackagingPrice, getWaiterPrice } from "@/lib/pricing";
 
+export type SubmissionType = "order" | "offer";
+
 export async function submitOrder(
   order: CateringOrder,
   totalPrice: number,
@@ -12,6 +14,7 @@ export async function submitOrder(
   packagingOptions: PackagingOption[],
   waiterServiceOptions: WaiterServiceOption[],
   eventTypes: { id: string; name: string }[],
+  submissionType: SubmissionType = "offer",
 ): Promise<string> {
   const ct = order.cateringType;
   const now = new Date();
@@ -19,12 +22,27 @@ export async function submitOrder(
 
   const eventType = eventTypes.find((e) => e.id === order.eventType);
 
+  // Try to match client by email
+  let clientId: string | null = null;
+  if (order.contactEmail) {
+    const { data: existingClient } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("email", order.contactEmail)
+      .limit(1)
+      .maybeSingle();
+    if (existingClient) clientId = existingClient.id;
+  }
+
+  const status = submissionType === "order" ? "Nowe zamówienie" : "Nowa oferta";
+
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .insert({
       order_number: orderNumber,
-      status: "Nowe",
+      status,
       amount: totalPrice,
+      client_id: clientId,
       client_name: order.contactName,
       client_email: order.contactEmail,
       client_phone: order.contactPhone,

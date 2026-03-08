@@ -63,7 +63,7 @@ export function CateringWizard() {
     return products.filter((p) => visibleCategoryIds.has(p.category));
   }, [filteredCategories, products]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (submissionType: SubmissionType = "offer") => {
     await submitOrder(
       order,
       totalPrice,
@@ -72,6 +72,7 @@ export function CateringWizard() {
       packagingOptions,
       waiterServiceOptions,
       eventTypes,
+      submissionType,
     );
   };
 
