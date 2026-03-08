@@ -24,6 +24,7 @@ export function CateringWizard() {
     blockedDates,
     deliveryConfig,
     eventCategoryMappings,
+    orderConfig,
   } = useSupabaseData();
 
   const {
