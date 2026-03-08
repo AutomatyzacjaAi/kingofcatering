@@ -50,6 +50,7 @@ export type ConfigurableProduct = {
   longDescription?: string;
   image?: string;
   pricePerPerson: number;
+  pricePerPersonOnSite?: number | null;
   minPersons: number;
   category: string;
   optionGroups: OptionGroup[];
