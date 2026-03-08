@@ -139,6 +139,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
     setFormDuration(extra.duration || "");
     setFormContents(extra.contents.join("\n"));
     setFormFoodCost(extra.foodCost.toFixed(2));
+    setFormPriceOnSite(extra.priceOnSite != null ? extra.priceOnSite.toFixed(2) : "");
     setShowForm(true);
   };
 
