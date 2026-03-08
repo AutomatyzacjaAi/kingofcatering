@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download } from "lucide-react";
+import { generateOfferPdf, generateShoppingListPdf, generateFoodCostPdf, generateKitchenPdf, generateSummaryPdf, type SummaryDocType } from "@/lib/generatePdf";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { LucideIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -274,10 +275,21 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
           </h1>
           <p className="text-muted-foreground text-sm">{order.client} · {order.date}</p>
         </div>
-        <Button variant="outline" size="sm">
-          <Printer className="w-4 h-4 mr-1" />
-          Drukuj
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            if (showOffer) generateOfferPdf(order);
+            else if (showShoppingList) generateShoppingListPdf(order);
+            else if (showKitchen) generateKitchenPdf(order);
+            else if (showFoodCost) generateFoodCostPdf(order);
+          }}>
+            <Download className="w-4 h-4 mr-1" />
+            Pobierz PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="w-4 h-4 mr-1" />
+            Drukuj
+          </Button>
+        </div>
       </div>
 
       {/* OFERTA */}
@@ -882,7 +894,6 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
 };
 
 // ===== SUMMARY SHEET =====
-type SummaryDocType = "zamowienia" | "lista-zakupow" | "lista-dan" | "food-cost";
 const summaryDocLabels: Record<SummaryDocType, { label: string; Icon: LucideIcon }> = {
   "zamowienia": { label: "Lista zamówień", Icon: FileText },
   "lista-zakupow": { label: "Lista zakupów", Icon: ShoppingCart },
@@ -922,81 +933,12 @@ const SummarySheet = ({ open, onClose, orders }: { open: boolean; onClose: () =>
     return true;
   });
 
-  const generateCSV = () => {
-    let csv = "";
-    const sep = ";";
-
-    if (docType === "zamowienia") {
-      csv = ["Nr zamówienia", "Klient", "Wydarzenie", "Data", "Kwota", "Status", "Pozycje"].join(sep) + "\n";
-      filteredOrders.forEach(o => {
-        const itemNames = o.items.map(i => `${i.name} x${i.quantity}`).join(", ");
-        csv += [o.id, o.client, o.event || "-", o.date, o.amount, o.status, `"${itemNames}"`].join(sep) + "\n";
-      });
-    } else if (docType === "lista-zakupow") {
-      const ingredientMap: Record<string, { name: string; totalQty: number; unit: string }> = {};
-      filteredOrders.forEach(o => {
-        o.items.forEach(item => {
-          if (item.subItems) {
-            item.subItems.forEach(sub => {
-              const key = `${sub.name}__${sub.unit}`;
-              if (!ingredientMap[key]) ingredientMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit };
-              ingredientMap[key].totalQty += sub.quantity;
-            });
-          }
-        });
-      });
-      const ingredients = Object.values(ingredientMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
-      csv = ["Składnik", "Ilość", "Jednostka"].join(sep) + "\n";
-      ingredients.forEach(i => { csv += [i.name, fmtNum(i.totalQty), i.unit].join(sep) + "\n"; });
-    } else if (docType === "lista-dan") {
-      type DishEntry = { name: string; totalQty: number; unit: string; source: string };
-      const dishMap: Record<string, DishEntry> = {};
-      filteredOrders.forEach(o => {
-        o.items.forEach(item => {
-          if (item.type === "service" || item.type === "extra") return;
-          if ((item.type === "configurable" || item.type === "bundle") && item.subItems) {
-            item.subItems.forEach(sub => {
-              const key = `${sub.name}__dish`;
-              if (!dishMap[key]) dishMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit, source: item.name };
-              dishMap[key].totalQty += sub.quantity;
-            });
-          } else {
-            const key = `${item.name}__dish`;
-            if (!dishMap[key]) dishMap[key] = { name: item.name, totalQty: 0, unit: item.unit, source: "" };
-            dishMap[key].totalQty += item.quantity;
-          }
-        });
-      });
-      const dishes = Object.values(dishMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
-      csv = ["Danie", "Ilość", "Jednostka", "Źródło"].join(sep) + "\n";
-      dishes.forEach(d => { csv += [d.name, d.totalQty, d.unit, d.source || "-"].join(sep) + "\n"; });
-    } else if (docType === "food-cost") {
-      csv = ["Produkt", "Ilość", "Jednostka", "FC/jedn.", "FC łącznie", "Przychód", "Marża %"].join(sep) + "\n";
-      filteredOrders.forEach(o => {
-        o.items.forEach(item => {
-          if (item.type === "service" || !item.foodCostPerUnit) return;
-          const totalFC = item.foodCostPerUnit * item.quantity;
-          const margin = item.total > 0 ? ((item.total - totalFC) / item.total) * 100 : 0;
-          csv += [item.name, item.quantity, item.unit, fmtNum(item.foodCostPerUnit), fmtNum(totalFC), fmtNum(item.total), margin.toFixed(1) + "%"].join(sep) + "\n";
-        });
-      });
-    }
-
-    return csv;
-  };
-
   const handleDownload = () => {
-    const csv = generateCSV();
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const dateStr = new Date().toISOString().slice(0, 10);
-    a.download = `${docType}_${dateStr}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Plik pobrany");
+    const dateFromStr = dateFrom ? dateFrom.toLocaleDateString("pl-PL") : "";
+    const dateToStr = dateTo ? dateTo.toLocaleDateString("pl-PL") : "";
+    const dateRange = dateFromStr || dateToStr ? `${dateFromStr} - ${dateToStr}` : "Wszystkie daty";
+    generateSummaryPdf(filteredOrders, docType, dateRange);
+    toast.success("PDF pobrany");
   };
 
   return (
@@ -1082,7 +1024,7 @@ const SummarySheet = ({ open, onClose, orders }: { open: boolean; onClose: () =>
           {/* Download */}
           <Button className="w-full" size="lg" onClick={handleDownload} disabled={filteredOrders.length === 0}>
             <Download className="w-4 h-4 mr-2" />
-            Pobierz {summaryDocLabels[docType].label} (CSV)
+            Pobierz {summaryDocLabels[docType].label} (PDF)
           </Button>
         </div>
       </SheetContent>
