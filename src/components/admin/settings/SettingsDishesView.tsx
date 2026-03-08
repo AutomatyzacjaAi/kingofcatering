@@ -19,7 +19,7 @@ const ALLERGEN_OPTIONS = [
 ];
 
 const DIETARY_OPTIONS = [
-  "Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto", "Low carb", "Pescetariańskie",
+  "Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto",
 ];
 
 interface Ingredient {
@@ -122,7 +122,7 @@ const mockDishes: Dish[] = [
   },
   {
     id: "d2", name: "Łosoś grillowany", image: null,
-    priceNetto: 38.89, vatRate: 8, priceBrutto: 42, dietaryTags: ["Pescetariańskie", "Bezglutenowe"],
+    priceNetto: 38.89, vatRate: 8, priceBrutto: 42, dietaryTags: ["Bezglutenowe"],
     ingredients: [
       { ingredientId: "i6", quantity: 250 },
       { ingredientId: "i5", quantity: 20 },
