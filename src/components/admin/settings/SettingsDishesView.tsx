@@ -123,7 +123,6 @@ const DishPicker = ({ dishes, selectedDishId, onSelect }: { dishes: Dish[]; sele
               selectedDishId === d.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
             )}>
             <span className="flex items-center gap-2">
-              <span>{d.icon}</span>
               <span className="font-medium">{d.name}</span>
             </span>
             <span className="text-[10px] opacity-70">{d.priceBrutto.toFixed(2)} zł</span>
