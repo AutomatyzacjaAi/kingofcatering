@@ -263,7 +263,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
                 className="w-full min-h-[60px] rounded-md border border-border bg-background px-3 py-2 text-sm resize-none" />
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena netto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => updatePriceFromNetto(e.target.value, formVat)} />
@@ -280,6 +280,10 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
               <div className="space-y-1">
                 <Label className="text-xs">Cena brutto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => updatePriceFromBrutto(e.target.value, formVat)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena brutto sala (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceOnSite} onChange={(e) => setFormPriceOnSite(e.target.value)} placeholder="—" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Food cost (zł)</Label>
