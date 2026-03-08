@@ -11,6 +11,7 @@ import SettingsEventsView from "@/components/admin/settings/SettingsEventsView";
 import SettingsCalendarView from "@/components/admin/settings/SettingsCalendarView";
 import SettingsDishesView from "@/components/admin/settings/SettingsDishesView";
 import SettingsFormView from "@/components/admin/settings/SettingsFormView";
+import SettingsDeliveryView from "@/components/admin/settings/SettingsDeliveryView";
 
 const Admin = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>("orders");
