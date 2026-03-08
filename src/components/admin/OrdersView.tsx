@@ -50,6 +50,7 @@ interface Order {
   createdAt: string;
   deliveryCost: number;
   guestCount: number;
+  discount: number;
 }
 
 const statusColors: Record<OrderStatus, string> = {

@@ -16,6 +16,7 @@ export interface PdfOrder {
   notes: string;
   deliveryCost: number;
   guestCount: number;
+  discount?: number;
   items: {
     name: string;
     quantity: number;
