@@ -140,6 +140,7 @@ async function fetchProducts(): Promise<Product[]> {
       longDescription: s.long_description ?? undefined,
       image: s.image_url ?? undefined,
       pricePerPerson: Number(s.price_per_person),
+      pricePerPersonOnSite: (s as any).price_per_person_on_site != null ? Number((s as any).price_per_person_on_site) : null,
       minPersons: s.min_persons,
       category: s.category_slug ?? "zestawy",
       optionGroups,
