@@ -217,6 +217,7 @@ async function fetchExtras(): Promise<{
         image: e.image_url ?? undefined,
         duration: e.duration ?? "4h",
         price: Number(e.price),
+        priceOnSite: (e as any).price_on_site != null ? Number((e as any).price_on_site) : null,
         contents: (e.contents as string[]) ?? [],
         extrasCategoryId: e.extras_category_id ?? undefined,
       });
