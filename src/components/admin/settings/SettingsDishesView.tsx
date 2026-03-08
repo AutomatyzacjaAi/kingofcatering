@@ -834,20 +834,19 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
         {bundles.map((b) => (
           <Card key={b.id} className="group hover:shadow-sm transition-shadow">
             <CardContent className="py-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {b.image ? <img src={b.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Package className="w-5 h-5 text-primary" />}
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{b.name}</p>
-                    {b.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{b.categorySlug}</Badge>}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{b.variants.length} wariantów</p>
+                  <p className="text-sm font-medium">{b.name}</p>
+                  {b.categorySlug && <p className="text-xs text-muted-foreground">{b.categorySlug}</p>}
                 </div>
-                <span className="text-sm font-semibold text-primary">{b.priceBrutto.toFixed(2)} zł</span>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => startEdit(b)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
-                <button onClick={() => remove(b.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-primary">{b.priceBrutto.toFixed(2)} zł</span>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => startEdit(b)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => remove(b.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
               </div>
             </CardContent>
           </Card>
