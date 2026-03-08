@@ -370,14 +370,20 @@ function PackagingModal({ option, isOpen, onClose, isSelected, personCount, onSe
 
 function WaiterServiceSection({ options, selectedId, onOptionClick, onNoServiceClick }: { options: WaiterServiceOption[]; selectedId: string | null; onOptionClick: (option: WaiterServiceOption) => void; onNoServiceClick: () => void; }) {
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Wybierz pakiet obsługi kelnerskiej (opcjonalne)</p>
+    <div className="space-y-3">
       <Card onClick={onNoServiceClick} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md", !selectedId && "ring-2 ring-primary")}>
         <CardContent className="p-3">
           <div className="flex items-center gap-3">
-            <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0", !selectedId ? "bg-primary/10" : "bg-muted")}><span className="text-2xl">🚫</span></div>
-            <div className="flex-1"><h3 className="font-semibold text-foreground text-sm">Bez obsługi</h3><p className="text-xs text-muted-foreground">Samodzielna obsługa bufetu</p></div>
-            {!selectedId && <Check className="w-5 h-5 text-primary shrink-0" />}
+            <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0", !selectedId ? "bg-primary/10" : "bg-muted")}>
+              <X className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground text-sm">Bez obsługi</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-sm font-bold text-primary">W cenie</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
           </div>
         </CardContent>
       </Card>
@@ -394,8 +400,9 @@ function WaiterServiceSection({ options, selectedId, onOptionClick, onNoServiceC
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{option.description}</p>
-                    <span className="text-sm font-bold text-primary">{option.price.toFixed(0)} zł / {option.duration}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-sm font-bold text-primary">{option.price.toFixed(0)} zł / {option.duration}</span>
+                    </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                 </div>
