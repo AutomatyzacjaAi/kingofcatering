@@ -68,7 +68,7 @@ export function CartDrawer({
     if (qty > 0) {
       const extra = extraItems.find(e => e.id === extraId);
       if (extra) {
-        cartItems.push({ key: `extra-${extraId}`, name: extra.name, price: extra.price, quantity: qty, type: "extra", productId: extraId });
+        cartItems.push({ key: `extra-${extraId}`, name: extra.name, price: getExtraPrice(extra, ct), quantity: qty, type: "extra", productId: extraId });
       }
     }
   }
