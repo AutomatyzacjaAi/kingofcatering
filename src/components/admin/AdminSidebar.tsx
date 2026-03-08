@@ -7,6 +7,7 @@ export type AdminSection = "orders" | "clients" | "reports" | "settings-company"
 interface AdminSidebarProps {
   activeSection: AdminSection;
   onSectionChange: (section: AdminSection) => void;
+  onLogout?: () => void;
 }
 
 const mainNavItems: { id: "orders" | "clients" | "reports"; icon: typeof ClipboardList; label: string }[] = [
@@ -24,7 +25,7 @@ const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: strin
   { id: "settings-form", icon: FileText, label: "Formularz" },
 ];
 
-const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
+const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebarProps) => {
   const isSettingsActive = activeSection.startsWith("settings-");
   const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
 
@@ -106,7 +107,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => 
 
       {/* Bottom */}
       <div className="p-3 border-t border-border">
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
           <LogOut className="w-4 h-4" />
           Wyloguj
         </button>

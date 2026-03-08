@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import AdminSidebar, { type AdminSection } from "@/components/admin/AdminSidebar";
 import OrdersView from "@/components/admin/OrdersView";
 import ClientsView from "@/components/admin/ClientsView";
@@ -12,10 +14,15 @@ import SettingsFormView from "@/components/admin/settings/SettingsFormView";
 
 const Admin = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>("orders");
+  const { isAuthenticated, logout } = useAdminAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
-      <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} onLogout={logout} />
       <main className="flex-1 p-8 overflow-auto">
         {activeSection === "orders" && <OrdersView />}
         {activeSection === "clients" && <ClientsView />}
