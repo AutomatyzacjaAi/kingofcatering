@@ -316,7 +316,7 @@ function ExpandableProductContent({
             >
               <div className="flex-1">
                 <div className="font-medium">{variant.name}</div>
-                <div className="text-sm text-muted-foreground">{variant.price.toFixed(2)} zł / szt.</div>
+                <div className="text-sm text-muted-foreground">{getVariantPrice(variant, cateringType).toFixed(2)} zł / szt.</div>
                 {variant.allergens.length > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     <AlertTriangle className="w-3 h-3 text-orange-500" />
