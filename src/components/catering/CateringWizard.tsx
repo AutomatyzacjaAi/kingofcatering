@@ -44,6 +44,23 @@ export function CateringWizard() {
     resetOrder,
   } = useCateringOrder(products, extraItems, packagingOptions, waiterServiceOptions);
 
+  // Filter categories based on selected event type mappings
+  const filteredCategories = useMemo(() => {
+    if (!order.eventType) return categories;
+    const mappedCategoryIds = eventCategoryMappings
+      .filter((m) => m.event_type_id === order.eventType)
+      .map((m) => m.category_id);
+    // If no mappings exist for this event type, show all categories
+    if (mappedCategoryIds.length === 0) return categories;
+    return categories.filter((c) => c.dbId && mappedCategoryIds.includes(c.dbId));
+  }, [order.eventType, eventCategoryMappings, categories]);
+
+  // Filter products to only those in visible categories
+  const filteredProducts = useMemo(() => {
+    const visibleCategoryIds = new Set(filteredCategories.map((c) => c.id));
+    return products.filter((p) => visibleCategoryIds.has(p.category));
+  }, [filteredCategories, products]);
+
   const handleSubmit = async () => {
     await submitOrder(
       order,
