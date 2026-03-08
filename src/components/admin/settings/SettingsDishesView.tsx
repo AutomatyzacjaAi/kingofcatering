@@ -486,7 +486,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Jednostka</Label>
                 <Input value={formUnitLabel} onChange={(e) => setFormUnitLabel(e.target.value)} placeholder="szt." />
@@ -494,10 +494,6 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               <div className="space-y-1">
                 <Label className="text-xs">Min. ilość</Label>
                 <Input type="number" value={formMinQty} onChange={(e) => setFormMinQty(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Ikona</Label>
-                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
               </div>
             </div>
 
@@ -727,15 +723,9 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
 
             <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Długi opis</Label>
-                <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Ikona</Label>
-                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
-              </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Długi opis</Label>
+              <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-4 gap-3">
@@ -1001,7 +991,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
             <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena za osobę (zł)</Label>
                 <Input type="number" step="0.01" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
@@ -1009,10 +999,6 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
               <div className="space-y-1">
                 <Label className="text-xs">Min. osób</Label>
                 <Input type="number" value={formMinPersons} onChange={(e) => setFormMinPersons(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Ikona</Label>
-                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
               </div>
             </div>
 
