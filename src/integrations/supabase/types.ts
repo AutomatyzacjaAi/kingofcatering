@@ -367,6 +367,51 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_zones: {
+        Row: {
+          cities: string[] | null
+          created_at: string
+          description: string | null
+          free_delivery_above: number | null
+          id: string
+          is_active: boolean
+          min_order_value: number | null
+          name: string
+          postal_codes: string[] | null
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          cities?: string[] | null
+          created_at?: string
+          description?: string | null
+          free_delivery_above?: number | null
+          id?: string
+          is_active?: boolean
+          min_order_value?: number | null
+          name: string
+          postal_codes?: string[] | null
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          cities?: string[] | null
+          created_at?: string
+          description?: string | null
+          free_delivery_above?: number | null
+          id?: string
+          is_active?: boolean
+          min_order_value?: number | null
+          name?: string
+          postal_codes?: string[] | null
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dish_ingredients: {
         Row: {
           dish_id: string
@@ -726,6 +771,8 @@ export type Database = {
           contact_street: string | null
           created_at: string
           delivery_address: string | null
+          delivery_cost: number
+          delivery_zone_id: string | null
           event_date: string | null
           event_type: string | null
           guest_count: number | null
@@ -748,6 +795,8 @@ export type Database = {
           contact_street?: string | null
           created_at?: string
           delivery_address?: string | null
+          delivery_cost?: number
+          delivery_zone_id?: string | null
           event_date?: string | null
           event_type?: string | null
           guest_count?: number | null
@@ -770,6 +819,8 @@ export type Database = {
           contact_street?: string | null
           created_at?: string
           delivery_address?: string | null
+          delivery_cost?: number
+          delivery_zone_id?: string | null
           event_date?: string | null
           event_type?: string | null
           guest_count?: number | null
@@ -786,6 +837,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_delivery_zone_id_fkey"
+            columns: ["delivery_zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
             referencedColumns: ["id"]
           },
         ]
