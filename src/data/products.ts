@@ -257,7 +257,6 @@ export const products: Product[] = [
     image: "/products/mini-burgery.jpg",
     basePrice: 15,
     minQuantity: 10,
-    icon: "🍔",
     category: "mini",
     variants: [
       {
