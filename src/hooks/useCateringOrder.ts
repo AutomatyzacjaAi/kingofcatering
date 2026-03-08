@@ -92,12 +92,13 @@ export function useCateringOrder(
 
   const totalPrice = useMemo(() => {
     let total = 0;
+    const ct = order.cateringType;
     
     for (const [productId, qty] of Object.entries(order.simpleQuantities)) {
       if (qty > 0) {
         const product = products.find(p => p.id === productId);
         if (product && product.type === "simple") {
-          total += product.pricePerUnit * qty;
+          total += getSimplePrice(product, ct) * qty;
         }
       }
     }
@@ -109,7 +110,7 @@ export function useCateringOrder(
           if (qty > 0) {
             const variant = product.variants.find(v => v.id === variantId);
             if (variant) {
-              total += variant.price * qty;
+              total += getVariantPrice(variant, ct) * qty;
             }
           }
         }
@@ -120,7 +121,7 @@ export function useCateringOrder(
       if (data.quantity > 0) {
         const product = products.find(p => p.id === productId);
         if (product && product.type === "configurable") {
-          total += product.pricePerPerson * data.quantity;
+          total += getConfigurablePrice(product, ct) * data.quantity;
         }
       }
     }
@@ -129,29 +130,29 @@ export function useCateringOrder(
       if (qty > 0) {
         const extra = extraItems.find((e) => e.id === extraId);
         if (extra) {
-          total += extra.price * qty;
+          total += getExtraPrice(extra, ct) * qty;
         }
       }
     }
 
     if (order.selectedPackaging) {
       const packaging = packagingOptionsList.find(p => p.id === order.selectedPackaging);
-      if (packaging && packaging.price > 0) {
-        total += packaging.price * order.packagingPersonCount;
+      if (packaging && getPackagingPrice(packaging, ct) > 0) {
+        total += getPackagingPrice(packaging, ct) * order.packagingPersonCount;
       }
     }
 
     if (order.selectedWaiterService) {
       const service = waiterServiceOptionsList.find(s => s.id === order.selectedWaiterService);
       if (service) {
-        total += service.price * order.waiterCount;
+        total += getWaiterPrice(service, ct) * order.waiterCount;
       }
     }
     // Delivery cost
     total += order.deliveryPrice;
     
     return total;
-  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData, order.selectedExtras, order.selectedPackaging, order.packagingPersonCount, order.selectedWaiterService, order.waiterCount, order.deliveryPrice, products, extraItems, packagingOptionsList, waiterServiceOptionsList]);
+  }, [order.cateringType, order.simpleQuantities, order.expandableQuantities, order.configurableData, order.selectedExtras, order.selectedPackaging, order.packagingPersonCount, order.selectedWaiterService, order.waiterCount, order.deliveryPrice, products, extraItems, packagingOptionsList, waiterServiceOptionsList]);
 
   const updateSimpleQuantity = useCallback((productId: string, quantity: number) => {
     setOrder((prev) => ({
