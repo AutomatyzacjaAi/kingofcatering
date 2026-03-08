@@ -11,6 +11,7 @@ export type SimpleProduct = {
   contents: string[];
   allergens: string[];
   pricePerUnit: number;
+  pricePerUnitOnSite?: number | null;
   unitLabel: string;
   minQuantity: number;
   category: string;
@@ -35,6 +36,7 @@ export type ProductVariant = {
   name: string;
   description: string;
   price: number;
+  priceOnSite?: number | null;
   allergens: string[];
   dietaryTags: string[];
 };
@@ -48,6 +50,7 @@ export type ConfigurableProduct = {
   longDescription?: string;
   image?: string;
   pricePerPerson: number;
+  pricePerPersonOnSite?: number | null;
   minPersons: number;
   category: string;
   optionGroups: OptionGroup[];

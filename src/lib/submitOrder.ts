@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
 import type { Product } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption } from "@/data/extras";
+import { getSimplePrice, getVariantPrice, getConfigurablePrice, getExtraPrice, getPackagingPrice, getWaiterPrice } from "@/lib/pricing";
 
 export async function submitOrder(
   order: CateringOrder,
@@ -12,13 +13,12 @@ export async function submitOrder(
   waiterServiceOptions: WaiterServiceOption[],
   eventTypes: { id: string; name: string }[],
 ): Promise<string> {
-  // Generate order number
+  const ct = order.cateringType;
   const now = new Date();
   const orderNumber = `KC-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
 
   const eventType = eventTypes.find((e) => e.id === order.eventType);
 
-  // Insert order
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -47,7 +47,6 @@ export async function submitOrder(
   if (orderError) throw orderError;
   const orderId = orderData.id;
 
-  // Build order items
   const orderItems: {
     order_id: string;
     name: string;
@@ -61,26 +60,20 @@ export async function submitOrder(
 
   let sortOrder = 0;
 
-  // Simple products
   for (const [productId, qty] of Object.entries(order.simpleQuantities)) {
     if (qty > 0) {
       const product = products.find((p) => p.id === productId);
       if (product && product.type === "simple") {
+        const price = getSimplePrice(product, ct);
         orderItems.push({
-          order_id: orderId,
-          name: product.name,
-          quantity: qty,
-          price_per_unit: product.pricePerUnit,
-          total: product.pricePerUnit * qty,
-          unit: product.unitLabel,
-          item_type: "simple",
-          sort_order: sortOrder++,
+          order_id: orderId, name: product.name, quantity: qty,
+          price_per_unit: price, total: price * qty,
+          unit: product.unitLabel, item_type: "simple", sort_order: sortOrder++,
         });
       }
     }
   }
 
-  // Expandable products (variants)
   for (const [productId, variants] of Object.entries(order.expandableQuantities)) {
     const product = products.find((p) => p.id === productId);
     if (product && product.type === "expandable") {
@@ -88,15 +81,11 @@ export async function submitOrder(
         if (qty > 0) {
           const variant = product.variants.find((v) => v.id === variantId);
           if (variant) {
+            const price = getVariantPrice(variant, ct);
             orderItems.push({
-              order_id: orderId,
-              name: `${product.name} — ${variant.name}`,
-              quantity: qty,
-              price_per_unit: variant.price,
-              total: variant.price * qty,
-              unit: "szt.",
-              item_type: "expandable",
-              sort_order: sortOrder++,
+              order_id: orderId, name: `${product.name} — ${variant.name}`, quantity: qty,
+              price_per_unit: price, total: price * qty,
+              unit: "szt.", item_type: "expandable", sort_order: sortOrder++,
             });
           }
         }
@@ -104,74 +93,55 @@ export async function submitOrder(
     }
   }
 
-  // Configurable products
   for (const [productId, data] of Object.entries(order.configurableData)) {
     if (data.quantity > 0) {
       const product = products.find((p) => p.id === productId);
       if (product && product.type === "configurable") {
+        const price = getConfigurablePrice(product, ct);
         orderItems.push({
-          order_id: orderId,
-          name: product.name,
-          quantity: data.quantity,
-          price_per_unit: product.pricePerPerson,
-          total: product.pricePerPerson * data.quantity,
-          unit: "os.",
-          item_type: "configurable",
-          sort_order: sortOrder++,
+          order_id: orderId, name: product.name, quantity: data.quantity,
+          price_per_unit: price, total: price * data.quantity,
+          unit: "os.", item_type: "configurable", sort_order: sortOrder++,
         });
       }
     }
   }
 
-  // Extras
   for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
     if (qty > 0) {
       const extra = extraItems.find((e) => e.id === extraId);
       if (extra) {
+        const price = getExtraPrice(extra, ct);
         orderItems.push({
-          order_id: orderId,
-          name: extra.name,
-          quantity: qty,
-          price_per_unit: extra.price,
-          total: extra.price * qty,
-          unit: extra.unitLabel,
-          item_type: "extra",
-          sort_order: sortOrder++,
+          order_id: orderId, name: extra.name, quantity: qty,
+          price_per_unit: price, total: price * qty,
+          unit: extra.unitLabel, item_type: "extra", sort_order: sortOrder++,
         });
       }
     }
   }
 
-  // Packaging
   if (order.selectedPackaging) {
     const packaging = packagingOptions.find((p) => p.id === order.selectedPackaging);
     if (packaging) {
+      const price = getPackagingPrice(packaging, ct);
       orderItems.push({
-        order_id: orderId,
-        name: packaging.name,
-        quantity: packaging.price > 0 ? order.packagingPersonCount : 1,
-        price_per_unit: packaging.price,
-        total: packaging.price * (packaging.price > 0 ? order.packagingPersonCount : 1),
-        unit: packaging.price > 0 ? "os." : "szt.",
-        item_type: "packaging",
-        sort_order: sortOrder++,
+        order_id: orderId, name: packaging.name,
+        quantity: price > 0 ? order.packagingPersonCount : 1,
+        price_per_unit: price, total: price * (price > 0 ? order.packagingPersonCount : 1),
+        unit: price > 0 ? "os." : "szt.", item_type: "packaging", sort_order: sortOrder++,
       });
     }
   }
 
-  // Waiter service
   if (order.selectedWaiterService) {
     const service = waiterServiceOptions.find((s) => s.id === order.selectedWaiterService);
     if (service) {
+      const price = getWaiterPrice(service, ct);
       orderItems.push({
-        order_id: orderId,
-        name: service.name,
-        quantity: order.waiterCount,
-        price_per_unit: service.price,
-        total: service.price * order.waiterCount,
-        unit: "szt.",
-        item_type: "waiter",
-        sort_order: sortOrder++,
+        order_id: orderId, name: service.name, quantity: order.waiterCount,
+        price_per_unit: price, total: price * order.waiterCount,
+        unit: "szt.", item_type: "waiter", sort_order: sortOrder++,
       });
     }
   }

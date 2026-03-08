@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
+import { getSimplePrice, getVariantPrice, getConfigurablePrice, getExtraPrice, getPackagingPrice, getWaiterPrice } from "@/lib/pricing";
 
 type OrderSummaryProps = {
   order: CateringOrder;
@@ -47,6 +48,7 @@ export function OrderSummary({
       });
   }, []);
 
+  const ct = order.cateringType;
   const eventType = eventTypes.find((e) => e.id === order.eventType);
 
   // Build ordered items list
@@ -60,7 +62,7 @@ export function OrderSummary({
         productLines.push({
           name: product.name,
           quantity: qty,
-          price: product.pricePerUnit * qty,
+          price: getSimplePrice(product, ct) * qty,
           note: order.productNotes[productId] || undefined,
           time: order.servingTimes[productId] || undefined,
         });
@@ -78,7 +80,7 @@ export function OrderSummary({
             productLines.push({
               name: variant.name,
               quantity: qty,
-              price: variant.price * qty,
+              price: getVariantPrice(variant, ct) * qty,
               note: order.productNotes[productId] || undefined,
               time: order.servingTimes[productId] || undefined,
             });
@@ -95,7 +97,7 @@ export function OrderSummary({
         productLines.push({
           name: product.name,
           quantity: data.quantity,
-          price: product.pricePerPerson * data.quantity,
+          price: getConfigurablePrice(product, ct) * data.quantity,
           note: order.productNotes[productId] || undefined,
           time: order.servingTimes[productId] || undefined,
         });
@@ -116,18 +118,18 @@ export function OrderSummary({
   for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
     if (qty > 0) {
       const extra = extraItems.find(e => e.id === extraId);
-      if (extra) extrasLines.push({ name: extra.name, quantity: qty, price: extra.price * qty });
+      if (extra) extrasLines.push({ name: extra.name, quantity: qty, price: getExtraPrice(extra, ct) * qty });
     }
   }
 
   const selectedPkg = packagingOptions.find(p => p.id === order.selectedPackaging);
-  if (selectedPkg && selectedPkg.price > 0) {
-    extrasLines.push({ name: selectedPkg.name, quantity: order.packagingPersonCount, price: selectedPkg.price * order.packagingPersonCount });
+  if (selectedPkg && getPackagingPrice(selectedPkg, ct) > 0) {
+    extrasLines.push({ name: selectedPkg.name, quantity: order.packagingPersonCount, price: getPackagingPrice(selectedPkg, ct) * order.packagingPersonCount });
   }
 
   const selectedService = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
   if (selectedService) {
-    extrasLines.push({ name: selectedService.name, quantity: order.waiterCount, price: selectedService.price * order.waiterCount });
+    extrasLines.push({ name: selectedService.name, quantity: order.waiterCount, price: getWaiterPrice(selectedService, ct) * order.waiterCount });
   }
 
   const formatDate = (dateStr: string) => {

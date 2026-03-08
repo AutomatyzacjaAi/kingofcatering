@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { AlertTriangle, X, Clock } from "lucide-react";
 import { QuantityInput } from "./QuantityInput";
 import type { Product, SimpleProduct, ExpandableProduct, ConfigurableProduct } from "@/data/products";
+import type { CateringType } from "@/lib/pricing";
+import { getSimplePrice, getVariantPrice, getConfigurablePrice } from "@/lib/pricing";
 
 type ProductModalProps = {
   product: Product | null;
@@ -26,6 +28,7 @@ type ProductModalProps = {
   onServingTimeChange?: (productId: string, time: string) => void;
   productNotes?: string;
   onProductNotesChange?: (productId: string, notes: string) => void;
+  cateringType?: CateringType;
 };
 
 export function ProductModal({
@@ -43,6 +46,7 @@ export function ProductModal({
   onServingTimeChange,
   productNotes = "",
   onProductNotesChange,
+  cateringType = "wyjazdowy",
 }: ProductModalProps) {
   if (!product) return null;
 
@@ -87,6 +91,7 @@ export function ProductModal({
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
               notes={productNotes}
               onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
+              cateringType={cateringType}
             />
           )}
           {product.type === "configurable" && (
@@ -102,6 +107,7 @@ export function ProductModal({
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
               notes={productNotes}
               onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
+              cateringType={cateringType}
             />
           )}
         </div>
@@ -195,6 +201,7 @@ function SimpleProductContent({
   onServingTimeChange,
   notes,
   onNotesChange,
+  cateringType = "wyjazdowy",
 }: {
   product: SimpleProduct;
   quantity: number;
@@ -203,7 +210,9 @@ function SimpleProductContent({
   onServingTimeChange: (time: string) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  cateringType?: CateringType;
 }) {
+  const effectivePrice = getSimplePrice(product, cateringType);
   return (
     <div>
       {product.image && (
@@ -224,7 +233,7 @@ function SimpleProductContent({
 
         <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
           <div>
-            <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
+            <span className="text-2xl font-bold">{effectivePrice.toFixed(2)} zł</span>
             <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
           </div>
           <QuantityInput value={quantity} onChange={onQuantityChange} />
@@ -265,6 +274,7 @@ function ExpandableProductContent({
   onServingTimeChange,
   notes,
   onNotesChange,
+  cateringType = "wyjazdowy",
 }: {
   product: ExpandableProduct;
   quantities: Record<string, number>;
@@ -273,6 +283,7 @@ function ExpandableProductContent({
   onServingTimeChange: (time: string) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  cateringType?: CateringType;
 }) {
   return (
     <div>
@@ -305,7 +316,7 @@ function ExpandableProductContent({
             >
               <div className="flex-1">
                 <div className="font-medium">{variant.name}</div>
-                <div className="text-sm text-muted-foreground">{variant.price.toFixed(2)} zł / szt.</div>
+                <div className="text-sm text-muted-foreground">{getVariantPrice(variant, cateringType).toFixed(2)} zł / szt.</div>
                 {variant.allergens.length > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     <AlertTriangle className="w-3 h-3 text-orange-500" />
@@ -334,6 +345,7 @@ function ConfigurableProductContent({
   onServingTimeChange,
   notes,
   onNotesChange,
+  cateringType = "wyjazdowy",
 }: {
   product: ConfigurableProduct;
   quantity: number;
@@ -344,7 +356,9 @@ function ConfigurableProductContent({
   onServingTimeChange: (time: string) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  cateringType?: CateringType;
 }) {
+  const effectivePrice = getConfigurablePrice(product, cateringType);
   const toggleOption = (groupId: string, optionId: string) => {
     const group = product.optionGroups.find(g => g.id === groupId);
     if (!group) return;
@@ -387,7 +401,7 @@ function ConfigurableProductContent({
         <div className="p-4 bg-accent rounded-xl">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <span className="text-2xl font-bold">{product.pricePerPerson.toFixed(2)} zł</span>
+              <span className="text-2xl font-bold">{effectivePrice.toFixed(2)} zł</span>
               <span className="text-muted-foreground ml-1">/ osoba</span>
             </div>
             <Badge variant="outline" className="text-primary border-primary">
@@ -415,7 +429,7 @@ function ConfigurableProductContent({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Suma:</span>
                 <span className="text-lg font-bold text-primary">
-                  {(quantity * product.pricePerPerson).toFixed(2)} zł
+                  {(quantity * effectivePrice).toFixed(2)} zł
                 </span>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { ShoppingCart, Trash2, Plus, Minus, UtensilsCrossed } from "lucide-react
 import type { Product } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption } from "@/data/extras";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
+import { getSimplePrice, getVariantPrice, getConfigurablePrice, getExtraPrice, getPackagingPrice, getWaiterPrice } from "@/lib/pricing";
 
 type CartDrawerProps = {
   order: CateringOrder;
@@ -26,6 +27,7 @@ export function CartDrawer({
   onExtraChange, onPackagingChange, onWaiterServiceChange,
   products, extraItems, packagingOptions, waiterServiceOptions,
 }: CartDrawerProps) {
+  const ct = order.cateringType;
   type CartItem = { key: string; name: string; price: number; quantity: number; type: "simple" | "expandable" | "configurable" | "extra" | "packaging" | "waiter"; productId: string; variantId?: string; isReadOnly?: boolean; };
   
   const cartItems: CartItem[] = [];
@@ -34,7 +36,7 @@ export function CartDrawer({
     if (qty > 0) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "simple") {
-        cartItems.push({ key: productId, name: product.name, price: product.pricePerUnit, quantity: qty, type: "simple", productId });
+        cartItems.push({ key: productId, name: product.name, price: getSimplePrice(product, ct), quantity: qty, type: "simple", productId });
       }
     }
   }
@@ -46,7 +48,7 @@ export function CartDrawer({
         if (qty > 0) {
           const variant = product.variants.find(v => v.id === variantId);
           if (variant) {
-            cartItems.push({ key: `${productId}-${variantId}`, name: variant.name, price: variant.price, quantity: qty, type: "expandable", productId, variantId });
+            cartItems.push({ key: `${productId}-${variantId}`, name: variant.name, price: getVariantPrice(variant, ct), quantity: qty, type: "expandable", productId, variantId });
           }
         }
       }
@@ -57,7 +59,7 @@ export function CartDrawer({
     if (data.quantity > 0) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "configurable") {
-        cartItems.push({ key: productId, name: product.name, price: product.pricePerPerson, quantity: data.quantity, type: "configurable", productId });
+        cartItems.push({ key: productId, name: product.name, price: getConfigurablePrice(product, ct), quantity: data.quantity, type: "configurable", productId });
       }
     }
   }
@@ -66,22 +68,22 @@ export function CartDrawer({
     if (qty > 0) {
       const extra = extraItems.find(e => e.id === extraId);
       if (extra) {
-        cartItems.push({ key: `extra-${extraId}`, name: extra.name, price: extra.price, quantity: qty, type: "extra", productId: extraId });
+        cartItems.push({ key: `extra-${extraId}`, name: extra.name, price: getExtraPrice(extra, ct), quantity: qty, type: "extra", productId: extraId });
       }
     }
   }
 
   if (order.selectedPackaging) {
     const packaging = packagingOptions.find(p => p.id === order.selectedPackaging);
-    if (packaging && packaging.price > 0) {
-      cartItems.push({ key: `packaging-${order.selectedPackaging}`, name: packaging.name, price: packaging.price, quantity: order.packagingPersonCount, type: "packaging", productId: order.selectedPackaging, isReadOnly: true });
+    if (packaging && getPackagingPrice(packaging, ct) > 0) {
+      cartItems.push({ key: `packaging-${order.selectedPackaging}`, name: packaging.name, price: getPackagingPrice(packaging, ct), quantity: order.packagingPersonCount, type: "packaging", productId: order.selectedPackaging, isReadOnly: true });
     }
   }
 
   if (order.selectedWaiterService) {
     const service = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
     if (service) {
-      cartItems.push({ key: `waiter-${order.selectedWaiterService}`, name: service.name, price: service.price, quantity: order.waiterCount, type: "waiter", productId: order.selectedWaiterService, isReadOnly: true });
+      cartItems.push({ key: `waiter-${order.selectedWaiterService}`, name: service.name, price: getWaiterPrice(service, ct), quantity: order.waiterCount, type: "waiter", productId: order.selectedWaiterService, isReadOnly: true });
     }
   }
 

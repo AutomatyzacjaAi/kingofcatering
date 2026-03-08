@@ -2,6 +2,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product, Category } from "@/data/products";
+import type { CateringType } from "@/lib/pricing";
 import { ProductCard } from "./ProductCard";
 import { ProductModal } from "./ProductModal";
 
@@ -18,6 +19,7 @@ type ProductsStepProps = {
   onProductNotesChange: (productId: string, notes: string) => void;
   products: Product[];
   categories: Category[];
+  cateringType: CateringType;
 };
 
 export function ProductsStep({
@@ -33,6 +35,7 @@ export function ProductsStep({
   onProductNotesChange,
   products,
   categories,
+  cateringType,
 }: ProductsStepProps) {
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -137,6 +140,7 @@ export function ProductsStep({
               product={product}
               isSelected={isProductSelected(product)}
               selectedCount={getProductSelectedCount(product)}
+              cateringType={cateringType}
               onClick={() => setSelectedProduct(product)}
             />
           ))}
@@ -158,6 +162,7 @@ export function ProductsStep({
         onServingTimeChange={onServingTimeChange}
         productNotes={selectedProduct ? productNotes[selectedProduct.id] || "" : ""}
         onProductNotesChange={onProductNotesChange}
+        cateringType={cateringType}
       />
     </div>
   );

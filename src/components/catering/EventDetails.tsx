@@ -5,20 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { EventType } from "@/data/products";
+import type { CateringType } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { 
   Users, 
   CalendarDays, 
   ChevronRight, 
   Clock,
+  Truck,
+  Building2,
 } from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
 
 type EventDetailsProps = {
+  cateringType: CateringType;
   guestCount: number;
   eventType: string;
   eventDate: string;
   eventTime: string;
+  onCateringTypeChange: (type: CateringType) => void;
   onGuestCountChange: (count: number) => void;
   onEventTypeChange: (type: string) => void;
   onEventDateChange: (date: string) => void;
@@ -28,10 +33,12 @@ type EventDetailsProps = {
 };
 
 export function EventDetails({
+  cateringType,
   guestCount,
   eventType,
   eventDate,
   eventTime,
+  onCateringTypeChange,
   onGuestCountChange,
   onEventTypeChange,
   onEventDateChange,
@@ -58,6 +65,44 @@ export function EventDetails({
           Powiedz nam więcej o swoim wydarzeniu
         </p>
       </div>
+
+      {/* Catering Type */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Rodzaj cateringu</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              { id: "wyjazdowy" as CateringType, label: "Catering wyjazdowy", icon: Truck, desc: "Dowozimy na wskazany adres" },
+              { id: "na_sali" as CateringType, label: "Catering na sali", icon: Building2, desc: "Obsługa w naszej sali" },
+            ]).map((option) => {
+              const isSelected = cateringType === option.id;
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => onCateringTypeChange(option.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                    "hover:border-primary hover:bg-accent/50 focus:outline-none",
+                    isSelected ? "border-primary bg-primary/5" : "border-border bg-card"
+                  )}
+                >
+                  <div className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  )}>
+                    <Icon className="w-5 h-5" strokeWidth={1.5} />
+                  </div>
+                  <span className={cn("text-xs font-medium text-center leading-tight", isSelected ? "text-primary" : "text-foreground")}>{option.label}</span>
+                  <span className="text-[10px] text-muted-foreground text-center">{option.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Guest Count */}
       <Card>

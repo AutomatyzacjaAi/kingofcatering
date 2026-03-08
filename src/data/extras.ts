@@ -7,6 +7,7 @@ export type ExtraItem = {
   longDescription?: string;
   image?: string;
   price: number;
+  priceOnSite?: number | null;
   unitLabel: string;
   contents?: string[];
   extrasCategoryId?: string;
@@ -19,6 +20,7 @@ export type PackagingOption = {
   longDescription?: string;
   image?: string;
   price: number;
+  priceOnSite?: number | null;
   priceLabel: string;
   requiresPersonCount?: boolean;
   contents?: string[];
@@ -33,6 +35,7 @@ export type WaiterServiceOption = {
   image?: string;
   duration: string;
   price: number;
+  priceOnSite?: number | null;
   contents?: string[];
   extrasCategoryId?: string;
 };
