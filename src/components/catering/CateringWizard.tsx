@@ -249,9 +249,8 @@ export function CateringWizard() {
         steps={steps}
         currentStep={currentStep}
         totalSteps={steps.length}
-        onNext={nextStep}
+        onNext={handleNext}
         onPrev={prevStep}
-        canGoNext={canGoNext()}
         nextLabel={getNextLabel()}
         showNav={!isLastStep}
         order={order}
