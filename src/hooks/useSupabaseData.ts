@@ -353,6 +353,12 @@ export function useSupabaseData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const orderConfigQuery = useQuery({
+    queryKey: ["orderConfig"],
+    queryFn: fetchOrderConfig,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isLoading =
     categoriesQuery.isLoading ||
     eventTypesQuery.isLoading ||
@@ -362,7 +368,8 @@ export function useSupabaseData() {
     paymentMethodsQuery.isLoading ||
     blockedDatesQuery.isLoading ||
     deliveryConfigQuery.isLoading ||
-    eventCategoryMappingsQuery.isLoading;
+    eventCategoryMappingsQuery.isLoading ||
+    orderConfigQuery.isLoading;
 
   return {
     isLoading,
@@ -377,5 +384,6 @@ export function useSupabaseData() {
     blockedDates: blockedDatesQuery.data ?? [],
     deliveryConfig: deliveryConfigQuery.data ?? { companyLat: null, companyLng: null, pricePerKm: 3, maxDeliveryKm: null, freeDeliveryAbove: null },
     eventCategoryMappings: eventCategoryMappingsQuery.data ?? [],
+    orderConfig: orderConfigQuery.data ?? { minOrderValue: 0, minLeadDays: 0 },
   };
 }
