@@ -933,11 +933,11 @@ const SummarySheet = ({ open, onClose, orders }: { open: boolean; onClose: () =>
     return true;
   });
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const dateFromStr = dateFrom ? dateFrom.toLocaleDateString("pl-PL") : "";
     const dateToStr = dateTo ? dateTo.toLocaleDateString("pl-PL") : "";
     const dateRange = dateFromStr || dateToStr ? `${dateFromStr} - ${dateToStr}` : "Wszystkie daty";
-    generateSummaryPdf(filteredOrders, docType, dateRange);
+    await generateSummaryPdf(filteredOrders, docType, dateRange);
     toast.success("PDF pobrany");
   };
 
