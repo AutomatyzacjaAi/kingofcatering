@@ -1,17 +1,22 @@
 import { useState } from "react";
-import { Search, Eye, Pencil, Trash2 } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 import { type ClientData, mockClients as initialClients } from "@/data/clientsData";
 import ClientDetailView from "./ClientDetailView";
-import ClientFormView from "./ClientFormView";
 import { toast } from "@/components/ui/sonner";
 
-type View = "list" | "detail" | "add" | "edit";
+type View = "list" | "detail";
+
+const emptyClient: ClientData = {
+  id: "", firstName: "", lastName: "", email: "", phone: "", phoneAlt: "",
+  companyName: "", nip: "", companyAddress: "", companyCity: "", companyPostalCode: "",
+  address: "", city: "", postalCode: "",
+  notes: "", orders: 0, totalSpent: "0,00 zł", lastOrder: "—", createdAt: "",
+};
 
 const ClientsView = () => {
   const [view, setView] = useState<View>("list");
@@ -25,32 +30,30 @@ const ClientsView = () => {
     c.companyName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleView = (client: ClientData) => {
+  const handleOpen = (client: ClientData) => {
     setSelectedClient(client);
     setView("detail");
-  };
-
-  const handleEdit = (client: ClientData) => {
-    setSelectedClient(client);
-    setView("edit");
   };
 
   const handleAdd = () => {
-    setSelectedClient(null);
-    setView("add");
+    const newClient = { ...emptyClient, id: crypto.randomUUID() };
+    setSelectedClient(newClient);
+    setView("detail");
   };
 
   const handleSave = (client: ClientData) => {
+    if (!client.createdAt) {
+      const now = new Date();
+      const months = ["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
+      client.createdAt = `${String(now.getDate()).padStart(2, "0")} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
     setClients((prev) => {
       const exists = prev.find((c) => c.id === client.id);
-      if (exists) {
-        return prev.map((c) => (c.id === client.id ? client : c));
-      }
+      if (exists) return prev.map((c) => (c.id === client.id ? client : c));
       return [...prev, client];
     });
     setSelectedClient(client);
-    setView("detail");
-    toast.success(view === "edit" ? "Klient zaktualizowany" : "Klient dodany");
+    toast.success("Zapisano");
   };
 
   const handleDelete = (client: ClientData) => {
@@ -63,22 +66,10 @@ const ClientsView = () => {
     setSelectedClient(null);
   };
 
-  // Sub-views
   if (view === "detail" && selectedClient) {
-    return <ClientDetailView client={selectedClient} onBack={handleBack} onEdit={handleEdit} />;
+    return <ClientDetailView client={selectedClient} onBack={handleBack} onSave={handleSave} />;
   }
 
-  if (view === "add" || (view === "edit" && selectedClient)) {
-    return (
-      <ClientFormView
-        client={view === "edit" ? selectedClient : null}
-        onBack={handleBack}
-        onSave={handleSave}
-      />
-    );
-  }
-
-  // List view
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -114,7 +105,7 @@ const ClientsView = () => {
           </TableHeader>
           <TableBody>
             {filtered.map((client) => (
-              <TableRow key={client.id} className="cursor-pointer" onClick={() => handleView(client)}>
+              <TableRow key={client.id} className="cursor-pointer" onClick={() => handleOpen(client)}>
                 <TableCell>
                   <div>
                     <div className="font-medium text-foreground">{client.firstName} {client.lastName}</div>
@@ -127,19 +118,7 @@ const ClientsView = () => {
                 <TableCell className="font-semibold text-foreground">{client.totalSpent}</TableCell>
                 <TableCell className="text-muted-foreground">{client.lastOrder}</TableCell>
                 <TableCell>
-                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => handleView(client)}
-                      className="p-1.5 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(client)}
-                      className="p-1.5 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                  <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleDelete(client)}
                       className="p-1.5 rounded-md transition-colors text-destructive/60 hover:text-destructive hover:bg-destructive/10"

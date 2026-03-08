@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { ArrowLeft, Pencil, User, Building2, Phone, MapPin, FileText, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Save, User, Building2, MapPin, FileText, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -20,23 +22,21 @@ const statusColors: Record<string, string> = {
 interface Props {
   client: ClientData;
   onBack: () => void;
-  onEdit: (client: ClientData) => void;
+  onSave: (client: ClientData) => void;
 }
 
-const InfoRow = ({ label, value }: { label: string; value: string }) => {
-  if (!value) return null;
-  return (
-    <div className="flex justify-between py-2 border-b border-border last:border-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium text-foreground text-right">{value}</span>
-    </div>
-  );
-};
-
-const ClientDetailView = ({ client, onBack, onEdit }: Props) => {
+const ClientDetailView = ({ client, onBack, onSave }: Props) => {
+  const [form, setForm] = useState<ClientData>(client);
   const orders = mockClientOrders[client.id] || [];
-  const fullName = `${client.firstName} ${client.lastName}`;
-  const hasCompany = !!client.companyName;
+
+  useEffect(() => { setForm(client); }, [client]);
+
+  const set = (field: keyof ClientData, value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleSave = () => onSave(form);
+
+  const fullName = `${form.firstName} ${form.lastName}`.trim() || "Nowy klient";
 
   return (
     <div>
@@ -49,37 +49,39 @@ const ClientDetailView = ({ client, onBack, onEdit }: Props) => {
           <div>
             <h1 className="text-2xl font-bold text-foreground">{fullName}</h1>
             <p className="text-muted-foreground text-sm">
-              Klient od {client.createdAt} · {client.orders} zamówień
+              {client.createdAt ? `Klient od ${client.createdAt} · ${client.orders} zamówień` : "Nowy klient"}
             </p>
           </div>
         </div>
-        <Button variant="outline" className="gap-2" onClick={() => onEdit(client)}>
-          <Pencil className="w-4 h-4" />
-          Edytuj klienta
+        <Button className="gap-2" onClick={handleSave}>
+          <Save className="w-4 h-4" />
+          Zapisz
         </Button>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{client.orders}</p>
-            <p className="text-xs text-muted-foreground">Zamówienia</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{client.totalSpent}</p>
-            <p className="text-xs text-muted-foreground">Łączna kwota</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{client.lastOrder}</p>
-            <p className="text-xs text-muted-foreground">Ostatnie zamówienie</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Stats bar - only for existing clients */}
+      {client.orders > 0 && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{client.orders}</p>
+              <p className="text-xs text-muted-foreground">Zamówienia</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-primary">{client.totalSpent}</p>
+              <p className="text-xs text-muted-foreground">Łączna kwota</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{client.lastOrder}</p>
+              <p className="text-xs text-muted-foreground">Ostatnie zamówienie</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Personal data */}
@@ -90,12 +92,31 @@ const ClientDetailView = ({ client, onBack, onEdit }: Props) => {
               Dane osobowe
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <InfoRow label="Imię" value={client.firstName} />
-            <InfoRow label="Nazwisko" value={client.lastName} />
-            <InfoRow label="Email" value={client.email} />
-            <InfoRow label="Telefon" value={client.phone} />
-            <InfoRow label="Telefon dodatkowy" value={client.phoneAlt} />
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Imię *</Label>
+                <Input value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Nazwisko *</Label>
+                <Input value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Email *</Label>
+              <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Telefon *</Label>
+                <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Telefon dodatkowy</Label>
+                <Input value={form.phoneAlt} onChange={(e) => set("phoneAlt", e.target.value)} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -107,18 +128,31 @@ const ClientDetailView = ({ client, onBack, onEdit }: Props) => {
               Dane firmowe
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {hasCompany ? (
-              <>
-                <InfoRow label="Nazwa firmy" value={client.companyName} />
-                <InfoRow label="NIP" value={client.nip} />
-                <InfoRow label="Adres" value={client.companyAddress} />
-                <InfoRow label="Miasto" value={client.companyCity} />
-                <InfoRow label="Kod pocztowy" value={client.companyPostalCode} />
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">Brak danych firmowych</p>
-            )}
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Nazwa firmy</Label>
+                <Input value={form.companyName} onChange={(e) => set("companyName", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">NIP</Label>
+                <Input value={form.nip} onChange={(e) => set("nip", e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Adres firmy</Label>
+              <Input value={form.companyAddress} onChange={(e) => set("companyAddress", e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Miasto</Label>
+                <Input value={form.companyCity} onChange={(e) => set("companyCity", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Kod pocztowy</Label>
+                <Input value={form.companyPostalCode} onChange={(e) => set("companyPostalCode", e.target.value)} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -130,10 +164,21 @@ const ClientDetailView = ({ client, onBack, onEdit }: Props) => {
               Adres zamieszkania
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <InfoRow label="Adres" value={client.address} />
-            <InfoRow label="Miasto" value={client.city} />
-            <InfoRow label="Kod pocztowy" value={client.postalCode} />
+          <CardContent className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Adres</Label>
+              <Input value={form.address} onChange={(e) => set("address", e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Miasto</Label>
+                <Input value={form.city} onChange={(e) => set("city", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Kod pocztowy</Label>
+                <Input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -146,25 +191,26 @@ const ClientDetailView = ({ client, onBack, onEdit }: Props) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {client.notes ? (
-              <p className="text-sm text-foreground">{client.notes}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">Brak notatek</p>
-            )}
+            <Textarea
+              value={form.notes}
+              onChange={(e) => set("notes", e.target.value)}
+              placeholder="Dodatkowe informacje o kliencie..."
+              rows={3}
+            />
           </CardContent>
         </Card>
       </div>
 
-      {/* Order history */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" />
-            Historia zamówień
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {orders.length > 0 ? (
+      {/* Order history - only for existing clients */}
+      {orders.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
+              Historia zamówień
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -194,11 +240,9 @@ const ClientDetailView = ({ client, onBack, onEdit }: Props) => {
                 ))}
               </TableBody>
             </Table>
-          ) : (
-            <p className="text-sm text-muted-foreground py-8 text-center">Brak zamówień</p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
