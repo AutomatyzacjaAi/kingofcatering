@@ -35,6 +35,7 @@ interface Extra {
   priceNetto: number;
   vatRate: number;
   priceBrutto: number;
+  priceOnSite: number | null;
   unitLabel: string;
   priceLabel: string;
   requiresPersonCount: boolean;
