@@ -162,6 +162,7 @@ export function ProductsStep({
         onServingTimeChange={onServingTimeChange}
         productNotes={selectedProduct ? productNotes[selectedProduct.id] || "" : ""}
         onProductNotesChange={onProductNotesChange}
+        cateringType={cateringType}
       />
     </div>
   );

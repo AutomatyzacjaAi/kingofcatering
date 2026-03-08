@@ -83,7 +83,7 @@ export function CartDrawer({
   if (order.selectedWaiterService) {
     const service = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
     if (service) {
-      cartItems.push({ key: `waiter-${order.selectedWaiterService}`, name: service.name, price: service.price, quantity: order.waiterCount, type: "waiter", productId: order.selectedWaiterService, isReadOnly: true });
+      cartItems.push({ key: `waiter-${order.selectedWaiterService}`, name: service.name, price: getWaiterPrice(service, ct), quantity: order.waiterCount, type: "waiter", productId: order.selectedWaiterService, isReadOnly: true });
     }
   }
 
