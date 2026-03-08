@@ -95,7 +95,7 @@ const mockOrders: Order[] = [
     ],
   },
   {
-    id: "ZAM-KOC01SQ", client: "Jan Nowak", email: "jan.nowak@email.pl", phone: "+48 600 333 444",
+    id: "ZAM-KOC01SQ", dbId: "", clientId: null, client: "Jan Nowak", email: "jan.nowak@email.pl", phone: "+48 600 333 444",
     event: "", date: "21 sty 2026", deliveryAddress: "ul. Długa 12, Kraków",
     amount: "350,00 zł", amountNum: 350, status: "Potwierdzone", notes: "",
     createdAt: "10 sty 2026",
