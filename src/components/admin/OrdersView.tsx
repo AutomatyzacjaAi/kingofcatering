@@ -963,12 +963,13 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
   };
 
   const totalAmount = items.reduce((s, i) => s + i.total, 0);
+  const finalAmount = totalAmount - discount;
 
   const handleSave = () => {
     onSave({
-      ...order, status, notes, deliveryAddress, items,
-      amount: fmtNum(totalAmount) + " zł",
-      amountNum: totalAmount,
+      ...order, status, notes, deliveryAddress, items, discount,
+      amount: fmtNum(finalAmount) + " zł",
+      amountNum: finalAmount,
     });
   };
 
