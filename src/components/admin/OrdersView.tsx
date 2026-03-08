@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download, Clock, ChevronRight, Loader2, CheckCircle2, AlertCircle, Truck } from "lucide-react";
+import { Search, Eye, Pencil, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download, Clock, ChevronRight, Loader2, CheckCircle2, AlertCircle, Truck } from "lucide-react";
 import { generateOfferPdf, generateShoppingListPdf, generateFoodCostPdf, generateKitchenPdf, generateSummaryPdf, type SummaryDocType, type FoodCostExtra as FoodCostExtraPdf } from "@/lib/generatePdf";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { LucideIcon } from "lucide-react";
@@ -344,10 +344,6 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
           }}>
             <Download className="w-4 h-4 mr-1" />
             Pobierz PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="w-4 h-4 mr-1" />
-            Drukuj
           </Button>
         </div>
       </div>
@@ -2118,12 +2114,6 @@ const OrdersView = () => {
                     </button>
                     <button onClick={() => openEdit(order)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                       <Pencil className="w-4 h-4" />
-                    </button>
-                    <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                      <Printer className="w-4 h-4" />
                     </button>
                     <button className="p-1.5 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors">
                       <Trash2 className="w-4 h-4" />
