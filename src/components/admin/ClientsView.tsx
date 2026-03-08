@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, User, Building2, MapPin, FileText, Save, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import ClientDetailView from "./ClientDetailView";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +38,13 @@ export interface ClientData {
 
 type View = "list" | "detail";
 
+const newClientForm = (): ClientData => ({
+  id: crypto.randomUUID(), firstName: "", lastName: "", email: "", phone: "", phoneAlt: "",
+  companyName: "", nip: "", companyAddress: "", companyCity: "", companyPostalCode: "",
+  address: "", city: "", postalCode: "",
+  notes: "", orders: 0, totalSpent: "0,00 zł", lastOrder: "—", createdAt: "",
+});
+
 const fmtPLN = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtDate = (d: string) => {
   const date = new Date(d);
@@ -53,6 +65,8 @@ const ClientsView = () => {
   const [selectedClient, setSelectedClient] = useState<ClientData | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [addForm, setAddForm] = useState<ClientData>(newClientForm());
 
   const fetchClients = async () => {
     const { data: dbClients, error } = await supabase
@@ -125,9 +139,43 @@ const ClientsView = () => {
   };
 
   const handleAdd = () => {
-    const newClient = { ...emptyClient, id: crypto.randomUUID() };
-    setSelectedClient(newClient);
-    setView("detail");
+    setAddForm(newClientForm());
+    setIsAddSheetOpen(true);
+  };
+
+  const setAddField = (field: keyof ClientData, value: string) =>
+    setAddForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleAddSave = async () => {
+    if (!addForm.firstName || !addForm.lastName || !addForm.email || !addForm.phone) {
+      toast.error("Wypełnij wymagane pola (imię, nazwisko, email, telefon)");
+      return;
+    }
+    const payload = {
+      id: addForm.id,
+      first_name: addForm.firstName,
+      last_name: addForm.lastName,
+      email: addForm.email,
+      phone: addForm.phone,
+      phone_alt: addForm.phoneAlt || null,
+      company_name: addForm.companyName || null,
+      nip: addForm.nip || null,
+      company_address: addForm.companyAddress || null,
+      company_city: addForm.companyCity || null,
+      company_postal_code: addForm.companyPostalCode || null,
+      address: addForm.address || null,
+      city: addForm.city || null,
+      postal_code: addForm.postalCode || null,
+      notes: addForm.notes || null,
+    };
+    const { error } = await supabase.from("clients").insert(payload);
+    if (error) {
+      toast.error("Błąd zapisu: " + error.message);
+      return;
+    }
+    toast.success("Klient dodany");
+    setIsAddSheetOpen(false);
+    fetchClients();
   };
 
   const handleSave = async (client: ClientData) => {
@@ -265,6 +313,128 @@ const ClientsView = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add Client Sheet */}
+      <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
+            <SheetTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              Nowy klient
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="flex-1 px-6 py-4">
+            <div className="space-y-6">
+              {/* Dane osobowe */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  Dane osobowe
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Imię *</Label>
+                    <Input value={addForm.firstName} onChange={(e) => setAddField("firstName", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Nazwisko *</Label>
+                    <Input value={addForm.lastName} onChange={(e) => setAddField("lastName", e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Email *</Label>
+                  <Input type="email" value={addForm.email} onChange={(e) => setAddField("email", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Telefon *</Label>
+                    <Input value={addForm.phone} onChange={(e) => setAddField("phone", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Telefon dodatkowy</Label>
+                    <Input value={addForm.phoneAlt} onChange={(e) => setAddField("phoneAlt", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dane firmowe */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  Dane firmowe
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Nazwa firmy</Label>
+                    <Input value={addForm.companyName} onChange={(e) => setAddField("companyName", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">NIP</Label>
+                    <Input value={addForm.nip} onChange={(e) => setAddField("nip", e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Adres firmy</Label>
+                  <Input value={addForm.companyAddress} onChange={(e) => setAddField("companyAddress", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Miasto</Label>
+                    <Input value={addForm.companyCity} onChange={(e) => setAddField("companyCity", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Kod pocztowy</Label>
+                    <Input value={addForm.companyPostalCode} onChange={(e) => setAddField("companyPostalCode", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Adres */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  Adres zamieszkania
+                </h3>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Adres</Label>
+                  <Input value={addForm.address} onChange={(e) => setAddField("address", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Miasto</Label>
+                    <Input value={addForm.city} onChange={(e) => setAddField("city", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Kod pocztowy</Label>
+                    <Input value={addForm.postalCode} onChange={(e) => setAddField("postalCode", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notatki */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  Notatki
+                </h3>
+                <Textarea
+                  value={addForm.notes}
+                  onChange={(e) => setAddField("notes", e.target.value)}
+                  placeholder="Dodatkowe informacje o kliencie..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          </ScrollArea>
+          <div className="px-6 py-4 border-t border-border flex gap-3">
+            <Button className="flex-1 gap-2" onClick={handleAddSave}>
+              <Save className="w-4 h-4" />
+              Dodaj klienta
+            </Button>
+            <Button variant="outline" onClick={() => setIsAddSheetOpen(false)}>Anuluj</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
