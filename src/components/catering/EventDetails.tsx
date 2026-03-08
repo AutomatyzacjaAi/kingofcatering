@@ -33,10 +33,12 @@ type EventDetailsProps = {
 };
 
 export function EventDetails({
+  cateringType,
   guestCount,
   eventType,
   eventDate,
   eventTime,
+  onCateringTypeChange,
   onGuestCountChange,
   onEventTypeChange,
   onEventDateChange,
