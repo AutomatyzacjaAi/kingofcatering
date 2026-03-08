@@ -43,6 +43,7 @@ interface Dish {
   vatRate: number;
   priceBrutto: number;
   ingredients: DishIngredient[];
+  dietaryTags: string[];
 }
 
 // Bundle = group of variants (e.g. "Pierogi" with ruskie, z mięsem, etc.)
