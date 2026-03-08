@@ -1376,8 +1376,8 @@ const OrdersView = () => {
           <p className="text-muted-foreground text-sm">Zarządzaj zamówieniami cateringowymi</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setView("summary")}>
-            <FileText className="w-4 h-4 mr-1" />
+          <Button variant="outline" onClick={() => setShowSummary(true)}>
+            <FileDown className="w-4 h-4 mr-1" />
             Generuj podsumowanie
           </Button>
           <Button className="gap-2" onClick={() => setShowAddOrder(true)}>
