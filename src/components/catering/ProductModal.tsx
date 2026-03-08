@@ -345,6 +345,7 @@ function ConfigurableProductContent({
   onServingTimeChange,
   notes,
   onNotesChange,
+  cateringType = "wyjazdowy",
 }: {
   product: ConfigurableProduct;
   quantity: number;
@@ -355,7 +356,9 @@ function ConfigurableProductContent({
   onServingTimeChange: (time: string) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  cateringType?: CateringType;
 }) {
+  const effectivePrice = getConfigurablePrice(product, cateringType);
   const toggleOption = (groupId: string, optionId: string) => {
     const group = product.optionGroups.find(g => g.id === groupId);
     if (!group) return;
