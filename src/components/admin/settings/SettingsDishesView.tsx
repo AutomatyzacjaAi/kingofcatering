@@ -1134,20 +1134,19 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
         {configSets.map((cs) => (
           <Card key={cs.id} className="group hover:shadow-sm transition-shadow">
             <CardContent className="py-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {cs.image ? <img src={cs.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Settings2 className="w-5 h-5 text-primary" />}
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{cs.name}</p>
-                    {cs.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{cs.categorySlug}</Badge>}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{cs.groups.length} grup · min. {cs.minPersons} os.</p>
+                  <p className="text-sm font-medium">{cs.name}</p>
+                  {cs.categorySlug && <p className="text-xs text-muted-foreground">{cs.categorySlug}</p>}
                 </div>
-                <span className="text-sm font-semibold text-primary">{cs.pricePerPerson} zł/os.</span>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => startEdit(cs)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
-                <button onClick={() => remove(cs.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-primary">{cs.pricePerPerson} zł/os.</span>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => startEdit(cs)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => remove(cs.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
               </div>
             </CardContent>
           </Card>
