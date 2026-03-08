@@ -990,7 +990,7 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
       </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Status</CardTitle></CardHeader>
             <CardContent>
@@ -1006,6 +1006,23 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
             <CardHeader className="pb-3"><CardTitle className="text-base">Adres dostawy</CardTitle></CardHeader>
             <CardContent>
               <Input value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Rabat</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={discount}
+                  onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="text-right"
+                  placeholder="0"
+                />
+                <span className="text-sm text-muted-foreground whitespace-nowrap">zł</span>
+              </div>
             </CardContent>
           </Card>
           <Card>
