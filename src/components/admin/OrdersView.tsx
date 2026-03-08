@@ -1518,6 +1518,8 @@ const OrdersView = () => {
           notes: o.notes || "",
           items,
           createdAt: formatDate(o.created_at),
+          deliveryCost: Number(o.delivery_cost) || 0,
+          guestCount: Number(o.guest_count) || 0,
         };
       });
 
