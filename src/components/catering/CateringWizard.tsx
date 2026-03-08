@@ -19,6 +19,7 @@ export function CateringWizard() {
     waiterServiceOptions,
     paymentMethods,
     blockedDates,
+    deliveryZones,
   } = useSupabaseData();
 
   const {
@@ -155,6 +156,9 @@ export function CateringWizard() {
             onBuildingNumberChange={(num) => updateOrder({ contactBuildingNumber: num })}
             onApartmentNumberChange={(num) => updateOrder({ contactApartmentNumber: num })}
             onNotesChange={(notes) => updateOrder({ notes })}
+            deliveryZones={deliveryZones}
+            orderTotal={totalPrice}
+            onDeliveryZoneMatch={(zoneId, price) => updateOrder({ deliveryZoneId: zoneId, deliveryPrice: price })}
           />
         );
       case 4:

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Send, Users, Phone, Mail, PartyPopper, MapPin, Check, Calendar,
-  UtensilsCrossed, Sparkles, Package, CreditCard, Banknote, FileText, Receipt
+  UtensilsCrossed, Sparkles, Package, CreditCard, Banknote, FileText, Receipt, Truck
 } from "lucide-react";
 import type { Product, Category, EventType } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption, PaymentMethod } from "@/data/extras";
@@ -273,6 +273,20 @@ export function OrderSummary({
               </div>
             </CardContent>
           </Card>
+
+          {order.deliveryPrice > 0 && (
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-primary" />
+                    <span>Dostawa</span>
+                  </div>
+                  <span className="font-medium">{order.deliveryPrice.toFixed(0)} zł</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardContent className="pt-4">

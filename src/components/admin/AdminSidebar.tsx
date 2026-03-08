@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3 } from "lucide-react";
+import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AdminSection = "orders" | "clients" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form";
+export type AdminSection = "orders" | "clients" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -23,6 +23,7 @@ const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: strin
   { id: "settings-calendar", icon: CalendarDays, label: "Kalendarz" },
   { id: "settings-dishes", icon: UtensilsCrossed, label: "Dania" },
   { id: "settings-form", icon: FileText, label: "Formularz" },
+  { id: "settings-delivery", icon: Truck, label: "Strefy dostaw" },
 ];
 
 const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebarProps) => {
