@@ -1040,9 +1040,9 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
                   />
                 </div>
                 <div className="max-h-48 overflow-y-auto space-y-1">
-                  {filteredProducts.map((product) => (
+                  {filteredCatalog.map((product) => (
                     <button
-                      key={product.name}
+                      key={product.id}
                       onClick={() => addProduct(product)}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
                     >
@@ -1050,10 +1050,13 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
                       <span className="text-muted-foreground text-xs">{fmtNum(product.defaultPrice)} zł / {product.unit}</span>
                     </button>
                   ))}
-                  {filteredProducts.length === 0 && (
+                  {filteredCatalog.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-3">Nie znaleziono produktów</p>
                   )}
                 </div>
+                {configuringProduct && (
+                  <SubItemSelector product={configuringProduct} onConfirm={handleSubItemConfirm} onCancel={() => setConfiguringProduct(null)} />
+                )}
               </div>
             )}
 
