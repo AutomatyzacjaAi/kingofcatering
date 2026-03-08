@@ -18,6 +18,10 @@ const ALLERGEN_OPTIONS = [
   "orzechy", "sezam", "seler", "gorczyca", "łubin", "mięczaki",
 ];
 
+const DIETARY_OPTIONS = [
+  "Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto", "Low carb", "Pescetariańskie",
+];
+
 interface Ingredient {
   id: string;
   name: string;
