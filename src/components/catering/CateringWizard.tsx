@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useCateringOrder } from "@/hooks/useCateringOrder";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { submitOrder } from "@/lib/submitOrder";
@@ -20,6 +21,7 @@ export function CateringWizard() {
     paymentMethods,
     blockedDates,
     deliveryConfig,
+    eventCategoryMappings,
   } = useSupabaseData();
 
   const {
@@ -41,6 +43,23 @@ export function CateringWizard() {
     updateOrder,
     resetOrder,
   } = useCateringOrder(products, extraItems, packagingOptions, waiterServiceOptions);
+
+  // Filter categories based on selected event type mappings
+  const filteredCategories = useMemo(() => {
+    if (!order.eventType) return categories;
+    const mappedCategoryIds = eventCategoryMappings
+      .filter((m) => m.event_type_id === order.eventType)
+      .map((m) => m.category_id);
+    // If no mappings exist for this event type, show all categories
+    if (mappedCategoryIds.length === 0) return categories;
+    return categories.filter((c) => c.dbId && mappedCategoryIds.includes(c.dbId));
+  }, [order.eventType, eventCategoryMappings, categories]);
+
+  // Filter products to only those in visible categories
+  const filteredProducts = useMemo(() => {
+    const visibleCategoryIds = new Set(filteredCategories.map((c) => c.id));
+    return products.filter((p) => visibleCategoryIds.has(p.category));
+  }, [filteredCategories, products]);
 
   const handleSubmit = async () => {
     await submitOrder(
@@ -116,8 +135,8 @@ export function CateringWizard() {
             onConfigurableChange={updateConfigurable}
             onServingTimeChange={updateServingTime}
             onProductNotesChange={updateProductNotes}
-            products={products}
-            categories={categories}
+            products={filteredProducts}
+            categories={filteredCategories}
           />
         );
       case 2:

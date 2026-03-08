@@ -19,6 +19,7 @@ async function fetchCategories(): Promise<Category[]> {
   if (error) throw error;
   return (data ?? []).map((c) => ({
     id: c.slug,
+    dbId: c.id,
     name: c.name,
     description: c.description ?? "",
     icon: c.icon,
@@ -36,6 +37,16 @@ async function fetchEventTypes(): Promise<EventType[]> {
     name: e.name,
     icon: e.icon,
   }));
+}
+
+export type EventCategoryMapping = { event_type_id: string; category_id: string };
+
+async function fetchEventCategoryMappings(): Promise<EventCategoryMapping[]> {
+  const { data, error } = await supabase
+    .from("event_category_mappings")
+    .select("event_type_id, category_id");
+  if (error) throw error;
+  return data ?? [];
 }
 
 async function fetchProducts(): Promise<Product[]> {
@@ -294,6 +305,12 @@ export function useSupabaseData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const eventCategoryMappingsQuery = useQuery({
+    queryKey: ["eventCategoryMappings"],
+    queryFn: fetchEventCategoryMappings,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isLoading =
     categoriesQuery.isLoading ||
     eventTypesQuery.isLoading ||
@@ -301,7 +318,8 @@ export function useSupabaseData() {
     extrasQuery.isLoading ||
     paymentMethodsQuery.isLoading ||
     blockedDatesQuery.isLoading ||
-    deliveryConfigQuery.isLoading;
+    deliveryConfigQuery.isLoading ||
+    eventCategoryMappingsQuery.isLoading;
 
   return {
     isLoading,
@@ -314,5 +332,6 @@ export function useSupabaseData() {
     paymentMethods: paymentMethodsQuery.data ?? [],
     blockedDates: blockedDatesQuery.data ?? [],
     deliveryConfig: deliveryConfigQuery.data ?? { companyLat: null, companyLng: null, pricePerKm: 3, maxDeliveryKm: null, freeDeliveryAbove: null },
+    eventCategoryMappings: eventCategoryMappingsQuery.data ?? [],
   };
 }
