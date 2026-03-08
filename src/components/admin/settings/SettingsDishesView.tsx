@@ -666,7 +666,7 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
     }
     const v: BundleVariant = {
       id: crypto.randomUUID(), name: dish.name, description: dish.description,
-      price: dish.priceBrutto, allergens: [...dish.allergens],
+      price: dish.priceBrutto, priceOnSite: null, allergens: [...dish.allergens],
       dietaryTags: [...dish.dietaryTags], sortOrder: formVariants.length,
       dishId: dish.id,
     };
