@@ -84,12 +84,12 @@ export type Category = {
 // ============= EVENT TYPES =============
 
 export const eventTypes: EventType[] = [
-  { id: "wedding", name: "Wesele", icon: "Heart" },
-  { id: "corporate", name: "Konferencja", icon: "Presentation" },
-  { id: "birthday", name: "Urodziny", icon: "Gift" },
-  { id: "business", name: "Spotkanie firmowe", icon: "Briefcase" },
-  { id: "party", name: "Impreza", icon: "Music" },
-  { id: "other", name: "Inne", icon: "CalendarDays" },
+  { id: "wedding", name: "Wesele" },
+  { id: "corporate", name: "Konferencja" },
+  { id: "birthday", name: "Urodziny" },
+  { id: "business", name: "Spotkanie firmowe" },
+  { id: "party", name: "Impreza" },
+  { id: "other", name: "Inne" },
 ];
 
 // ============= CATEGORIES =============
@@ -99,19 +99,16 @@ export const categories: Category[] = [
     id: "patery",
     name: "Patery",
     description: "Gotowe kompozycje na każdą okazję",
-    icon: "Salad",
   },
   {
     id: "mini",
     name: "Mini",
     description: "Małe przekąski z wieloma wariantami",
-    icon: "Cookie",
   },
   {
     id: "zestawy",
     name: "Zestawy",
     description: "Pełne menu do konfiguracji",
-    icon: "UtensilsCrossed",
   },
 ];
 
