@@ -151,7 +151,7 @@ const mockOrders: Order[] = [
     ],
   },
   {
-    id: "ZAM-KOCX6J3", client: "Tomasz Kamiński", email: "t.kaminski@email.pl", phone: "+48 600 111 333",
+    id: "ZAM-KOCX6J3", dbId: "", clientId: null, client: "Tomasz Kamiński", email: "t.kaminski@email.pl", phone: "+48 600 111 333",
     event: "Impreza firmowa", date: "13 sty 2026", deliveryAddress: "Biurowiec Centrum, al. Jerozolimskie 100",
     amount: "14 970,00 zł", amountNum: 14970, status: "Potwierdzone", notes: "Faktura na firmę",
     createdAt: "2 sty 2026",
