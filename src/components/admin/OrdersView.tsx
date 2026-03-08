@@ -1371,7 +1371,17 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
   const [clientPhone, setClientPhone] = useState("");
   const [event, setEvent] = useState("");
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("blocked_dates").select("blocked_date").then(({ data }) => {
+      if (data) setBlockedDates(data.map(d => new Date(d.blocked_date)));
+    });
+  }, [open]);
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<OrderItem[]>([]);
   const [showProducts, setShowProducts] = useState(false);
