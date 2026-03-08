@@ -146,7 +146,7 @@ export function OrderSummary({
     }
     setIsSubmitting(true);
     try {
-      await onSubmit();
+      await onSubmit("order");
       setIsSubmitted(true);
       toast({ title: "Zamówienie złożone! 🎉", description: "Przekierowanie do płatności..." });
     } catch {
