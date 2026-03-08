@@ -34,7 +34,6 @@ async function fetchEventTypes(): Promise<EventType[]> {
   return (data ?? []).map((e) => ({
     id: e.id,
     name: e.name,
-    icon: e.icon,
   }));
 }
 
