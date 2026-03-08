@@ -1384,6 +1384,7 @@ const OrdersView = () => {
   const [view, setView] = useState<"list" | "detail" | "edit" | "summary" | "document">("list");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedDocType, setSelectedDocType] = useState<DocType>("offer");
+  const [showAddOrder, setShowAddOrder] = useState(false);
 
   const filtered = orders.filter((o) => {
     const matchSearch =
