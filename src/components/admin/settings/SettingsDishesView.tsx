@@ -416,6 +416,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
     setFormIcon(d.icon); setFormCategorySlug(d.categorySlug); setFormAllergens([...d.allergens]);
     setFormDietaryTags([...d.dietaryTags]); setFormContents(d.contents.join("\n"));
     setFormIngredients([...d.dishIngredients]);
+    setFormPriceBruttoOnSite(d.pricePerUnitOnSite != null ? d.pricePerUnitOnSite.toString() : "");
     setShowForm(true);
   };
 
