@@ -1100,7 +1100,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
                 {cs.image ? <img src={cs.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Settings2 className="w-5 h-5 text-primary" />}
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{cs.icon}</span>
+                    <p className="text-sm font-medium">{cs.name}</p>
                     <p className="text-sm font-medium">{cs.name}</p>
                     {cs.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{cs.categorySlug}</Badge>}
                   </div>
