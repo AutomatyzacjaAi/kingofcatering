@@ -571,7 +571,12 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
                     <CookingPot className="w-5 h-5 text-primary" />
                   )}
                   <div>
-                    <p className="text-sm font-medium">{dish.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{dish.name}</p>
+                      {dish.dietaryTags?.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">{tag}</Badge>
+                      ))}
+                    </div>
                     <p className="text-xs text-muted-foreground">{dish.ingredients.length} składników · food cost: {dishFoodCost.toFixed(2)} zł</p>
                   </div>
                   <div className="flex items-center gap-2">
