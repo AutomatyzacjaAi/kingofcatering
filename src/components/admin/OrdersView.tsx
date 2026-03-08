@@ -1074,7 +1074,16 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
               <TableBody>
                 {items.map((item, i) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      <span className="font-medium">{item.name}</span>
+                      {item.subItems && item.subItems.length > 0 && (
+                        <div className="mt-1 space-y-0.5">
+                          {item.subItems.map((sub, si) => (
+                            <p key={si} className="text-xs text-muted-foreground pl-3 border-l-2 border-primary/20">{sub.name}{sub.quantity > 1 ? ` ×${sub.quantity}` : ""}</p>
+                          ))}
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center gap-1 justify-center">
                         <Input
