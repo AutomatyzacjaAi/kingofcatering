@@ -146,11 +146,84 @@ export function OrderSummary({
     }
     setIsSubmitting(true);
     try {
-      await onSubmit("order");
+      // 1. Zapisz zamówienie w bazie
+      const orderNumber = await onSubmit("order");
+
+      // 2. Pobierz orderId z bazy po numerze zamówienia
+      const { data: orderRow } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("order_number", orderNumber as unknown as string)
+        .single();
+
+      if (!orderRow) throw new Error("Nie znaleziono zamówienia");
+
+      // 3. Utwórz line items dla Stripe
+      const stripeLineItems = [
+        ...productLines.map(line => ({
+          name: line.name,
+          quantity: line.quantity,
+          unitPrice: line.price / line.quantity,
+        })),
+        ...extrasLines.map(line => ({
+          name: line.name,
+          quantity: line.quantity,
+          unitPrice: line.price / line.quantity,
+        })),
+      ];
+
+      if (order.deliveryPrice > 0) {
+        stripeLineItems.push({
+          name: "Dostawa",
+          quantity: 1,
+          unitPrice: order.deliveryPrice,
+        });
+      }
+
+      // 4. Wywołaj edge function do tworzenia Stripe Checkout Session
+      // ============================================================
+      // WAŻNE: Aby to zadziałało, musisz:
+      // 1. Dodać STRIPE_SECRET_KEY do Supabase Secrets
+      // 2. Deploy edge function: create-stripe-checkout
+      // ============================================================
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
+        "create-stripe-checkout",
+        {
+          body: {
+            orderId: orderRow.id,
+            orderNumber: orderNumber as unknown as string,
+            amount: totalPrice,
+            customerEmail: order.contactEmail,
+            customerName: order.contactName,
+            lineItems: stripeLineItems,
+            successUrl: `${window.location.origin}?payment=success&order=${orderNumber}`,
+            cancelUrl: `${window.location.origin}?payment=cancelled&order=${orderNumber}`,
+          },
+        }
+      );
+
+      if (checkoutError) throw checkoutError;
+
+      if (checkoutData?.error === "stripe_not_configured") {
+        // Stripe nie jest jeszcze skonfigurowany — fallback na potwierdzenie
+        toast({ 
+          title: "Płatności online niedostępne", 
+          description: "Zamówienie zostało zapisane. Skontaktujemy się w sprawie płatności.", 
+        });
+        setIsSubmitted(true);
+        return;
+      }
+
+      if (checkoutData?.url) {
+        // Przekieruj do Stripe Checkout
+        window.location.href = checkoutData.url;
+      } else {
+        throw new Error(checkoutData?.message || "Nie udało się utworzyć sesji płatności");
+      }
+    } catch (err) {
+      console.error("Stripe checkout error:", err);
+      toast({ title: "Błąd", description: "Nie udało się uruchomić płatności. Zamówienie zostało zapisane.", variant: "destructive" });
       setIsSubmitted(true);
-      toast({ title: "Zamówienie złożone! 🎉", description: "Przekierowanie do płatności..." });
-    } catch {
-      toast({ title: "Błąd", description: "Nie udało się złożyć zamówienia.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
