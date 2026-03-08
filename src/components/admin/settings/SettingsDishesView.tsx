@@ -206,7 +206,9 @@ const IngredientPicker = ({ ingredients, dishIngredients, onChange }: {
             <button key={i.id} type="button" onClick={() => toggleIngredient(i.id)}
               className="w-full text-left px-2.5 py-1.5 rounded text-xs hover:bg-muted flex items-center justify-between">
               <span>{i.name}</span>
-              <span className="text-[10px] text-muted-foreground">{i.pricePerUnit.toFixed(3)} zł/{i.unit}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {i.unit === "szt." ? `${i.pricePerUnit.toFixed(2)} zł/szt.` : `${(i.pricePerUnit * 1000).toFixed(2)} zł/${i.unit === "g" ? "kg" : "l"}`}
+              </span>
             </button>
           ))}
           {filtered.filter(i => !selectedIds.includes(i.id)).length === 0 && (
@@ -234,8 +236,10 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
   const addIngredient = async () => {
     if (!newName.trim()) return;
     setSaving(true);
+    const enteredPrice = parseFloat(newPrice) || 0;
+    const pricePerUnit = newUnit === "szt." ? enteredPrice : enteredPrice / 1000;
     const { error } = await supabase.from("ingredients").insert({
-      name: newName.trim(), unit: newUnit, allergens: newAllergens, price_per_unit: parseFloat(newPrice) || 0,
+      name: newName.trim(), unit: newUnit, allergens: newAllergens, price_per_unit: pricePerUnit,
     });
     setSaving(false);
     if (error) { toast.error("Błąd: " + error.message); return; }
@@ -281,8 +285,10 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Cena za 1 {newUnit} (zł)</Label>
-                <Input type="number" step="0.001" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0.00" />
+                <Label className="text-xs">
+                  {newUnit === "szt." ? "Cena za 1 szt. (zł)" : newUnit === "g" ? "Cena za 1 kg (zł)" : "Cena za 1 litr (zł)"}
+                </Label>
+                <Input type="number" step="0.01" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0.00" />
               </div>
             </div>
             <div className="space-y-1">
@@ -312,7 +318,12 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
               <Apple className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium">{ingredient.name}</span>
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">{ingredient.unit}</Badge>
-              <span className="text-xs text-muted-foreground">{ingredient.pricePerUnit.toFixed(3)} zł/{ingredient.unit}</span>
+              <span className="text-xs text-muted-foreground">
+                {ingredient.unit === "szt."
+                  ? `${ingredient.pricePerUnit.toFixed(2)} zł/szt.`
+                  : `${(ingredient.pricePerUnit * 1000).toFixed(2)} zł/${ingredient.unit === "g" ? "kg" : "l"}`
+                }
+              </span>
               {ingredient.allergens.map((a) => (
                 <Badge key={a} variant="secondary" className="text-[10px] px-1.5 py-0">{a}</Badge>
               ))}
