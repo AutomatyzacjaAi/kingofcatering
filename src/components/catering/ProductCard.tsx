@@ -63,7 +63,7 @@ export function ProductCard({
     >
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
-          {/* Image or Icon */}
+          {/* Image */}
           <div
             className={cn(
               "w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden",
@@ -77,7 +77,7 @@ export function ProductCard({
                 className="w-full h-full object-cover rounded-lg"
               />
             ) : (
-              <span className="text-2xl">{product.icon}</span>
+              <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />
             )}
           </div>
 
