@@ -767,272 +767,212 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
   );
 };
 
-// ===== SUMMARY VIEW =====
-const SummaryView = ({ orders, onBack }: { orders: Order[]; onBack: () => void }) => {
-  const activeOrders = orders.filter((o) => o.status !== "Anulowane" && o.status !== "Zrealizowane");
+// ===== SUMMARY SHEET =====
+type SummaryDocType = "zamowienia" | "lista-zakupow" | "lista-dan" | "food-cost";
+const summaryDocLabels: Record<SummaryDocType, { label: string; Icon: LucideIcon }> = {
+  "zamowienia": { label: "Lista zamówień", Icon: FileText },
+  "lista-zakupow": { label: "Lista zakupów", Icon: ShoppingCart },
+  "lista-dan": { label: "Lista dań", Icon: CookingPot },
+  "food-cost": { label: "Food cost", Icon: Calculator },
+};
 
-  // 1. LISTA ZAKUPÓW - aggregate raw ingredients from subItems
-  const ingredientMap: Record<string, { name: string; totalQty: number; unit: string }> = {};
-  activeOrders.forEach((order) => {
-    order.items.forEach((item) => {
-      if (item.subItems) {
-        item.subItems.forEach((sub) => {
-          const key = `${sub.name}__${sub.unit}`;
-          if (!ingredientMap[key]) {
-            ingredientMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit };
-          }
-          ingredientMap[key].totalQty += sub.quantity;
-        });
-      }
-    });
+const parseSimpleDate = (dateStr: string): Date | null => {
+  const months: Record<string, number> = {
+    "sty": 0, "lut": 1, "mar": 2, "kwi": 3, "maj": 4, "cze": 5,
+    "lip": 6, "sie": 7, "wrz": 8, "paź": 9, "lis": 10, "gru": 11,
+  };
+  const parts = dateStr.trim().split(" ");
+  if (parts.length !== 3) return null;
+  const day = parseInt(parts[0]);
+  const month = months[parts[1]];
+  const year = parseInt(parts[2]);
+  if (isNaN(day) || month === undefined || isNaN(year)) return null;
+  return new Date(year, month, day);
+};
+
+const SummarySheet = ({ open, onClose, orders }: { open: boolean; onClose: () => void; orders: Order[] }) => {
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [docType, setDocType] = useState<SummaryDocType>("zamowienia");
+
+  const filteredOrders = orders.filter(o => {
+    const matchStatus = statusFilter === "all" || o.status === statusFilter;
+    if (!matchStatus) return false;
+    if (dateFrom || dateTo) {
+      const orderDate = parseSimpleDate(o.date);
+      if (!orderDate) return true;
+      if (dateFrom && orderDate < dateFrom) return false;
+      if (dateTo && orderDate > dateTo) return false;
+    }
+    return true;
   });
-  const ingredients = Object.values(ingredientMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
 
-  // 2. LISTA DAŃ - for bundles/configurable show sub-items, for simple show the product
-  type DishEntry = { name: string; totalQty: number; unit: string; source: string };
-  const dishMap: Record<string, DishEntry> = {};
-  activeOrders.forEach((order) => {
-    order.items.forEach((item) => {
-      if (item.type === "service" || item.type === "extra") return;
-      if ((item.type === "configurable" || item.type === "bundle") && item.subItems) {
-        item.subItems.forEach((sub) => {
-          const key = `${sub.name}__dish`;
-          if (!dishMap[key]) {
-            dishMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit, source: item.name };
-          }
-          dishMap[key].totalQty += sub.quantity;
-        });
-      } else {
-        const key = `${item.name}__dish`;
-        if (!dishMap[key]) {
-          dishMap[key] = { name: item.name, totalQty: 0, unit: item.unit, source: "" };
-        }
-        dishMap[key].totalQty += item.quantity;
-      }
-    });
-  });
-  const dishes = Object.values(dishMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+  const generateCSV = () => {
+    let csv = "";
+    const sep = ";";
 
-  // 3. FOOD COST
-  type FoodCostEntry = { name: string; quantity: number; unit: string; foodCostPerUnit: number; totalFoodCost: number; revenue: number; margin: number };
-  const foodCostItems: FoodCostEntry[] = [];
-  activeOrders.forEach((order) => {
-    order.items.forEach((item) => {
-      if (item.type === "service" || !item.foodCostPerUnit) return;
-      foodCostItems.push({
-        name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        foodCostPerUnit: item.foodCostPerUnit,
-        totalFoodCost: item.foodCostPerUnit * item.quantity,
-        revenue: item.total,
-        margin: item.total > 0 ? ((item.total - item.foodCostPerUnit * item.quantity) / item.total) * 100 : 0,
+    if (docType === "zamowienia") {
+      csv = ["Nr zamówienia", "Klient", "Wydarzenie", "Data", "Kwota", "Status", "Pozycje"].join(sep) + "\n";
+      filteredOrders.forEach(o => {
+        const itemNames = o.items.map(i => `${i.name} x${i.quantity}`).join(", ");
+        csv += [o.id, o.client, o.event || "-", o.date, o.amount, o.status, `"${itemNames}"`].join(sep) + "\n";
       });
-    });
-  });
-  const totalRevenue = foodCostItems.reduce((s, i) => s + i.revenue, 0);
-  const totalFoodCost = foodCostItems.reduce((s, i) => s + i.totalFoodCost, 0);
-  const totalMargin = totalRevenue > 0 ? ((totalRevenue - totalFoodCost) / totalRevenue) * 100 : 0;
-  const totalValue = activeOrders.reduce((s, o) => s + o.amountNum, 0);
+    } else if (docType === "lista-zakupow") {
+      const ingredientMap: Record<string, { name: string; totalQty: number; unit: string }> = {};
+      filteredOrders.forEach(o => {
+        o.items.forEach(item => {
+          if (item.subItems) {
+            item.subItems.forEach(sub => {
+              const key = `${sub.name}__${sub.unit}`;
+              if (!ingredientMap[key]) ingredientMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit };
+              ingredientMap[key].totalQty += sub.quantity;
+            });
+          }
+        });
+      });
+      const ingredients = Object.values(ingredientMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+      csv = ["Składnik", "Ilość", "Jednostka"].join(sep) + "\n";
+      ingredients.forEach(i => { csv += [i.name, fmtNum(i.totalQty), i.unit].join(sep) + "\n"; });
+    } else if (docType === "lista-dan") {
+      type DishEntry = { name: string; totalQty: number; unit: string; source: string };
+      const dishMap: Record<string, DishEntry> = {};
+      filteredOrders.forEach(o => {
+        o.items.forEach(item => {
+          if (item.type === "service" || item.type === "extra") return;
+          if ((item.type === "configurable" || item.type === "bundle") && item.subItems) {
+            item.subItems.forEach(sub => {
+              const key = `${sub.name}__dish`;
+              if (!dishMap[key]) dishMap[key] = { name: sub.name, totalQty: 0, unit: sub.unit, source: item.name };
+              dishMap[key].totalQty += sub.quantity;
+            });
+          } else {
+            const key = `${item.name}__dish`;
+            if (!dishMap[key]) dishMap[key] = { name: item.name, totalQty: 0, unit: item.unit, source: "" };
+            dishMap[key].totalQty += item.quantity;
+          }
+        });
+      });
+      const dishes = Object.values(dishMap).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+      csv = ["Danie", "Ilość", "Jednostka", "Źródło"].join(sep) + "\n";
+      dishes.forEach(d => { csv += [d.name, d.totalQty, d.unit, d.source || "-"].join(sep) + "\n"; });
+    } else if (docType === "food-cost") {
+      csv = ["Produkt", "Ilość", "Jednostka", "FC/jedn.", "FC łącznie", "Przychód", "Marża %"].join(sep) + "\n";
+      filteredOrders.forEach(o => {
+        o.items.forEach(item => {
+          if (item.type === "service" || !item.foodCostPerUnit) return;
+          const totalFC = item.foodCostPerUnit * item.quantity;
+          const margin = item.total > 0 ? ((item.total - totalFC) / item.total) * 100 : 0;
+          csv += [item.name, item.quantity, item.unit, fmtNum(item.foodCostPerUnit), fmtNum(totalFC), fmtNum(item.total), margin.toFixed(1) + "%"].join(sep) + "\n";
+        });
+      });
+    }
 
-  const fmtNum = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return csv;
+  };
+
+  const handleDownload = () => {
+    const csv = generateCSV();
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `${docType}_${dateStr}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Plik pobrany");
+  };
 
   return (
-    <div>
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Powrót
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">Podsumowanie zamówień</h1>
-          <p className="text-muted-foreground text-sm">
-            {activeOrders.length} aktywnych zamówień (Nowe, Potwierdzone, W realizacji)
-          </p>
-        </div>
-        <Button variant="outline" size="sm">
-          <Printer className="w-4 h-4 mr-1" />
-          Drukuj
-        </Button>
-      </div>
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-xl">Generuj podsumowanie</SheetTitle>
+        </SheetHeader>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Aktywne zamówienia</p>
-            <p className="text-3xl font-bold text-foreground">{activeOrders.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Łączna wartość</p>
-            <p className="text-3xl font-bold text-primary">{fmtNum(totalValue)} zł</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Food cost</p>
-            <p className="text-3xl font-bold text-foreground">{fmtNum(totalFoodCost)} zł</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Marża</p>
-            <p className={cn("text-3xl font-bold", totalMargin >= 60 ? "text-emerald-600" : totalMargin >= 40 ? "text-yellow-600" : "text-red-600")}>
-              {totalMargin.toFixed(1)}%
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 1. LISTA ZAKUPÓW */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-primary" />
-            Lista zakupów
-          </CardTitle>
-          <CardDescription>Zagregowane składniki ze wszystkich aktywnych zamówień</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {ingredients.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">Brak danych o składnikach w zamówieniach</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="font-semibold text-foreground">Składnik</TableHead>
-                  <TableHead className="font-semibold text-foreground text-right">Łączna ilość</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ingredients.map((ing, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-medium">{ing.name}</TableCell>
-                    <TableCell className="text-right">{fmtNum(ing.totalQty)} {ing.unit}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 2. LISTA DAŃ */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <UtensilsCrossed className="w-5 h-5 text-primary" />
-            Lista dań
-          </CardTitle>
-          <CardDescription>Wszystkie dania do przygotowania (zestawy i pakiety rozbite na pozycje)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="font-semibold text-foreground">Danie</TableHead>
-                <TableHead className="font-semibold text-foreground text-muted-foreground">Źródło</TableHead>
-                <TableHead className="font-semibold text-foreground text-right">Ilość</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {dishes.map((dish, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{dish.name}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{dish.source || "—"}</TableCell>
-                  <TableCell className="text-right">{dish.totalQty} {dish.unit}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* 3. FOOD COST */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-primary" />
-            Food cost
-          </CardTitle>
-          <CardDescription>Analiza kosztów surowców i marży</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="font-semibold text-foreground">Produkt</TableHead>
-                <TableHead className="font-semibold text-foreground text-center">Ilość</TableHead>
-                <TableHead className="font-semibold text-foreground text-right">FC/jedn.</TableHead>
-                <TableHead className="font-semibold text-foreground text-right">FC łącznie</TableHead>
-                <TableHead className="font-semibold text-foreground text-right">Przychód</TableHead>
-                <TableHead className="font-semibold text-foreground text-right">Marża</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {foodCostItems.map((item, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{fmtNum(item.foodCostPerUnit)} zł</TableCell>
-                  <TableCell className="text-right">{fmtNum(item.totalFoodCost)} zł</TableCell>
-                  <TableCell className="text-right">{fmtNum(item.revenue)} zł</TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant="outline" className={cn(
-                      "text-xs",
-                      item.margin >= 60 ? "border-emerald-300 text-emerald-700 bg-emerald-50" :
-                      item.margin >= 40 ? "border-yellow-300 text-yellow-700 bg-yellow-50" :
-                      "border-red-300 text-red-700 bg-red-50"
-                    )}>
-                      {item.margin.toFixed(1)}%
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="hover:bg-transparent border-t-2">
-                <TableCell colSpan={3} className="text-right font-semibold">Suma:</TableCell>
-                <TableCell className="text-right font-bold">{fmtNum(totalFoodCost)} zł</TableCell>
-                <TableCell className="text-right font-bold text-primary">{fmtNum(totalRevenue)} zł</TableCell>
-                <TableCell className="text-right">
-                  <Badge variant="outline" className={cn(
-                    "text-xs font-bold",
-                    totalMargin >= 60 ? "border-emerald-300 text-emerald-700 bg-emerald-50" :
-                    totalMargin >= 40 ? "border-yellow-300 text-yellow-700 bg-yellow-50" :
-                    "border-red-300 text-red-700 bg-red-50"
-                  )}>
-                    {totalMargin.toFixed(1)}%
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Per-order breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Rozbicie na zamówienia</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {activeOrders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between px-4 py-3 rounded-lg bg-muted/30">
-              <div className="flex items-center gap-4">
-                <span className="font-mono text-xs text-muted-foreground">{order.id}</span>
-                <span className="text-sm font-medium">{order.client}</span>
-                <Badge className={cn("text-[10px] border", statusColors[order.status])}>{order.status}</Badge>
+        <div className="space-y-6 mt-6">
+          {/* Date range */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              Zakres dat
+            </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Od</Label>
+                <Input
+                  type="date"
+                  value={dateFrom ? dateFrom.toISOString().slice(0, 10) : ""}
+                  onChange={(e) => setDateFrom(e.target.value ? new Date(e.target.value) : undefined)}
+                />
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs text-muted-foreground">{order.date}</span>
-                <span className="text-sm font-semibold">{order.amount}</span>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Do</Label>
+                <Input
+                  type="date"
+                  value={dateTo ? dateTo.toISOString().slice(0, 10) : ""}
+                  onChange={(e) => setDateTo(e.target.value ? new Date(e.target.value) : undefined)}
+                />
               </div>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+
+          {/* Status filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Status zamówień</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Wszystkie statusy</SelectItem>
+                {allStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Document type */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold">Rodzaj dokumentu</Label>
+            <div className="grid grid-cols-1 gap-1.5">
+              {(Object.keys(summaryDocLabels) as SummaryDocType[]).map(type => {
+                const { label, Icon } = summaryDocLabels[type];
+                const isSelected = docType === type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setDocType(type)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg border text-sm text-left transition-colors",
+                      isSelected
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border bg-card text-muted-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <Icon className={cn("w-4 h-4", isSelected ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("font-medium", isSelected && "text-foreground")}>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Preview count */}
+          <div className="px-4 py-3 rounded-lg bg-muted/50 text-sm">
+            <span className="text-muted-foreground">Zamówień w zakresie: </span>
+            <span className="font-semibold text-foreground">{filteredOrders.length}</span>
+            <span className="text-muted-foreground"> · Łączna kwota: </span>
+            <span className="font-semibold text-primary">{fmtNum(filteredOrders.reduce((s, o) => s + o.amountNum, 0))} zł</span>
+          </div>
+
+          {/* Download */}
+          <Button className="w-full" size="lg" onClick={handleDownload} disabled={filteredOrders.length === 0}>
+            <Download className="w-4 h-4 mr-2" />
+            Pobierz {summaryDocLabels[docType].label} (CSV)
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
