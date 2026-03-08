@@ -202,11 +202,17 @@ export type Database = {
           address: string | null
           auto_confirm: boolean | null
           bank_account: string | null
+          company_address_full: string | null
+          company_lat: number | null
+          company_lng: number | null
           company_name: string | null
           created_at: string
+          delivery_price_per_km: number
           email: string | null
           email_notifications: boolean | null
+          free_delivery_above_km: number | null
           id: string
+          max_delivery_km: number | null
           min_lead_days: number | null
           min_order_value: number | null
           nip: string | null
@@ -218,11 +224,17 @@ export type Database = {
           address?: string | null
           auto_confirm?: boolean | null
           bank_account?: string | null
+          company_address_full?: string | null
+          company_lat?: number | null
+          company_lng?: number | null
           company_name?: string | null
           created_at?: string
+          delivery_price_per_km?: number
           email?: string | null
           email_notifications?: boolean | null
+          free_delivery_above_km?: number | null
           id?: string
+          max_delivery_km?: number | null
           min_lead_days?: number | null
           min_order_value?: number | null
           nip?: string | null
@@ -234,11 +246,17 @@ export type Database = {
           address?: string | null
           auto_confirm?: boolean | null
           bank_account?: string | null
+          company_address_full?: string | null
+          company_lat?: number | null
+          company_lng?: number | null
           company_name?: string | null
           created_at?: string
+          delivery_price_per_km?: number
           email?: string | null
           email_notifications?: boolean | null
+          free_delivery_above_km?: number | null
           id?: string
+          max_delivery_km?: number | null
           min_lead_days?: number | null
           min_order_value?: number | null
           nip?: string | null
