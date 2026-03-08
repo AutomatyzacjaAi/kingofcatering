@@ -1578,7 +1578,7 @@ const OrdersView = () => {
           deliveryAddress: o.delivery_address || "",
           amount: fmtNum(Number(o.amount)) + " zł",
           amountNum: Number(o.amount),
-          status: (o.status as OrderStatus) || "Nowe",
+          status: (o.status as OrderStatus) || "Nowe zamówienie",
           notes: o.notes || "",
           items,
           createdAt: formatDate(o.created_at),

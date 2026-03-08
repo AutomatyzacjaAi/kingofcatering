@@ -13,7 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { ClientData } from "./ClientsView";
 
 const statusColors: Record<string, string> = {
-  "Nowe": "bg-blue-50 text-blue-700 border-blue-200",
+  "Nowe zamówienie": "bg-blue-50 text-blue-700 border-blue-200",
+  "Nowa oferta": "bg-purple-50 text-purple-700 border-purple-200",
   "Potwierdzone": "bg-green-50 text-green-700 border-green-200",
   "W realizacji": "bg-yellow-50 text-yellow-700 border-yellow-200",
   "Zrealizowane": "bg-emerald-50 text-emerald-700 border-emerald-200",
