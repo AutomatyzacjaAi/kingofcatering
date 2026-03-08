@@ -17,7 +17,7 @@ type OrderSummaryProps = {
   order: CateringOrder;
   totalPrice: number;
   onPaymentMethodChange: (method: string) => void;
-  onSubmit: () => Promise<void>;
+  onSubmit: (submissionType: "order" | "offer") => Promise<void>;
   onResetOrder: () => void;
   onSimpleQuantityChange: (productId: string, quantity: number) => void;
   onExpandableVariantChange: (productId: string, variantId: string, quantity: number) => void;
@@ -146,7 +146,7 @@ export function OrderSummary({
     }
     setIsSubmitting(true);
     try {
-      await onSubmit();
+      await onSubmit("order");
       setIsSubmitted(true);
       toast({ title: "Zamówienie złożone! 🎉", description: "Przekierowanie do płatności..." });
     } catch {
@@ -163,7 +163,7 @@ export function OrderSummary({
     }
     setIsSubmitting(true);
     try {
-      await onSubmit();
+      await onSubmit("offer");
       setIsSubmitted(true);
       toast({ title: "Zapytanie wysłane! 🎉", description: "Skontaktujemy się w ciągu 24h." });
     } catch {
