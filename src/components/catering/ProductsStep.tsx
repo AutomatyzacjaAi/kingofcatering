@@ -139,6 +139,7 @@ export function ProductsStep({
               product={product}
               isSelected={isProductSelected(product)}
               selectedCount={getProductSelectedCount(product)}
+              cateringType={cateringType}
               onClick={() => setSelectedProduct(product)}
             />
           ))}
