@@ -100,7 +100,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
     setFormCategory("dodatki"); setFormExtrasCategoryId(null);
     setFormPriceNetto(""); setFormVat(23); setFormPriceBrutto("");
     setFormUnitLabel("szt."); setFormPriceLabel(""); setFormRequiresPersonCount(false);
-    setFormDuration(""); setFormContents(""); setFormFoodCost("");
+    setFormDuration(""); setFormContents(""); setFormFoodCost(""); setFormPriceOnSite("");
     setShowForm(false); setEditingId(null);
   };
 
