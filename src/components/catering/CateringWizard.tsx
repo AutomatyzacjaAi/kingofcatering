@@ -15,6 +15,7 @@ export function CateringWizard() {
     categories,
     eventTypes,
     products,
+    extrasCategories,
     extraItems,
     packagingOptions,
     waiterServiceOptions,
