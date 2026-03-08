@@ -304,6 +304,12 @@ export function useSupabaseData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const eventCategoryMappingsQuery = useQuery({
+    queryKey: ["eventCategoryMappings"],
+    queryFn: fetchEventCategoryMappings,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isLoading =
     categoriesQuery.isLoading ||
     eventTypesQuery.isLoading ||
@@ -311,7 +317,8 @@ export function useSupabaseData() {
     extrasQuery.isLoading ||
     paymentMethodsQuery.isLoading ||
     blockedDatesQuery.isLoading ||
-    deliveryConfigQuery.isLoading;
+    deliveryConfigQuery.isLoading ||
+    eventCategoryMappingsQuery.isLoading;
 
   return {
     isLoading,
@@ -324,5 +331,6 @@ export function useSupabaseData() {
     paymentMethods: paymentMethodsQuery.data ?? [],
     blockedDates: blockedDatesQuery.data ?? [],
     deliveryConfig: deliveryConfigQuery.data ?? { companyLat: null, companyLng: null, pricePerKm: 3, maxDeliveryKm: null, freeDeliveryAbove: null },
+    eventCategoryMappings: eventCategoryMappingsQuery.data ?? [],
   };
 }
