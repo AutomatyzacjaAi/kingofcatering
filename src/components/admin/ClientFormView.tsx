@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { type ClientData } from "@/data/clientsData";
+import { type ClientData } from "@/components/admin/ClientsView";
 
 interface Props {
   client?: ClientData | null; // null = add new
