@@ -341,7 +341,6 @@ export const products: Product[] = [
     image: "/products/zestaw-1.jpg",
     pricePerPerson: 70,
     minPersons: 12,
-    icon: "🍽️",
     category: "zestawy",
     optionGroups: [
       {
