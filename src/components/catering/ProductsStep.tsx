@@ -1,15 +1,9 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Salad, Cookie, UtensilsCrossed } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product, Category } from "@/data/products";
 import { ProductCard } from "./ProductCard";
 import { ProductModal } from "./ProductModal";
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  Salad: <Salad className="w-4 h-4" />,
-  Cookie: <Cookie className="w-4 h-4" />,
-  UtensilsCrossed: <UtensilsCrossed className="w-4 h-4" />,
-};
 
 type ProductsStepProps = {
   simpleQuantities: Record<string, number>;
