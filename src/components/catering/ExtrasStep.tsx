@@ -76,7 +76,7 @@ export function ExtrasStep({
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span className="text-primary">{categoryIcons[category.icon] || <Sparkles className="w-4 h-4" />}</span>
+                <span className="text-sm">{category.name}</span>
                 <span className="text-sm">{category.name}</span>
                 {category.required && !itemCount && (
                   <Badge variant="destructive" className="text-xs px-1.5 py-0">!</Badge>
