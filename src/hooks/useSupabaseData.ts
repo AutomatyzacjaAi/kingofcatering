@@ -19,6 +19,7 @@ async function fetchCategories(): Promise<Category[]> {
   if (error) throw error;
   return (data ?? []).map((c) => ({
     id: c.slug,
+    dbId: c.id,
     name: c.name,
     description: c.description ?? "",
     icon: c.icon,

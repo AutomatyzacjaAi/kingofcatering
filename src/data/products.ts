@@ -80,6 +80,7 @@ export type EventType = {
 
 export type Category = {
   id: string;
+  dbId?: string; // UUID from database, used for event_category_mappings
   name: string;
   description: string;
   icon: string;
