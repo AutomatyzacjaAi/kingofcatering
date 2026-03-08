@@ -141,7 +141,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC0MII", dbId: "", clientId: null, client: "Katarzyna Wójcik", email: "k.wojcik@email.pl", phone: "+48 500 999 000",
     event: "Stypa", date: "26 sty 2026", deliveryAddress: "ul. Cicha 3, Warszawa",
     amount: "402,00 zł", amountNum: 402, status: "Zrealizowane", notes: "",
-    createdAt: "12 sty 2026", deliveryCost: 0, guestCount: 15,
+    createdAt: "12 sty 2026", deliveryCost: 0, guestCount: 15, discount: 0,
     items: [
       { name: "Patera Serów Europejskich", quantity: 1, unit: "szt.", pricePerUnit: 450, total: 450, type: "simple", foodCostPerUnit: 135,
         subItems: [
