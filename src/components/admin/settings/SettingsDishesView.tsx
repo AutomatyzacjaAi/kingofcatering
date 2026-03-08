@@ -18,6 +18,10 @@ const ALLERGEN_OPTIONS = [
   "orzechy", "sezam", "seler", "gorczyca", "łubin", "mięczaki",
 ];
 
+const DIETARY_OPTIONS = [
+  "Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto", "Low carb", "Pescetariańskie",
+];
+
 interface Ingredient {
   id: string;
   name: string;
@@ -39,6 +43,7 @@ interface Dish {
   vatRate: number;
   priceBrutto: number;
   ingredients: DishIngredient[];
+  dietaryTags: string[];
 }
 
 // Bundle = group of variants (e.g. "Pierogi" with ruskie, z mięsem, etc.)
@@ -107,7 +112,7 @@ const mockIngredients: Ingredient[] = [
 const mockDishes: Dish[] = [
   {
     id: "d1", name: "Roladki z indyka ze szpinakiem", image: null,
-    priceNetto: 25.93, vatRate: 8, priceBrutto: 28,
+    priceNetto: 25.93, vatRate: 8, priceBrutto: 28, dietaryTags: [],
     ingredients: [
       { ingredientId: "i1", quantity: 200 },
       { ingredientId: "i2", quantity: 100 },
@@ -117,7 +122,7 @@ const mockDishes: Dish[] = [
   },
   {
     id: "d2", name: "Łosoś grillowany", image: null,
-    priceNetto: 38.89, vatRate: 8, priceBrutto: 42,
+    priceNetto: 38.89, vatRate: 8, priceBrutto: 42, dietaryTags: ["Pescetariańskie", "Bezglutenowe"],
     ingredients: [
       { ingredientId: "i6", quantity: 250 },
       { ingredientId: "i5", quantity: 20 },
@@ -125,27 +130,27 @@ const mockDishes: Dish[] = [
   },
   {
     id: "d3", name: "Pierogi ruskie", image: null,
-    priceNetto: 13.89, vatRate: 8, priceBrutto: 15,
+    priceNetto: 13.89, vatRate: 8, priceBrutto: 15, dietaryTags: ["Wegetariańskie"],
     ingredients: [],
   },
   {
     id: "d4", name: "Pierogi z mięsem", image: null,
-    priceNetto: 14.81, vatRate: 8, priceBrutto: 16,
+    priceNetto: 14.81, vatRate: 8, priceBrutto: 16, dietaryTags: [],
     ingredients: [],
   },
   {
     id: "d5", name: "Pierogi z kapustą i grzybami", image: null,
-    priceNetto: 12.96, vatRate: 8, priceBrutto: 14,
+    priceNetto: 12.96, vatRate: 8, priceBrutto: 14, dietaryTags: ["Wegetariańskie", "Wegańskie"],
     ingredients: [],
   },
   {
     id: "d6", name: "Żurek", image: null,
-    priceNetto: 18.52, vatRate: 8, priceBrutto: 20,
+    priceNetto: 18.52, vatRate: 8, priceBrutto: 20, dietaryTags: [],
     ingredients: [],
   },
   {
     id: "d7", name: "Krem z pomidorów", image: null,
-    priceNetto: 16.67, vatRate: 8, priceBrutto: 18,
+    priceNetto: 16.67, vatRate: 8, priceBrutto: 18, dietaryTags: ["Wegetariańskie", "Wegańskie", "Bezglutenowe"],
     ingredients: [],
   },
 ];
@@ -328,6 +333,7 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
   const [formVat, setFormVat] = useState(8);
   const [formPriceBrutto, setFormPriceBrutto] = useState("");
   const [formIngredients, setFormIngredients] = useState<DishIngredient[]>([]);
+  const [formDietaryTags, setFormDietaryTags] = useState<string[]>([]);
   const [showIngredientList, setShowIngredientList] = useState(false);
 
   const filtered = dishes.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()));
@@ -375,8 +381,12 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
 
   const resetForm = () => {
     setFormName(""); setFormImage(null); setFormPriceNetto(""); setFormVat(8);
-    setFormPriceBrutto(""); setFormIngredients([]); setShowForm(false);
+    setFormPriceBrutto(""); setFormIngredients([]); setFormDietaryTags([]); setShowForm(false);
     setEditingId(null); setShowIngredientList(false);
+  };
+
+  const toggleDietaryTag = (tag: string) => {
+    setFormDietaryTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
   };
 
   const saveDish = () => {
@@ -385,6 +395,7 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
       id: editingId || Date.now().toString(), name: formName.trim(), image: formImage,
       priceNetto: parseFloat(formPriceNetto) || 0, vatRate: formVat,
       priceBrutto: parseFloat(formPriceBrutto) || 0, ingredients: formIngredients,
+      dietaryTags: formDietaryTags,
     };
     if (editingId) {
       setDishes(dishes.map((d) => (d.id === editingId ? dish : d)));
@@ -398,6 +409,7 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
     setEditingId(dish.id); setFormName(dish.name); setFormImage(dish.image);
     setFormPriceNetto(dish.priceNetto.toString()); setFormVat(dish.vatRate);
     setFormPriceBrutto(dish.priceBrutto.toString()); setFormIngredients([...dish.ingredients]);
+    setFormDietaryTags([...(dish.dietaryTags || [])]);
     setShowForm(true);
   };
 
@@ -520,6 +532,19 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
               )}
             </div>
 
+            {/* Dietary tags */}
+            <div className="space-y-2">
+              <Label className="text-xs">Rodzaj diety</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {DIETARY_OPTIONS.map((tag) => (
+                  <button key={tag} type="button" onClick={() => toggleDietaryTag(tag)}
+                    className={cn("px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                      formDietaryTags.includes(tag) ? "bg-accent text-accent-foreground border-accent" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
+                    )}>{tag}</button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-2">
               <Button size="sm" onClick={saveDish} disabled={!formName.trim()}>
                 <Check className="w-4 h-4 mr-1" />{editingId ? "Zapisz" : "Dodaj danie"}
@@ -546,7 +571,12 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
                     <CookingPot className="w-5 h-5 text-primary" />
                   )}
                   <div>
-                    <p className="text-sm font-medium">{dish.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{dish.name}</p>
+                      {dish.dietaryTags?.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">{tag}</Badge>
+                      ))}
+                    </div>
                     <p className="text-xs text-muted-foreground">{dish.ingredients.length} składników · food cost: {dishFoodCost.toFixed(2)} zł</p>
                   </div>
                   <div className="flex items-center gap-2">
