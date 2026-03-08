@@ -210,8 +210,10 @@ export type Database = {
           delivery_price_per_km: number
           email: string | null
           email_notifications: boolean | null
+          favicon_url: string | null
           free_delivery_above_km: number | null
           id: string
+          logo_url: string | null
           max_delivery_km: number | null
           min_lead_days: number | null
           min_order_value: number | null
@@ -232,8 +234,10 @@ export type Database = {
           delivery_price_per_km?: number
           email?: string | null
           email_notifications?: boolean | null
+          favicon_url?: string | null
           free_delivery_above_km?: number | null
           id?: string
+          logo_url?: string | null
           max_delivery_km?: number | null
           min_lead_days?: number | null
           min_order_value?: number | null
@@ -254,8 +258,10 @@ export type Database = {
           delivery_price_per_km?: number
           email?: string | null
           email_notifications?: boolean | null
+          favicon_url?: string | null
           free_delivery_above_km?: number | null
           id?: string
+          logo_url?: string | null
           max_delivery_km?: number | null
           min_lead_days?: number | null
           min_order_value?: number | null
