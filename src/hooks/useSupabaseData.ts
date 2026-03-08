@@ -258,6 +258,11 @@ export interface DeliveryConfig {
   freeDeliveryAbove: number | null;
 }
 
+export interface OrderConfig {
+  minOrderValue: number;
+  minLeadDays: number;
+}
+
 async function fetchDeliveryConfig(): Promise<DeliveryConfig> {
   const { data, error } = await supabase
     .from("company_settings")
@@ -273,6 +278,21 @@ async function fetchDeliveryConfig(): Promise<DeliveryConfig> {
     pricePerKm: Number((data as any).delivery_price_per_km) || 3,
     maxDeliveryKm: (data as any).max_delivery_km != null ? Number((data as any).max_delivery_km) : null,
     freeDeliveryAbove: (data as any).free_delivery_above_km != null ? Number((data as any).free_delivery_above_km) : null,
+  };
+}
+
+async function fetchOrderConfig(): Promise<OrderConfig> {
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("min_order_value, min_lead_days")
+    .limit(1)
+    .single();
+  if (error || !data) {
+    return { minOrderValue: 0, minLeadDays: 0 };
+  }
+  return {
+    minOrderValue: Number(data.min_order_value) || 0,
+    minLeadDays: Number(data.min_lead_days) || 0,
   };
 }
 
