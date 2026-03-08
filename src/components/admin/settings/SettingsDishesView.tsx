@@ -1,26 +1,31 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Pencil, Search, Apple, CookingPot, UtensilsCrossed, X, Check, ImagePlus, Package, Settings2, Sparkles } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, Apple, CookingPot, UtensilsCrossed, X, Check, ImagePlus, Package, Settings2, Sparkles, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-
-// ===== TYPES =====
-type UnitType = "g" | "ml" | "szt.";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 const ALLERGEN_OPTIONS = [
   "gluten", "mleko", "jaja", "ryby", "skorupiaki", "soja",
   "orzechy", "sezam", "seler", "gorczyca", "łubin", "mięczaki",
 ];
+const DIETARY_OPTIONS = ["Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto"];
+const VAT_RATES = [0, 5, 8, 23];
 
-const DIETARY_OPTIONS = [
-  "Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto",
-];
+// ===== TYPES =====
+type UnitType = "g" | "ml" | "szt.";
+
+interface CategoryOption {
+  slug: string;
+  name: string;
+}
 
 interface Ingredient {
   id: string;
@@ -30,195 +35,121 @@ interface Ingredient {
   pricePerUnit: number;
 }
 
-interface DishIngredient {
-  ingredientId: string;
-  quantity: number;
-}
-
 interface Dish {
   id: string;
   name: string;
+  description: string;
+  longDescription: string;
   image: string | null;
   priceNetto: number;
   vatRate: number;
   priceBrutto: number;
-  ingredients: DishIngredient[];
+  pricePerUnit: number;
+  unitLabel: string;
+  minQuantity: number;
+  icon: string;
+  categorySlug: string | null;
+  contents: string[];
+  allergens: string[];
   dietaryTags: string[];
+  productType: string;
 }
 
-// Bundle = group of variants (e.g. "Pierogi" with ruskie, z mięsem, etc.)
 interface BundleVariant {
   id: string;
-  dishId: string;
-  // variant uses the dish as its base
+  name: string;
+  description: string;
+  price: number;
+  allergens: string[];
+  dietaryTags: string[];
+  sortOrder: number;
 }
 
 interface Bundle {
   id: string;
   name: string;
   description: string;
+  longDescription: string;
   image: string | null;
   priceNetto: number;
   vatRate: number;
   priceBrutto: number;
+  basePrice: number;
   minQuantity: number;
-  variantDishIds: string[]; // dishes that are variants
+  icon: string;
+  categorySlug: string | null;
+  variants: BundleVariant[];
 }
 
-// Configurable set = pick from groups of dishes
+interface ConfigGroupOption {
+  id: string;
+  name: string;
+  allergens: string[];
+  sortOrder: number;
+}
+
 interface ConfigGroup {
   id: string;
   name: string;
   minSelections: number;
   maxSelections: number;
-  dishIds: string[];
+  options: ConfigGroupOption[];
+  sortOrder: number;
 }
 
-interface ConfigurableSet {
+interface ConfigSet {
   id: string;
   name: string;
   description: string;
+  longDescription: string;
   image: string | null;
   pricePerPerson: number;
   minPersons: number;
+  icon: string;
+  categorySlug: string | null;
   groups: ConfigGroup[];
 }
 
-// Extra item (e.g. dekoracja, podgrzewacze, świece LED)
-interface ExtraItem {
-  id: string;
-  name: string;
-  description: string;
-  image: string | null;
-  priceNetto: number;
-  vatRate: number;
-  priceBrutto: number;
-  foodCost: number;
-}
-
-// ===== MOCK DATA =====
-const mockIngredients: Ingredient[] = [
-  { id: "i1", name: "Kurczak", unit: "g", allergens: [], pricePerUnit: 0.025 },
-  { id: "i2", name: "Mozzarella", unit: "g", allergens: ["mleko"], pricePerUnit: 0.04 },
-  { id: "i3", name: "Pomidory suszone", unit: "g", allergens: [], pricePerUnit: 0.06 },
-  { id: "i4", name: "Szpinak", unit: "g", allergens: [], pricePerUnit: 0.03 },
-  { id: "i5", name: "Oliwa z oliwek", unit: "ml", allergens: [], pricePerUnit: 0.05 },
-  { id: "i6", name: "Łosoś", unit: "g", allergens: ["ryby"], pricePerUnit: 0.08 },
-  { id: "i7", name: "Ryż", unit: "g", allergens: [], pricePerUnit: 0.008 },
-  { id: "i8", name: "Awokado", unit: "szt.", allergens: [], pricePerUnit: 4.5 },
-  { id: "i9", name: "Mleko kokosowe", unit: "ml", allergens: ["mleko"], pricePerUnit: 0.012 },
-];
-
-const mockDishes: Dish[] = [
-  {
-    id: "d1", name: "Roladki z indyka ze szpinakiem", image: null,
-    priceNetto: 25.93, vatRate: 8, priceBrutto: 28, dietaryTags: [],
-    ingredients: [
-      { ingredientId: "i1", quantity: 200 },
-      { ingredientId: "i2", quantity: 100 },
-      { ingredientId: "i3", quantity: 50 },
-      { ingredientId: "i4", quantity: 80 },
-    ],
-  },
-  {
-    id: "d2", name: "Łosoś grillowany", image: null,
-    priceNetto: 38.89, vatRate: 8, priceBrutto: 42, dietaryTags: ["Bezglutenowe"],
-    ingredients: [
-      { ingredientId: "i6", quantity: 250 },
-      { ingredientId: "i5", quantity: 20 },
-    ],
-  },
-  {
-    id: "d3", name: "Pierogi ruskie", image: null,
-    priceNetto: 13.89, vatRate: 8, priceBrutto: 15, dietaryTags: ["Wegetariańskie"],
-    ingredients: [],
-  },
-  {
-    id: "d4", name: "Pierogi z mięsem", image: null,
-    priceNetto: 14.81, vatRate: 8, priceBrutto: 16, dietaryTags: [],
-    ingredients: [],
-  },
-  {
-    id: "d5", name: "Pierogi z kapustą i grzybami", image: null,
-    priceNetto: 12.96, vatRate: 8, priceBrutto: 14, dietaryTags: ["Wegetariańskie", "Wegańskie"],
-    ingredients: [],
-  },
-  {
-    id: "d6", name: "Żurek", image: null,
-    priceNetto: 18.52, vatRate: 8, priceBrutto: 20, dietaryTags: [],
-    ingredients: [],
-  },
-  {
-    id: "d7", name: "Krem z pomidorów", image: null,
-    priceNetto: 16.67, vatRate: 8, priceBrutto: 18, dietaryTags: ["Wegetariańskie", "Wegańskie", "Bezglutenowe"],
-    ingredients: [],
-  },
-];
-
-const mockBundles: Bundle[] = [
-  {
-    id: "b1", name: "Pierogi", description: "Wybierz rodzaj pierogów",
-    image: null, priceNetto: 13.89, vatRate: 8, priceBrutto: 15,
-    minQuantity: 10, variantDishIds: ["d3", "d4", "d5"],
-  },
-];
-
-const mockConfigSets: ConfigurableSet[] = [
-  {
-    id: "cs1", name: "Zestaw Obiadowy", description: "Zupa + danie główne + deser",
-    image: null, pricePerPerson: 70, minPersons: 12,
-    groups: [
-      { id: "g1", name: "Zupy", minSelections: 1, maxSelections: 2, dishIds: ["d6", "d7"] },
-      { id: "g2", name: "Dania główne", minSelections: 2, maxSelections: 4, dishIds: ["d1", "d2"] },
-    ],
-  },
-];
-
-const mockExtras: ExtraItem[] = [
-  { id: "ex1", name: "Dekoracja stołu", description: "Elegancka dekoracja kwiatowa na stół", image: null, priceNetto: 120, vatRate: 23, priceBrutto: 147.60, foodCost: 45 },
-  { id: "ex2", name: "Świece LED", description: "Zestaw 10 świec LED na stół", image: null, priceNetto: 35, vatRate: 23, priceBrutto: 43.05, foodCost: 12 },
-  { id: "ex3", name: "Podgrzewacze", description: "Podgrzewacze do dań w zestawach", image: null, priceNetto: 80, vatRate: 23, priceBrutto: 98.40, foodCost: 30 },
-];
-
-const VAT_RATES = [0, 5, 8, 23];
-
-// ===== IMAGE UPLOAD PLACEHOLDER =====
+// ===== IMAGE UPLOAD =====
 const ImageUpload = ({ image, onChange }: { image: string | null; onChange: (img: string | null) => void }) => {
   const fileRef = useRef<HTMLInputElement>(null);
-
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    onChange(url);
+    onChange(URL.createObjectURL(file));
   };
-
   return (
     <div className="space-y-1">
       <Label className="text-xs">Zdjęcie</Label>
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        className={cn(
-          "w-20 h-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center overflow-hidden hover:border-primary/50 transition-colors",
-          image && "border-solid border-border"
-        )}
-      >
-        {image ? (
-          <img src={image} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <ImagePlus className="w-6 h-6 text-muted-foreground" />
-        )}
+      <button type="button" onClick={() => fileRef.current?.click()}
+        className={cn("w-20 h-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center overflow-hidden hover:border-primary/50 transition-colors", image && "border-solid border-border")}>
+        {image ? <img src={image} alt="" className="w-full h-full object-cover" /> : <ImagePlus className="w-6 h-6 text-muted-foreground" />}
       </button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   );
 };
 
+// ===== CATEGORY SELECTOR =====
+const CategorySelect = ({ value, onChange, categories }: { value: string | null; onChange: (v: string | null) => void; categories: CategoryOption[] }) => (
+  <div className="space-y-1">
+    <Label className="text-xs">Kategoria (wyświetlana w formularzu)</Label>
+    <Select value={value ?? ""} onValueChange={(v) => onChange(v || null)}>
+      <SelectTrigger><SelectValue placeholder="Wybierz kategorię" /></SelectTrigger>
+      <SelectContent>
+        {categories.map((c) => (
+          <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
+
 // ===== INGREDIENTS TAB =====
-const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredient[]; setIngredients: (v: Ingredient[]) => void }) => {
+const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; reload: () => void }) => {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newName, setNewName] = useState("");
   const [newUnit, setNewUnit] = useState<UnitType>("g");
   const [newPrice, setNewPrice] = useState("");
@@ -226,20 +157,26 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
 
   const filtered = ingredients.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
 
-  const toggleAllergen = (allergen: string) => {
-    setNewAllergens((prev) => prev.includes(allergen) ? prev.filter((a) => a !== allergen) : [...prev, allergen]);
-  };
+  const toggleAllergen = (a: string) => setNewAllergens((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
 
-  const addIngredient = () => {
+  const addIngredient = async () => {
     if (!newName.trim()) return;
-    setIngredients([...ingredients, {
-      id: Date.now().toString(), name: newName.trim(), unit: newUnit,
-      allergens: newAllergens, pricePerUnit: parseFloat(newPrice) || 0,
-    }]);
+    setSaving(true);
+    const { error } = await supabase.from("ingredients").insert({
+      name: newName.trim(), unit: newUnit, allergens: newAllergens, price_per_unit: parseFloat(newPrice) || 0,
+    });
+    setSaving(false);
+    if (error) { toast.error("Błąd: " + error.message); return; }
+    toast.success("Składnik dodany");
     setNewName(""); setNewUnit("g"); setNewPrice(""); setNewAllergens([]); setShowForm(false);
+    reload();
   };
 
-  const removeIngredient = (id: string) => setIngredients(ingredients.filter((i) => i.id !== id));
+  const removeIngredient = async (id: string) => {
+    const { error } = await supabase.from("ingredients").delete().eq("id", id);
+    if (error) toast.error("Błąd: " + error.message);
+    else reload();
+  };
 
   return (
     <div className="space-y-4">
@@ -249,11 +186,9 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
           <Input placeholder="Szukaj składnika..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button size="sm" onClick={() => setShowForm(!showForm)}>
-          <Plus className="w-4 h-4 mr-1" />
-          Dodaj składnik
+          <Plus className="w-4 h-4 mr-1" />Dodaj składnik
         </Button>
       </div>
-
       {showForm && (
         <Card>
           <CardContent className="pt-4 space-y-3">
@@ -281,22 +216,23 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
             <div className="space-y-1">
               <Label className="text-xs">Alergeny</Label>
               <div className="flex flex-wrap gap-1.5">
-                {ALLERGEN_OPTIONS.map((allergen) => (
-                  <button key={allergen} type="button" onClick={() => toggleAllergen(allergen)}
+                {ALLERGEN_OPTIONS.map((a) => (
+                  <button key={a} type="button" onClick={() => toggleAllergen(a)}
                     className={cn("px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
-                      newAllergens.includes(allergen) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
-                    )}>{allergen}</button>
+                      newAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
+                    )}>{a}</button>
                 ))}
               </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={addIngredient} disabled={!newName.trim()}>Dodaj</Button>
+              <Button size="sm" onClick={addIngredient} disabled={!newName.trim() || saving}>
+                {saving ? "Zapisuję..." : "Dodaj"}
+              </Button>
               <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
       )}
-
       <div className="space-y-1.5">
         {filtered.map((ingredient) => (
           <div key={ingredient.id} className="flex items-center justify-between px-4 py-3 rounded-lg bg-muted/30 group hover:bg-muted/50 transition-colors">
@@ -310,7 +246,6 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
               ))}
             </div>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
               <button onClick={() => removeIngredient(ingredient.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
             </div>
           </div>
@@ -322,98 +257,93 @@ const IngredientsTab = ({ ingredients, setIngredients }: { ingredients: Ingredie
 };
 
 // ===== DISHES TAB =====
-const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDishes: (v: Dish[]) => void; ingredients: Ingredient[] }) => {
+const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories: CategoryOption[]; reload: () => void }) => {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const [formName, setFormName] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formLongDesc, setFormLongDesc] = useState("");
   const [formImage, setFormImage] = useState<string | null>(null);
   const [formPriceNetto, setFormPriceNetto] = useState("");
   const [formVat, setFormVat] = useState(8);
   const [formPriceBrutto, setFormPriceBrutto] = useState("");
-  const [formIngredients, setFormIngredients] = useState<DishIngredient[]>([]);
+  const [formUnitLabel, setFormUnitLabel] = useState("szt.");
+  const [formMinQty, setFormMinQty] = useState("1");
+  const [formIcon, setFormIcon] = useState("🍽️");
+  const [formCategorySlug, setFormCategorySlug] = useState<string | null>(null);
+  const [formAllergens, setFormAllergens] = useState<string[]>([]);
   const [formDietaryTags, setFormDietaryTags] = useState<string[]>([]);
-  const [showIngredientList, setShowIngredientList] = useState(false);
+  const [formContents, setFormContents] = useState("");
 
   const filtered = dishes.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()));
 
-  const calcBrutto = (netto: number, vat: number) => +(netto * (1 + vat / 100)).toFixed(2);
-  const calcNetto = (brutto: number, vat: number) => +(brutto / (1 + vat / 100)).toFixed(2);
+  const calcBrutto = (n: number, v: number) => +(n * (1 + v / 100)).toFixed(2);
+  const calcNetto = (b: number, v: number) => +(b / (1 + v / 100)).toFixed(2);
 
-  const handleNettoChange = (val: string) => {
-    setFormPriceNetto(val);
-    const n = parseFloat(val);
-    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, formVat).toString());
-  };
-  const handleBruttoChange = (val: string) => {
-    setFormPriceBrutto(val);
-    const b = parseFloat(val);
-    if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString());
-  };
-  const handleVatChange = (val: string) => {
-    const vat = parseInt(val);
-    setFormVat(vat);
-    const n = parseFloat(formPriceNetto);
-    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString());
-  };
-
-  const foodCost = formIngredients.reduce((sum, fi) => {
-    const ing = ingredients.find((i) => i.id === fi.ingredientId);
-    return sum + (ing ? ing.pricePerUnit * fi.quantity : 0);
-  }, 0);
-
-  const toggleIngredient = (ingredientId: string) => {
-    if (formIngredients.some((fi) => fi.ingredientId === ingredientId)) {
-      setFormIngredients(formIngredients.filter((fi) => fi.ingredientId !== ingredientId));
-    } else {
-      setFormIngredients([...formIngredients, { ingredientId, quantity: 0 }]);
-    }
-  };
-
-  const updateIngredientQuantity = (ingredientId: string, quantity: number) => {
-    setFormIngredients(formIngredients.map((fi) => fi.ingredientId === ingredientId ? { ...fi, quantity } : fi));
-  };
-
-  const removeIngredientFromDish = (ingredientId: string) => {
-    setFormIngredients(formIngredients.filter((fi) => fi.ingredientId !== ingredientId));
-  };
+  const handleNettoChange = (val: string) => { setFormPriceNetto(val); const n = parseFloat(val); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, formVat).toString()); };
+  const handleBruttoChange = (val: string) => { setFormPriceBrutto(val); const b = parseFloat(val); if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString()); };
+  const handleVatChange = (val: string) => { const vat = parseInt(val); setFormVat(vat); const n = parseFloat(formPriceNetto); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString()); };
 
   const resetForm = () => {
-    setFormName(""); setFormImage(null); setFormPriceNetto(""); setFormVat(8);
-    setFormPriceBrutto(""); setFormIngredients([]); setFormDietaryTags([]); setShowForm(false);
-    setEditingId(null); setShowIngredientList(false);
+    setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPriceNetto(""); setFormVat(8);
+    setFormPriceBrutto(""); setFormUnitLabel("szt."); setFormMinQty("1"); setFormIcon("🍽️");
+    setFormCategorySlug(null); setFormAllergens([]); setFormDietaryTags([]); setFormContents("");
+    setShowForm(false); setEditingId(null);
   };
 
-  const toggleDietaryTag = (tag: string) => {
-    setFormDietaryTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
-  };
-
-  const saveDish = () => {
-    if (!formName.trim()) return;
-    const dish: Dish = {
-      id: editingId || Date.now().toString(), name: formName.trim(), image: formImage,
-      priceNetto: parseFloat(formPriceNetto) || 0, vatRate: formVat,
-      priceBrutto: parseFloat(formPriceBrutto) || 0, ingredients: formIngredients,
-      dietaryTags: formDietaryTags,
-    };
-    if (editingId) {
-      setDishes(dishes.map((d) => (d.id === editingId ? dish : d)));
-    } else {
-      setDishes([...dishes, dish]);
-    }
-    resetForm();
-  };
-
-  const startEdit = (dish: Dish) => {
-    setEditingId(dish.id); setFormName(dish.name); setFormImage(dish.image);
-    setFormPriceNetto(dish.priceNetto.toString()); setFormVat(dish.vatRate);
-    setFormPriceBrutto(dish.priceBrutto.toString()); setFormIngredients([...dish.ingredients]);
-    setFormDietaryTags([...(dish.dietaryTags || [])]);
+  const startEdit = (d: Dish) => {
+    setEditingId(d.id); setFormName(d.name); setFormDesc(d.description); setFormLongDesc(d.longDescription);
+    setFormImage(d.image); setFormPriceNetto(d.priceNetto.toString()); setFormVat(d.vatRate);
+    setFormPriceBrutto(d.priceBrutto.toString()); setFormUnitLabel(d.unitLabel); setFormMinQty(d.minQuantity.toString());
+    setFormIcon(d.icon); setFormCategorySlug(d.categorySlug); setFormAllergens([...d.allergens]);
+    setFormDietaryTags([...d.dietaryTags]); setFormContents(d.contents.join("\n"));
     setShowForm(true);
   };
 
-  const removeDish = (id: string) => setDishes(dishes.filter((d) => d.id !== id));
+  const saveDish = async () => {
+    if (!formName.trim() || !formCategorySlug) { toast.error("Podaj nazwę i wybierz kategorię"); return; }
+    setSaving(true);
+    const priceBrutto = parseFloat(formPriceBrutto) || 0;
+    const payload = {
+      name: formName.trim(),
+      description: formDesc.trim(),
+      long_description: formLongDesc.trim(),
+      image_url: formImage,
+      price_netto: parseFloat(formPriceNetto) || 0,
+      vat_rate: formVat,
+      price_brutto: priceBrutto,
+      price_per_unit: priceBrutto,
+      unit_label: formUnitLabel,
+      min_quantity: parseInt(formMinQty) || 1,
+      icon: formIcon,
+      category_slug: formCategorySlug,
+      allergens: formAllergens,
+      dietary_tags: formDietaryTags,
+      contents: formContents.split("\n").map(s => s.trim()).filter(Boolean),
+      product_type: "simple",
+    };
+
+    let error;
+    if (editingId) {
+      ({ error } = await supabase.from("dishes").update(payload).eq("id", editingId));
+    } else {
+      ({ error } = await supabase.from("dishes").insert(payload));
+    }
+    setSaving(false);
+    if (error) { toast.error("Błąd: " + error.message); return; }
+    toast.success(editingId ? "Danie zaktualizowane" : "Danie dodane");
+    resetForm();
+    reload();
+  };
+
+  const removeDish = async (id: string) => {
+    const { error } = await supabase.from("dishes").delete().eq("id", id);
+    if (error) toast.error("Błąd: " + error.message);
+    else { toast.success("Usunięto"); reload(); }
+  };
 
   return (
     <div className="space-y-4">
@@ -423,8 +353,7 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
           <Input placeholder="Szukaj dania..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-1" />
-          Dodaj danie
+          <Plus className="w-4 h-4 mr-1" />Dodaj danie
         </Button>
       </div>
 
@@ -436,118 +365,92 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
           <CardContent className="space-y-4">
             <div className="flex gap-4">
               <ImageUpload image={formImage} onChange={setFormImage} />
-              <div className="flex-1 space-y-1">
-                <Label className="text-xs">Nazwa dania</Label>
-                <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Roladki z indyka" />
+              <div className="flex-1 space-y-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Nazwa dania</Label>
+                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Patera Serów" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Krótki opis</Label>
+                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="np. Dla 7-8 osób" />
+                </div>
               </div>
+            </div>
+
+            <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
+
+            <div className="space-y-1">
+              <Label className="text-xs">Długi opis (modal)</Label>
+              <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} placeholder="Szczegółowy opis widoczny w modalu..." />
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena netto (zł)</Label>
-                <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} placeholder="0.00" />
+                <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Stawka VAT</Label>
+                <Label className="text-xs">VAT</Label>
                 <Select value={formVat.toString()} onValueChange={handleVatChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {VAT_RATES.map((rate) => (<SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>))}
-                  </SelectContent>
+                  <SelectContent>{VAT_RATES.map((r) => <SelectItem key={r} value={r.toString()}>{r}%</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Cena brutto (zł)</Label>
-                <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} placeholder="0.00" />
+                <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} />
               </div>
             </div>
 
-            {/* Ingredients */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Składniki</Label>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground">Food cost:</span>
-                  <span className="font-semibold text-primary">{foodCost.toFixed(2)} zł</span>
-                  {parseFloat(formPriceBrutto) > 0 && (
-                    <span className="text-muted-foreground">({((foodCost / parseFloat(formPriceBrutto)) * 100).toFixed(1)}%)</span>
-                  )}
-                </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Jednostka</Label>
+                <Input value={formUnitLabel} onChange={(e) => setFormUnitLabel(e.target.value)} placeholder="szt." />
               </div>
-
-              {/* Selected ingredients with quantities */}
-              {formIngredients.length > 0 && (
-                <div className="space-y-1.5">
-                  {formIngredients.map((fi) => {
-                    const ing = ingredients.find((i) => i.id === fi.ingredientId);
-                    if (!ing) return null;
-                    const cost = ing.pricePerUnit * fi.quantity;
-                    return (
-                      <div key={fi.ingredientId} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/30">
-                        <span className="text-sm flex-1">{ing.name}</span>
-                        <Input type="number" value={fi.quantity || ""} onChange={(e) => updateIngredientQuantity(fi.ingredientId, parseFloat(e.target.value) || 0)}
-                          className="w-20 h-8 text-xs text-center" placeholder="0" />
-                        <span className="text-xs text-muted-foreground w-8">{ing.unit}</span>
-                        <span className="text-xs font-medium w-16 text-right">{cost.toFixed(2)} zł</span>
-                        <button onClick={() => removeIngredientFromDish(fi.ingredientId)} className="p-1 text-muted-foreground hover:text-destructive">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Add ingredient - show full list */}
-              <Button type="button" size="sm" variant="outline" onClick={() => setShowIngredientList(!showIngredientList)} className="text-xs">
-                <Plus className="w-3.5 h-3.5 mr-1" />
-                {showIngredientList ? "Ukryj listę składników" : "Dodaj składnik"}
-              </Button>
-
-              {showIngredientList && (
-                <div className="border border-border rounded-lg max-h-48 overflow-y-auto">
-                  {ingredients.map((ing) => {
-                    const isSelected = formIngredients.some((fi) => fi.ingredientId === ing.id);
-                    return (
-                      <button
-                        key={ing.id}
-                        type="button"
-                        onClick={() => toggleIngredient(ing.id)}
-                        className={cn(
-                          "w-full text-left px-3 py-2.5 text-xs flex items-center justify-between border-b border-border last:border-b-0 transition-colors",
-                          isSelected ? "bg-accent/50" : "hover:bg-muted/50"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Checkbox checked={isSelected} className="w-3.5 h-3.5 pointer-events-none" />
-                          <span className="font-medium">{ing.name}</span>
-                          <Badge variant="outline" className="text-[9px] px-1 py-0">{ing.unit}</Badge>
-                        </div>
-                        <span className="text-muted-foreground">{ing.pricePerUnit.toFixed(3)} zł/{ing.unit}</span>
-                      </button>
-                    );
-                  })}
-                  {ingredients.length === 0 && <p className="text-xs text-muted-foreground p-3 text-center">Brak składników — dodaj je w zakładce Składniki</p>}
-                </div>
-              )}
+              <div className="space-y-1">
+                <Label className="text-xs">Min. ilość</Label>
+                <Input type="number" value={formMinQty} onChange={(e) => setFormMinQty(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Ikona</Label>
+                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
+              </div>
             </div>
 
-            {/* Dietary tags */}
+            <div className="space-y-1">
+              <Label className="text-xs">Zawartość (każdy element w nowej linii)</Label>
+              <textarea value={formContents} onChange={(e) => setFormContents(e.target.value)}
+                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder={"Brie francuski 150g\nCamembert z ziołami 150g\n..."} />
+            </div>
+
             <div className="space-y-2">
-              <Label className="text-xs">Rodzaj diety</Label>
+              <Label className="text-xs">Alergeny</Label>
               <div className="flex flex-wrap gap-1.5">
-                {DIETARY_OPTIONS.map((tag) => (
-                  <button key={tag} type="button" onClick={() => toggleDietaryTag(tag)}
+                {ALLERGEN_OPTIONS.map((a) => (
+                  <button key={a} type="button" onClick={() => setFormAllergens(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}
                     className={cn("px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
-                      formDietaryTags.includes(tag) ? "bg-accent text-accent-foreground border-accent" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
-                    )}>{tag}</button>
+                      formAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
+                    )}>{a}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Tagi dietetyczne</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {DIETARY_OPTIONS.map((t) => (
+                  <button key={t} type="button" onClick={() => setFormDietaryTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                    className={cn("px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                      formDietaryTags.includes(t) ? "bg-accent text-accent-foreground border-accent" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
+                    )}>{t}</button>
                 ))}
               </div>
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={saveDish} disabled={!formName.trim()}>
-                <Check className="w-4 h-4 mr-1" />{editingId ? "Zapisz" : "Dodaj danie"}
+              <Button size="sm" onClick={saveDish} disabled={!formName.trim() || saving}>
+                <Check className="w-4 h-4 mr-1" />{saving ? "Zapisuję..." : editingId ? "Zapisz" : "Dodaj danie"}
               </Button>
               <Button size="sm" variant="outline" onClick={resetForm}>Anuluj</Button>
             </div>
@@ -556,122 +459,158 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
       )}
 
       <div className="space-y-2">
-        {filtered.map((dish) => {
-          const dishFoodCost = dish.ingredients.reduce((sum, fi) => {
-            const ing = ingredients.find((i) => i.id === fi.ingredientId);
-            return sum + (ing ? ing.pricePerUnit * fi.quantity : 0);
-          }, 0);
-          return (
-            <Card key={dish.id} className="group hover:shadow-sm transition-shadow">
-              <CardContent className="py-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {dish.image ? (
-                    <img src={dish.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                  ) : (
-                    <CookingPot className="w-5 h-5 text-primary" />
-                  )}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{dish.name}</p>
-                      {dish.dietaryTags?.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">{tag}</Badge>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{dish.ingredients.length} składników · food cost: {dishFoodCost.toFixed(2)} zł</p>
-                  </div>
+        {filtered.map((dish) => (
+          <Card key={dish.id} className="group hover:shadow-sm transition-shadow">
+            <CardContent className="py-4 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {dish.image ? <img src={dish.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <CookingPot className="w-5 h-5 text-primary" />}
+                <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{dish.priceNetto.toFixed(2)} netto</span>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">VAT {dish.vatRate}%</Badge>
-                    <span className="text-sm font-semibold text-primary">{dish.priceBrutto.toFixed(2)} zł</span>
+                    <span className="text-lg">{dish.icon}</span>
+                    <p className="text-sm font-medium">{dish.name}</p>
+                    {dish.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{dish.categorySlug}</Badge>}
                   </div>
+                  <p className="text-xs text-muted-foreground">{dish.description}</p>
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => startEdit(dish)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => removeDish(dish.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{dish.priceNetto.toFixed(2)} netto</span>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">VAT {dish.vatRate}%</Badge>
+                  <span className="text-sm font-semibold text-primary">{dish.priceBrutto.toFixed(2)} zł</span>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              </div>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => startEdit(dish)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                <button onClick={() => removeDish(dish.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
         {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Brak dań</p>}
       </div>
     </div>
   );
 };
 
-// ===== BUNDLES TAB (Pakiety) =====
-const BundlesTab = ({ bundles, setBundles, dishes }: { bundles: Bundle[]; setBundles: (v: Bundle[]) => void; dishes: Dish[] }) => {
+// ===== BUNDLES TAB =====
+const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; categories: CategoryOption[]; reload: () => void }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
+  const [formLongDesc, setFormLongDesc] = useState("");
   const [formImage, setFormImage] = useState<string | null>(null);
   const [formPriceNetto, setFormPriceNetto] = useState("");
   const [formVat, setFormVat] = useState(8);
   const [formPriceBrutto, setFormPriceBrutto] = useState("");
+  const [formBasePrice, setFormBasePrice] = useState("");
   const [formMinQty, setFormMinQty] = useState("1");
-  const [formDishIds, setFormDishIds] = useState<string[]>([]);
-  const [showDishList, setShowDishList] = useState(false);
+  const [formIcon, setFormIcon] = useState("🍽️");
+  const [formCategorySlug, setFormCategorySlug] = useState<string | null>(null);
+  const [formVariants, setFormVariants] = useState<BundleVariant[]>([]);
+
+  // Variant form
+  const [showVariantForm, setShowVariantForm] = useState(false);
+  const [varName, setVarName] = useState("");
+  const [varDesc, setVarDesc] = useState("");
+  const [varPrice, setVarPrice] = useState("");
+  const [varAllergens, setVarAllergens] = useState<string[]>([]);
+  const [varDietaryTags, setVarDietaryTags] = useState<string[]>([]);
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
 
   const calcBrutto = (n: number, v: number) => +(n * (1 + v / 100)).toFixed(2);
   const calcNetto = (b: number, v: number) => +(b / (1 + v / 100)).toFixed(2);
 
-  const handleNettoChange = (val: string) => {
-    setFormPriceNetto(val);
-    const n = parseFloat(val);
-    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, formVat).toString());
-  };
-  const handleBruttoChange = (val: string) => {
-    setFormPriceBrutto(val);
-    const b = parseFloat(val);
-    if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString());
-  };
-  const handleVatChange = (val: string) => {
-    const vat = parseInt(val);
-    setFormVat(vat);
-    const n = parseFloat(formPriceNetto);
-    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString());
-  };
+  const handleNettoChange = (val: string) => { setFormPriceNetto(val); const n = parseFloat(val); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, formVat).toString()); };
+  const handleBruttoChange = (val: string) => { setFormPriceBrutto(val); const b = parseFloat(val); if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString()); };
+  const handleVatChange = (val: string) => { const vat = parseInt(val); setFormVat(vat); const n = parseFloat(formPriceNetto); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString()); };
 
-  const toggleDish = (id: string) => {
-    setFormDishIds((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]);
+  const resetVariantForm = () => {
+    setVarName(""); setVarDesc(""); setVarPrice(""); setVarAllergens([]); setVarDietaryTags([]);
+    setShowVariantForm(false); setEditingVariantId(null);
   };
 
   const resetForm = () => {
-    setFormName(""); setFormDesc(""); setFormImage(null); setFormPriceNetto("");
-    setFormVat(8); setFormPriceBrutto(""); setFormMinQty("1"); setFormDishIds([]);
-    setShowForm(false); setEditingId(null); setShowDishList(false);
+    setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPriceNetto("");
+    setFormVat(8); setFormPriceBrutto(""); setFormBasePrice(""); setFormMinQty("1"); setFormIcon("🍽️");
+    setFormCategorySlug(null); setFormVariants([]); setShowForm(false); setEditingId(null);
+    resetVariantForm();
   };
 
-  const save = () => {
-    if (!formName.trim()) return;
-    const bundle: Bundle = {
-      id: editingId || Date.now().toString(), name: formName.trim(), description: formDesc.trim(),
-      image: formImage, priceNetto: parseFloat(formPriceNetto) || 0, vatRate: formVat,
-      priceBrutto: parseFloat(formPriceBrutto) || 0, minQuantity: parseInt(formMinQty) || 1,
-      variantDishIds: formDishIds,
+  const saveVariant = () => {
+    if (!varName.trim()) return;
+    const v: BundleVariant = {
+      id: editingVariantId || crypto.randomUUID(),
+      name: varName.trim(), description: varDesc.trim(), price: parseFloat(varPrice) || 0,
+      allergens: varAllergens, dietaryTags: varDietaryTags, sortOrder: formVariants.length,
     };
-    if (editingId) setBundles(bundles.map((b) => b.id === editingId ? bundle : b));
-    else setBundles([...bundles, bundle]);
-    resetForm();
+    if (editingVariantId) {
+      setFormVariants(formVariants.map(fv => fv.id === editingVariantId ? v : fv));
+    } else {
+      setFormVariants([...formVariants, v]);
+    }
+    resetVariantForm();
   };
 
   const startEdit = (b: Bundle) => {
-    setEditingId(b.id); setFormName(b.name); setFormDesc(b.description); setFormImage(b.image);
-    setFormPriceNetto(b.priceNetto.toString()); setFormVat(b.vatRate);
-    setFormPriceBrutto(b.priceBrutto.toString()); setFormMinQty(b.minQuantity.toString());
-    setFormDishIds([...b.variantDishIds]); setShowForm(true);
+    setEditingId(b.id); setFormName(b.name); setFormDesc(b.description); setFormLongDesc(b.longDescription);
+    setFormImage(b.image); setFormPriceNetto(b.priceNetto.toString()); setFormVat(b.vatRate);
+    setFormPriceBrutto(b.priceBrutto.toString()); setFormBasePrice(b.basePrice.toString());
+    setFormMinQty(b.minQuantity.toString()); setFormIcon(b.icon); setFormCategorySlug(b.categorySlug);
+    setFormVariants([...b.variants]); setShowForm(true);
   };
 
-  const remove = (id: string) => setBundles(bundles.filter((b) => b.id !== id));
+  const save = async () => {
+    if (!formName.trim() || !formCategorySlug) { toast.error("Podaj nazwę i wybierz kategorię"); return; }
+    setSaving(true);
+    const priceBrutto = parseFloat(formPriceBrutto) || 0;
+    const bundlePayload = {
+      name: formName.trim(), description: formDesc.trim(), long_description: formLongDesc.trim(),
+      image_url: formImage, price_netto: parseFloat(formPriceNetto) || 0, vat_rate: formVat,
+      price_brutto: priceBrutto, base_price: parseFloat(formBasePrice) || priceBrutto,
+      min_quantity: parseInt(formMinQty) || 1, icon: formIcon, category_slug: formCategorySlug,
+    };
+
+    let bundleId = editingId;
+    if (editingId) {
+      const { error } = await supabase.from("bundles").update(bundlePayload).eq("id", editingId);
+      if (error) { toast.error("Błąd: " + error.message); setSaving(false); return; }
+    } else {
+      const { data, error } = await supabase.from("bundles").insert(bundlePayload).select("id").single();
+      if (error || !data) { toast.error("Błąd: " + (error?.message ?? "brak danych")); setSaving(false); return; }
+      bundleId = data.id;
+    }
+
+    // Replace all variants
+    await supabase.from("bundle_variants").delete().eq("bundle_id", bundleId!);
+    if (formVariants.length > 0) {
+      const variantsPayload = formVariants.map((v, i) => ({
+        bundle_id: bundleId!, name: v.name, description: v.description, price: v.price,
+        allergens: v.allergens, dietary_tags: v.dietaryTags, sort_order: i,
+      }));
+      const { error } = await supabase.from("bundle_variants").insert(variantsPayload);
+      if (error) { toast.error("Błąd wariantów: " + error.message); }
+    }
+
+    setSaving(false);
+    toast.success(editingId ? "Pakiet zaktualizowany" : "Pakiet dodany");
+    resetForm(); reload();
+  };
+
+  const remove = async (id: string) => {
+    await supabase.from("bundle_variants").delete().eq("bundle_id", id);
+    const { error } = await supabase.from("bundles").delete().eq("id", id);
+    if (error) toast.error("Błąd: " + error.message);
+    else { toast.success("Usunięto"); reload(); }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">Pakiety grupują warianty dań (np. „Pierogi" z różnymi nadzieniami)</p>
+        <p className="text-sm text-muted-foreground">Pakiety z wariantami (np. Tacos z różnymi nadzieniami)</p>
         <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-1" />
-          Dodaj pakiet
+          <Plus className="w-4 h-4 mr-1" />Dodaj pakiet
         </Button>
       </div>
 
@@ -685,80 +624,116 @@ const BundlesTab = ({ bundles, setBundles, dishes }: { bundles: Bundle[]; setBun
               <ImageUpload image={formImage} onChange={setFormImage} />
               <div className="flex-1 space-y-2">
                 <div className="space-y-1">
-                  <Label className="text-xs">Nazwa pakietu</Label>
-                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Pierogi" />
+                  <Label className="text-xs">Nazwa</Label>
+                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Meksykańskie Tacos" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Opis</Label>
-                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Krótki opis pakietu" />
+                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
                 </div>
+              </div>
+            </div>
+
+            <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Długi opis</Label>
+                <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Ikona</Label>
+                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
               </div>
             </div>
 
             <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs">Cena netto (zł)</Label>
-                <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} placeholder="0.00" />
+                <Label className="text-xs">Cena netto</Label>
+                <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">VAT</Label>
                 <Select value={formVat.toString()} onValueChange={handleVatChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {VAT_RATES.map((r) => (<SelectItem key={r} value={r.toString()}>{r}%</SelectItem>))}
-                  </SelectContent>
+                  <SelectContent>{VAT_RATES.map((r) => <SelectItem key={r} value={r.toString()}>{r}%</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Cena brutto (zł)</Label>
-                <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} placeholder="0.00" />
+                <Label className="text-xs">Cena brutto</Label>
+                <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Min. ilość</Label>
-                <Input type="number" value={formMinQty} onChange={(e) => setFormMinQty(e.target.value)} placeholder="1" />
+                <Input type="number" value={formMinQty} onChange={(e) => setFormMinQty(e.target.value)} />
               </div>
             </div>
 
-            {/* Variant dishes */}
-            <div className="space-y-2">
-              <Label className="text-xs">Warianty (dania do wyboru w pakiecie)</Label>
-              {formDishIds.length > 0 && (
-                <div className="space-y-1">
-                  {formDishIds.map((did) => {
-                    const d = dishes.find((dd) => dd.id === did);
-                    if (!d) return null;
-                    return (
-                      <div key={did} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
-                        <span className="text-xs font-medium">{d.name}</span>
-                        <button onClick={() => toggleDish(did)} className="p-1 text-muted-foreground hover:text-destructive"><X className="w-3.5 h-3.5" /></button>
-                      </div>
-                    );
-                  })}
+            {/* Variants */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Warianty ({formVariants.length})</Label>
+                <Button type="button" size="sm" variant="outline" onClick={() => { resetVariantForm(); setShowVariantForm(true); }} className="text-xs">
+                  <Plus className="w-3.5 h-3.5 mr-1" />Dodaj wariant
+                </Button>
+              </div>
+
+              {formVariants.map((v) => (
+                <div key={v.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
+                  <div>
+                    <span className="text-sm font-medium">{v.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">{v.price.toFixed(2)} zł</span>
+                    {v.description && <p className="text-xs text-muted-foreground">{v.description}</p>}
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => { setEditingVariantId(v.id); setVarName(v.name); setVarDesc(v.description); setVarPrice(v.price.toString()); setVarAllergens([...v.allergens]); setVarDietaryTags([...v.dietaryTags]); setShowVariantForm(true); }}
+                      className="p-1 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setFormVariants(formVariants.filter(fv => fv.id !== v.id))}
+                      className="p-1 text-muted-foreground hover:text-destructive"><X className="w-3.5 h-3.5" /></button>
+                  </div>
                 </div>
-              )}
-              <Button type="button" size="sm" variant="outline" onClick={() => setShowDishList(!showDishList)} className="text-xs">
-                <Plus className="w-3.5 h-3.5 mr-1" />{showDishList ? "Ukryj listę" : "Wybierz dania"}
-              </Button>
-              {showDishList && (
-                <div className="border border-border rounded-lg max-h-48 overflow-y-auto">
-                  {dishes.map((d) => {
-                    const sel = formDishIds.includes(d.id);
-                    return (
-                      <button key={d.id} type="button" onClick={() => toggleDish(d.id)}
-                        className={cn("w-full text-left px-3 py-2.5 text-xs flex items-center gap-2 border-b border-border last:border-b-0 transition-colors", sel ? "bg-accent/50" : "hover:bg-muted/50")}>
-                        <Checkbox checked={sel} className="w-3.5 h-3.5 pointer-events-none" />
-                        <span className="font-medium">{d.name}</span>
-                        <span className="text-muted-foreground ml-auto">{d.priceBrutto.toFixed(2)} zł</span>
-                      </button>
-                    );
-                  })}
+              ))}
+
+              {showVariantForm && (
+                <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nazwa wariantu</Label>
+                      <Input value={varName} onChange={(e) => setVarName(e.target.value)} placeholder="np. Tacos z kurczakiem" className="h-8 text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Cena (zł)</Label>
+                      <Input type="number" step="0.01" value={varPrice} onChange={(e) => setVarPrice(e.target.value)} className="h-8 text-xs" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Opis wariantu</Label>
+                    <Input value={varDesc} onChange={(e) => setVarDesc(e.target.value)} placeholder="np. grillowany ananas / salsa" className="h-8 text-xs" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Alergeny</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {ALLERGEN_OPTIONS.map((a) => (
+                        <button key={a} type="button" onClick={() => setVarAllergens(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}
+                          className={cn("px-2 py-0.5 rounded-full text-[10px] border transition-colors",
+                            varAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border"
+                          )}>{a}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={saveVariant} disabled={!varName.trim()} className="text-xs">
+                      {editingVariantId ? "Zapisz wariant" : "Dodaj wariant"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={resetVariantForm} className="text-xs">Anuluj</Button>
+                  </div>
                 </div>
               )}
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={save} disabled={!formName.trim()}>
-                <Check className="w-4 h-4 mr-1" />{editingId ? "Zapisz" : "Dodaj pakiet"}
+              <Button size="sm" onClick={save} disabled={!formName.trim() || saving}>
+                <Check className="w-4 h-4 mr-1" />{saving ? "Zapisuję..." : editingId ? "Zapisz" : "Dodaj pakiet"}
               </Button>
               <Button size="sm" variant="outline" onClick={resetForm}>Anuluj</Button>
             </div>
@@ -773,8 +748,12 @@ const BundlesTab = ({ bundles, setBundles, dishes }: { bundles: Bundle[]; setBun
               <div className="flex items-center gap-4">
                 {b.image ? <img src={b.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Package className="w-5 h-5 text-primary" />}
                 <div>
-                  <p className="text-sm font-medium">{b.name}</p>
-                  <p className="text-xs text-muted-foreground">{b.variantDishIds.length} wariantów · min. {b.minQuantity} szt.</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{b.icon}</span>
+                    <p className="text-sm font-medium">{b.name}</p>
+                    {b.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{b.categorySlug}</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{b.variants.length} wariantów · min. {b.minQuantity} szt.</p>
                 </div>
                 <span className="text-sm font-semibold text-primary">{b.priceBrutto.toFixed(2)} zł</span>
               </div>
@@ -791,15 +770,20 @@ const BundlesTab = ({ bundles, setBundles, dishes }: { bundles: Bundle[]; setBun
   );
 };
 
-// ===== CONFIGURABLE SETS TAB =====
-const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: ConfigurableSet[]; setConfigSets: (v: ConfigurableSet[]) => void; dishes: Dish[] }) => {
+// ===== CONFIG SETS TAB =====
+const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigSet[]; categories: CategoryOption[]; reload: () => void }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
+  const [formLongDesc, setFormLongDesc] = useState("");
   const [formImage, setFormImage] = useState<string | null>(null);
   const [formPrice, setFormPrice] = useState("");
   const [formMinPersons, setFormMinPersons] = useState("10");
+  const [formIcon, setFormIcon] = useState("🍽️");
+  const [formCategorySlug, setFormCategorySlug] = useState<string | null>(null);
   const [formGroups, setFormGroups] = useState<ConfigGroup[]>([]);
 
   // Group form
@@ -807,115 +791,166 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
   const [groupName, setGroupName] = useState("");
   const [groupMin, setGroupMin] = useState("1");
   const [groupMax, setGroupMax] = useState("3");
-  const [groupDishIds, setGroupDishIds] = useState<string[]>([]);
-  const [showGroupDishList, setShowGroupDishList] = useState(false);
+  const [groupOptions, setGroupOptions] = useState<ConfigGroupOption[]>([]);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
-  const resetForm = () => {
-    setFormName(""); setFormDesc(""); setFormImage(null); setFormPrice("");
-    setFormMinPersons("10"); setFormGroups([]); setShowForm(false); setEditingId(null);
-    resetGroupForm();
-  };
+  // Option form
+  const [showOptionForm, setShowOptionForm] = useState(false);
+  const [optName, setOptName] = useState("");
+  const [optAllergens, setOptAllergens] = useState<string[]>([]);
 
+  const resetOptionForm = () => { setOptName(""); setOptAllergens([]); setShowOptionForm(false); };
   const resetGroupForm = () => {
-    setGroupName(""); setGroupMin("1"); setGroupMax("3"); setGroupDishIds([]);
-    setShowGroupForm(false); setShowGroupDishList(false); setEditingGroupId(null);
+    setGroupName(""); setGroupMin("1"); setGroupMax("3"); setGroupOptions([]);
+    setShowGroupForm(false); setEditingGroupId(null); resetOptionForm();
+  };
+  const resetForm = () => {
+    setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPrice("");
+    setFormMinPersons("10"); setFormIcon("🍽️"); setFormCategorySlug(null); setFormGroups([]);
+    setShowForm(false); setEditingId(null); resetGroupForm();
   };
 
-  const toggleGroupDish = (id: string) => {
-    setGroupDishIds((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]);
+  const addOption = () => {
+    if (!optName.trim()) return;
+    setGroupOptions([...groupOptions, { id: crypto.randomUUID(), name: optName.trim(), allergens: optAllergens, sortOrder: groupOptions.length }]);
+    resetOptionForm();
   };
 
   const saveGroup = () => {
     if (!groupName.trim()) return;
-    const group: ConfigGroup = {
-      id: editingGroupId || Date.now().toString(), name: groupName.trim(),
+    const g: ConfigGroup = {
+      id: editingGroupId || crypto.randomUUID(), name: groupName.trim(),
       minSelections: parseInt(groupMin) || 1, maxSelections: parseInt(groupMax) || 3,
-      dishIds: groupDishIds,
+      options: groupOptions, sortOrder: formGroups.length,
     };
-    if (editingGroupId) {
-      setFormGroups(formGroups.map((g) => g.id === editingGroupId ? group : g));
-    } else {
-      setFormGroups([...formGroups, group]);
-    }
+    if (editingGroupId) setFormGroups(formGroups.map(fg => fg.id === editingGroupId ? g : fg));
+    else setFormGroups([...formGroups, g]);
     resetGroupForm();
   };
 
   const editGroup = (g: ConfigGroup) => {
     setEditingGroupId(g.id); setGroupName(g.name); setGroupMin(g.minSelections.toString());
-    setGroupMax(g.maxSelections.toString()); setGroupDishIds([...g.dishIds]); setShowGroupForm(true);
+    setGroupMax(g.maxSelections.toString()); setGroupOptions([...g.options]); setShowGroupForm(true);
   };
 
-  const removeGroup = (id: string) => setFormGroups(formGroups.filter((g) => g.id !== id));
+  const startEdit = (cs: ConfigSet) => {
+    setEditingId(cs.id); setFormName(cs.name); setFormDesc(cs.description); setFormLongDesc(cs.longDescription);
+    setFormImage(cs.image); setFormPrice(cs.pricePerPerson.toString()); setFormMinPersons(cs.minPersons.toString());
+    setFormIcon(cs.icon); setFormCategorySlug(cs.categorySlug); setFormGroups([...cs.groups]); setShowForm(true);
+  };
 
-  const save = () => {
-    if (!formName.trim()) return;
-    const cs: ConfigurableSet = {
-      id: editingId || Date.now().toString(), name: formName.trim(), description: formDesc.trim(),
-      image: formImage, pricePerPerson: parseFloat(formPrice) || 0,
-      minPersons: parseInt(formMinPersons) || 10, groups: formGroups,
+  const save = async () => {
+    if (!formName.trim() || !formCategorySlug) { toast.error("Podaj nazwę i wybierz kategorię"); return; }
+    setSaving(true);
+    const setPayload = {
+      name: formName.trim(), description: formDesc.trim(), long_description: formLongDesc.trim(),
+      image_url: formImage, price_per_person: parseFloat(formPrice) || 0,
+      min_persons: parseInt(formMinPersons) || 10, icon: formIcon, category_slug: formCategorySlug,
     };
-    if (editingId) setConfigSets(configSets.map((c) => c.id === editingId ? cs : c));
-    else setConfigSets([...configSets, cs]);
-    resetForm();
+
+    let setId = editingId;
+    if (editingId) {
+      const { error } = await supabase.from("configurable_sets").update(setPayload).eq("id", editingId);
+      if (error) { toast.error("Błąd: " + error.message); setSaving(false); return; }
+      // Delete old groups & options
+      const { data: oldGroups } = await supabase.from("config_groups").select("id").eq("set_id", editingId);
+      if (oldGroups && oldGroups.length > 0) {
+        const groupIds = oldGroups.map(g => g.id);
+        await supabase.from("config_group_options").delete().in("group_id", groupIds);
+        await supabase.from("config_groups").delete().eq("set_id", editingId);
+      }
+    } else {
+      const { data, error } = await supabase.from("configurable_sets").insert(setPayload).select("id").single();
+      if (error || !data) { toast.error("Błąd: " + (error?.message ?? "brak danych")); setSaving(false); return; }
+      setId = data.id;
+    }
+
+    // Insert groups and options
+    for (let gi = 0; gi < formGroups.length; gi++) {
+      const g = formGroups[gi];
+      const { data: groupData, error: groupErr } = await supabase.from("config_groups").insert({
+        set_id: setId!, name: g.name, min_selections: g.minSelections,
+        max_selections: g.maxSelections, sort_order: gi,
+      }).select("id").single();
+      if (groupErr || !groupData) continue;
+
+      if (g.options.length > 0) {
+        await supabase.from("config_group_options").insert(
+          g.options.map((o, oi) => ({
+            group_id: groupData.id, name: o.name, allergens: o.allergens, sort_order: oi,
+          }))
+        );
+      }
+    }
+
+    setSaving(false);
+    toast.success(editingId ? "Zestaw zaktualizowany" : "Zestaw dodany");
+    resetForm(); reload();
   };
 
-  const startEdit = (cs: ConfigurableSet) => {
-    setEditingId(cs.id); setFormName(cs.name); setFormDesc(cs.description); setFormImage(cs.image);
-    setFormPrice(cs.pricePerPerson.toString()); setFormMinPersons(cs.minPersons.toString());
-    setFormGroups([...cs.groups]); setShowForm(true);
+  const remove = async (id: string) => {
+    const { data: groups } = await supabase.from("config_groups").select("id").eq("set_id", id);
+    if (groups && groups.length > 0) {
+      await supabase.from("config_group_options").delete().in("group_id", groups.map(g => g.id));
+      await supabase.from("config_groups").delete().eq("set_id", id);
+    }
+    const { error } = await supabase.from("configurable_sets").delete().eq("id", id);
+    if (error) toast.error("Błąd: " + error.message);
+    else { toast.success("Usunięto"); reload(); }
   };
-
-  const remove = (id: string) => setConfigSets(configSets.filter((c) => c.id !== id));
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">Zestawy konfigurowalne — klient wybiera dania z grup (np. zupy, dania główne, desery)</p>
+        <p className="text-sm text-muted-foreground">Zestawy konfigurowalne — klient wybiera opcje z grup</p>
         <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-1" />
-          Dodaj zestaw
+          <Plus className="w-4 h-4 mr-1" />Dodaj zestaw
         </Button>
       </div>
 
       {showForm && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">{editingId ? "Edytuj zestaw" : "Nowy zestaw konfigurowalny"}</CardTitle>
+            <CardTitle className="text-base">{editingId ? "Edytuj zestaw" : "Nowy zestaw"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
               <ImageUpload image={formImage} onChange={setFormImage} />
               <div className="flex-1 space-y-2">
                 <div className="space-y-1">
-                  <Label className="text-xs">Nazwa zestawu</Label>
+                  <Label className="text-xs">Nazwa</Label>
                   <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Zestaw Obiadowy" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Opis</Label>
-                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Krótki opis zestawu" />
+                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
+
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena za osobę (zł)</Label>
-                <Input type="number" step="0.01" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} placeholder="0.00" />
+                <Input type="number" step="0.01" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Min. liczba osób</Label>
-                <Input type="number" value={formMinPersons} onChange={(e) => setFormMinPersons(e.target.value)} placeholder="10" />
+                <Label className="text-xs">Min. osób</Label>
+                <Input type="number" value={formMinPersons} onChange={(e) => setFormMinPersons(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Ikona</Label>
+                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
               </div>
             </div>
 
             {/* Groups */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Grupy dań</Label>
+                <Label className="text-xs font-medium">Grupy opcji ({formGroups.length})</Label>
                 <Button type="button" size="sm" variant="outline" onClick={() => { resetGroupForm(); setShowGroupForm(true); }} className="text-xs">
-                  <Plus className="w-3.5 h-3.5 mr-1" />
-                  Dodaj grupę
+                  <Plus className="w-3.5 h-3.5 mr-1" />Dodaj grupę
                 </Button>
               </div>
 
@@ -924,20 +959,20 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium">{g.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">
-                        (wybór: {g.minSelections}–{g.maxSelections})
-                      </span>
+                      <span className="text-xs text-muted-foreground ml-2">(wybór: {g.minSelections}–{g.maxSelections})</span>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => editGroup(g)} className="p-1 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => removeGroup(g.id)} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setFormGroups(formGroups.filter(fg => fg.id !== g.id))} className="p-1 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {g.dishIds.map((did) => {
-                      const d = dishes.find((dd) => dd.id === did);
-                      return d ? <Badge key={did} variant="secondary" className="text-[10px]">{d.name}</Badge> : null;
-                    })}
+                    {g.options.map((o) => (
+                      <Badge key={o.id} variant="secondary" className="text-[10px]">
+                        {o.name}
+                        {o.allergens.length > 0 && <span className="ml-1 opacity-60">({o.allergens.join(", ")})</span>}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -947,7 +982,7 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Nazwa grupy</Label>
-                      <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="np. Zupy" className="h-8 text-xs" />
+                      <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="np. Dania główne" className="h-8 text-xs" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Min. wybór</Label>
@@ -959,36 +994,36 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <Button type="button" size="sm" variant="outline" onClick={() => setShowGroupDishList(!showGroupDishList)} className="text-xs">
-                      <Plus className="w-3.5 h-3.5 mr-1" />{showGroupDishList ? "Ukryj dania" : "Wybierz dania"}
-                    </Button>
-                    {groupDishIds.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {groupDishIds.map((did) => {
-                          const d = dishes.find((dd) => dd.id === did);
-                          return d ? (
-                            <Badge key={did} variant="secondary" className="text-[10px] gap-1">
-                              {d.name}
-                              <button onClick={() => toggleGroupDish(did)}><X className="w-2.5 h-2.5" /></button>
-                            </Badge>
-                          ) : null;
-                        })}
+                  {/* Options in group */}
+                  <div className="space-y-2">
+                    <Label className="text-xs">Opcje ({groupOptions.length})</Label>
+                    {groupOptions.map((o) => (
+                      <div key={o.id} className="flex items-center justify-between px-2 py-1.5 rounded bg-muted/30 text-xs">
+                        <span>{o.name} {o.allergens.length > 0 && <span className="text-muted-foreground">({o.allergens.join(", ")})</span>}</span>
+                        <button onClick={() => setGroupOptions(groupOptions.filter(go => go.id !== o.id))} className="text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
                       </div>
-                    )}
-                    {showGroupDishList && (
-                      <div className="border border-border rounded-lg max-h-40 overflow-y-auto mt-1">
-                        {dishes.map((d) => {
-                          const sel = groupDishIds.includes(d.id);
-                          return (
-                            <button key={d.id} type="button" onClick={() => toggleGroupDish(d.id)}
-                              className={cn("w-full text-left px-3 py-2 text-xs flex items-center gap-2 border-b border-border last:border-b-0", sel ? "bg-accent/50" : "hover:bg-muted/50")}>
-                              <Checkbox checked={sel} className="w-3.5 h-3.5 pointer-events-none" />
-                              <span>{d.name}</span>
-                            </button>
-                          );
-                        })}
+                    ))}
+
+                    {showOptionForm ? (
+                      <div className="space-y-2 p-2 rounded border border-border">
+                        <Input value={optName} onChange={(e) => setOptName(e.target.value)} placeholder="Nazwa opcji" className="h-7 text-xs" />
+                        <div className="flex flex-wrap gap-1">
+                          {ALLERGEN_OPTIONS.map((a) => (
+                            <button key={a} type="button" onClick={() => setOptAllergens(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}
+                              className={cn("px-1.5 py-0.5 rounded-full text-[9px] border",
+                                optAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
+                              )}>{a}</button>
+                          ))}
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={addOption} disabled={!optName.trim()} className="h-6 text-xs px-2">Dodaj opcję</Button>
+                          <Button size="sm" variant="outline" onClick={resetOptionForm} className="h-6 text-xs px-2">Anuluj</Button>
+                        </div>
                       </div>
+                    ) : (
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setShowOptionForm(true)} className="text-xs h-7">
+                        <Plus className="w-3 h-3 mr-1" />Dodaj opcję
+                      </Button>
                     )}
                   </div>
 
@@ -1003,8 +1038,8 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={save} disabled={!formName.trim()}>
-                <Check className="w-4 h-4 mr-1" />{editingId ? "Zapisz" : "Dodaj zestaw"}
+              <Button size="sm" onClick={save} disabled={!formName.trim() || saving}>
+                <Check className="w-4 h-4 mr-1" />{saving ? "Zapisuję..." : editingId ? "Zapisz" : "Dodaj zestaw"}
               </Button>
               <Button size="sm" variant="outline" onClick={resetForm}>Anuluj</Button>
             </div>
@@ -1019,7 +1054,11 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
               <div className="flex items-center gap-4">
                 {cs.image ? <img src={cs.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Settings2 className="w-5 h-5 text-primary" />}
                 <div>
-                  <p className="text-sm font-medium">{cs.name}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{cs.icon}</span>
+                    <p className="text-sm font-medium">{cs.name}</p>
+                    {cs.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{cs.categorySlug}</Badge>}
+                  </div>
                   <p className="text-xs text-muted-foreground">{cs.groups.length} grup · min. {cs.minPersons} os.</p>
                 </div>
                 <span className="text-sm font-semibold text-primary">{cs.pricePerPerson} zł/os.</span>
@@ -1031,195 +1070,7 @@ const ConfigSetsTab = ({ configSets, setConfigSets, dishes }: { configSets: Conf
             </CardContent>
           </Card>
         ))}
-        {configSets.length === 0 && !showForm && <p className="text-sm text-muted-foreground text-center py-6">Brak zestawów konfigurowalnych</p>}
-      </div>
-    </div>
-  );
-};
-
-// ===== EXTRAS TAB =====
-const ExtrasTab = ({ extras, setExtras }: { extras: ExtraItem[]; setExtras: (v: ExtraItem[]) => void }) => {
-  const [search, setSearch] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  const [formName, setFormName] = useState("");
-  const [formDesc, setFormDesc] = useState("");
-  const [formImage, setFormImage] = useState<string | null>(null);
-  const [formPriceNetto, setFormPriceNetto] = useState("");
-  const [formVat, setFormVat] = useState(23);
-  const [formPriceBrutto, setFormPriceBrutto] = useState("");
-  const [formFoodCost, setFormFoodCost] = useState("");
-
-  const filtered = extras.filter((e) => e.name.toLowerCase().includes(search.toLowerCase()));
-
-  const calcBrutto = (netto: number, vat: number) => +(netto * (1 + vat / 100)).toFixed(2);
-  const calcNetto = (brutto: number, vat: number) => +(brutto / (1 + vat / 100)).toFixed(2);
-
-  const handleNettoChange = (val: string) => {
-    setFormPriceNetto(val);
-    const n = parseFloat(val);
-    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, formVat).toString());
-  };
-  const handleBruttoChange = (val: string) => {
-    setFormPriceBrutto(val);
-    const b = parseFloat(val);
-    if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString());
-  };
-  const handleVatChange = (val: string) => {
-    const vat = parseInt(val);
-    setFormVat(vat);
-    const n = parseFloat(formPriceNetto);
-    if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString());
-  };
-
-  const resetForm = () => {
-    setFormName(""); setFormDesc(""); setFormImage(null); setFormPriceNetto("");
-    setFormVat(23); setFormPriceBrutto(""); setFormFoodCost("");
-    setShowForm(false); setEditingId(null);
-  };
-
-  const saveExtra = () => {
-    if (!formName.trim()) return;
-    const extra: ExtraItem = {
-      id: editingId || Date.now().toString(),
-      name: formName.trim(),
-      description: formDesc.trim(),
-      image: formImage,
-      priceNetto: parseFloat(formPriceNetto) || 0,
-      vatRate: formVat,
-      priceBrutto: parseFloat(formPriceBrutto) || 0,
-      foodCost: parseFloat(formFoodCost) || 0,
-    };
-    if (editingId) {
-      setExtras(extras.map((e) => e.id === editingId ? extra : e));
-    } else {
-      setExtras([...extras, extra]);
-    }
-    resetForm();
-  };
-
-  const startEdit = (extra: ExtraItem) => {
-    setEditingId(extra.id); setFormName(extra.name); setFormDesc(extra.description);
-    setFormImage(extra.image); setFormPriceNetto(extra.priceNetto.toString());
-    setFormVat(extra.vatRate); setFormPriceBrutto(extra.priceBrutto.toString());
-    setFormFoodCost(extra.foodCost.toString()); setShowForm(true);
-  };
-
-  const removeExtra = (id: string) => setExtras(extras.filter((e) => e.id !== id));
-
-  const foodCostMargin = (extra: ExtraItem) => {
-    if (extra.priceNetto <= 0) return null;
-    return ((extra.foodCost / extra.priceNetto) * 100).toFixed(0);
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Szukaj dodatku..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-1" />
-          Dodaj dodatek
-        </Button>
-      </div>
-
-      {showForm && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">{editingId ? "Edytuj dodatek" : "Nowy dodatek"}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <ImageUpload image={formImage} onChange={setFormImage} />
-              <div className="flex-1 space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">Nazwa</Label>
-                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Dekoracja stołu" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Opis</Label>
-                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} placeholder="Krótki opis dodatku..." />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Cena netto (zł)</Label>
-                <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} placeholder="0.00" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">VAT</Label>
-                <Select value={formVat.toString()} onValueChange={handleVatChange}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {VAT_RATES.map((rate) => (<SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Cena brutto (zł)</Label>
-                <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} placeholder="0.00" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Food cost (zł)</Label>
-                <Input type="number" step="0.01" value={formFoodCost} onChange={(e) => setFormFoodCost(e.target.value)} placeholder="0.00" />
-              </div>
-            </div>
-
-            {parseFloat(formFoodCost) > 0 && parseFloat(formPriceNetto) > 0 && (
-              <div className="text-xs text-muted-foreground">
-                Food cost: <span className="font-semibold text-foreground">{((parseFloat(formFoodCost) / parseFloat(formPriceNetto)) * 100).toFixed(0)}%</span> ceny netto
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Button size="sm" onClick={saveExtra} disabled={!formName.trim()}>
-                {editingId ? "Zapisz" : "Dodaj"}
-              </Button>
-              <Button size="sm" variant="outline" onClick={resetForm}>Anuluj</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="space-y-1.5">
-        {filtered.map((extra) => (
-          <div key={extra.id} className="flex items-center justify-between px-4 py-3 rounded-lg bg-muted/30 group hover:bg-muted/50 transition-colors">
-            <div className="flex items-center gap-3">
-              {extra.image ? (
-                <img src={extra.image} alt="" className="w-10 h-10 rounded-md object-cover" />
-              ) : (
-                <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-muted-foreground" />
-                </div>
-              )}
-              <div>
-                <span className="text-sm font-medium">{extra.name}</span>
-                {extra.description && <p className="text-xs text-muted-foreground">{extra.description}</p>}
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right text-xs">
-                <div className="font-semibold text-foreground">{extra.priceBrutto.toFixed(2)} zł</div>
-                <div className="text-muted-foreground">{extra.priceNetto.toFixed(2)} netto • VAT {extra.vatRate}%</div>
-              </div>
-              {extra.foodCost > 0 && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  FC: {extra.foodCost.toFixed(2)} zł ({foodCostMargin(extra)}%)
-                </Badge>
-              )}
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => startEdit(extra)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
-                <button onClick={() => removeExtra(extra.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
-              </div>
-            </div>
-          </div>
-        ))}
-        {filtered.length === 0 && !showForm && <p className="text-sm text-muted-foreground text-center py-6">Brak dodatków</p>}
+        {configSets.length === 0 && !showForm && <p className="text-sm text-muted-foreground text-center py-6">Brak zestawów</p>}
       </div>
     </div>
   );
@@ -1227,57 +1078,113 @@ const ExtrasTab = ({ extras, setExtras }: { extras: ExtraItem[]; setExtras: (v: 
 
 // ===== MAIN =====
 const SettingsDishesView = () => {
-  const [ingredients, setIngredients] = useState<Ingredient[]>(mockIngredients);
-  const [dishes, setDishes] = useState<Dish[]>(mockDishes);
-  const [bundles, setBundles] = useState<Bundle[]>(mockBundles);
-  const [configSets, setConfigSets] = useState<ConfigurableSet[]>(mockConfigSets);
-  const [extras, setExtras] = useState<ExtraItem[]>(mockExtras);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [bundles, setBundles] = useState<Bundle[]>([]);
+  const [configSets, setConfigSets] = useState<ConfigSet[]>([]);
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+
+    // Load categories
+    const { data: catData } = await supabase.from("product_categories").select("slug, name").order("sort_order");
+    setCategories((catData ?? []).map(c => ({ slug: c.slug, name: c.name })));
+
+    // Load ingredients
+    const { data: ingData } = await supabase.from("ingredients").select("*").order("name");
+    setIngredients((ingData ?? []).map(i => ({
+      id: i.id, name: i.name, unit: i.unit as UnitType,
+      allergens: (i.allergens as string[]) ?? [], pricePerUnit: Number(i.price_per_unit),
+    })));
+
+    // Load dishes
+    const { data: dishData } = await supabase.from("dishes").select("*").order("created_at");
+    setDishes((dishData ?? []).map(d => ({
+      id: d.id, name: d.name, description: d.description ?? "", longDescription: d.long_description ?? "",
+      image: d.image_url, priceNetto: Number(d.price_netto), vatRate: d.vat_rate, priceBrutto: Number(d.price_brutto),
+      pricePerUnit: Number(d.price_per_unit ?? d.price_brutto), unitLabel: d.unit_label ?? "szt.",
+      minQuantity: d.min_quantity ?? 1, icon: d.icon ?? "🍽️", categorySlug: d.category_slug,
+      contents: (d.contents as string[]) ?? [], allergens: (d.allergens as string[]) ?? [],
+      dietaryTags: (d.dietary_tags as string[]) ?? [], productType: d.product_type,
+    })));
+
+    // Load bundles with variants
+    const { data: bundleData } = await supabase.from("bundles").select("*, bundle_variants(*)").order("created_at");
+    setBundles((bundleData ?? []).map(b => ({
+      id: b.id, name: b.name, description: b.description ?? "", longDescription: b.long_description ?? "",
+      image: b.image_url, priceNetto: Number(b.price_netto), vatRate: b.vat_rate, priceBrutto: Number(b.price_brutto),
+      basePrice: Number(b.base_price), minQuantity: b.min_quantity, icon: b.icon ?? "🍽️",
+      categorySlug: b.category_slug,
+      variants: ((b.bundle_variants as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((v: any) => ({
+        id: v.id, name: v.name, description: v.description ?? "", price: Number(v.price),
+        allergens: (v.allergens as string[]) ?? [], dietaryTags: (v.dietary_tags as string[]) ?? [],
+        sortOrder: v.sort_order,
+      })),
+    })));
+
+    // Load configurable sets with groups and options
+    const { data: setData } = await supabase.from("configurable_sets").select("*, config_groups(*, config_group_options(*))").order("created_at");
+    setConfigSets((setData ?? []).map(s => ({
+      id: s.id, name: s.name, description: s.description ?? "", longDescription: s.long_description ?? "",
+      image: s.image_url, pricePerPerson: Number(s.price_per_person), minPersons: s.min_persons,
+      icon: s.icon ?? "🍽️", categorySlug: s.category_slug,
+      groups: ((s.config_groups as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((g: any) => ({
+        id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, sortOrder: g.sort_order,
+        options: ((g.config_group_options as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((o: any) => ({
+          id: o.id, name: o.name, allergens: (o.allergens as string[]) ?? [], sortOrder: o.sort_order,
+        })),
+      })),
+    })));
+
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Dania</h1>
-        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami, zestawami i dodatkami</p>
+        <h1 className="text-2xl font-bold text-foreground">Katalog produktów</h1>
+        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami i zestawami — wszystko tutaj automatycznie pojawia się w formularzu klienta</p>
       </div>
 
-      <Tabs defaultValue="ingredients">
+      <Tabs defaultValue="dishes">
         <TabsList className="mb-4">
           <TabsTrigger value="ingredients" className="gap-1.5">
-            <Apple className="w-3.5 h-3.5" />
-            Składniki
+            <Apple className="w-3.5 h-3.5" />Składniki
           </TabsTrigger>
           <TabsTrigger value="dishes" className="gap-1.5">
-            <CookingPot className="w-3.5 h-3.5" />
-            Dania
+            <CookingPot className="w-3.5 h-3.5" />Dania
           </TabsTrigger>
           <TabsTrigger value="bundles" className="gap-1.5">
-            <Package className="w-3.5 h-3.5" />
-            Pakiety
+            <Package className="w-3.5 h-3.5" />Pakiety
           </TabsTrigger>
           <TabsTrigger value="configsets" className="gap-1.5">
-            <Settings2 className="w-3.5 h-3.5" />
-            Zestawy
-          </TabsTrigger>
-          <TabsTrigger value="extras" className="gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
-            Dodatki
+            <Settings2 className="w-3.5 h-3.5" />Zestawy
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
-          <IngredientsTab ingredients={ingredients} setIngredients={setIngredients} />
+          <IngredientsTab ingredients={ingredients} reload={loadAll} />
         </TabsContent>
         <TabsContent value="dishes">
-          <DishesTab dishes={dishes} setDishes={setDishes} ingredients={ingredients} />
+          <DishesTab dishes={dishes} categories={categories} reload={loadAll} />
         </TabsContent>
         <TabsContent value="bundles">
-          <BundlesTab bundles={bundles} setBundles={setBundles} dishes={dishes} />
+          <BundlesTab bundles={bundles} categories={categories} reload={loadAll} />
         </TabsContent>
         <TabsContent value="configsets">
-          <ConfigSetsTab configSets={configSets} setConfigSets={setConfigSets} dishes={dishes} />
-        </TabsContent>
-        <TabsContent value="extras">
-          <ExtrasTab extras={extras} setExtras={setExtras} />
+          <ConfigSetsTab configSets={configSets} categories={categories} reload={loadAll} />
         </TabsContent>
       </Tabs>
     </div>
