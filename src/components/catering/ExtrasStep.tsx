@@ -104,7 +104,7 @@ export function ExtrasStep({
     return count;
   };
 
-  if (extrasCategories.length === 0) {
+  if (!extrasCategories || extrasCategories.length === 0) {
     return (
       <div className="pb-24 px-4 py-8">
         <p className="text-sm text-muted-foreground text-center">Brak kategorii dodatków</p>
