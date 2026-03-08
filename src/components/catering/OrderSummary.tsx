@@ -118,7 +118,7 @@ export function OrderSummary({
   for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
     if (qty > 0) {
       const extra = extraItems.find(e => e.id === extraId);
-      if (extra) extrasLines.push({ name: extra.name, quantity: qty, price: extra.price * qty });
+      if (extra) extrasLines.push({ name: extra.name, quantity: qty, price: getExtraPrice(extra, ct) * qty });
     }
   }
 
