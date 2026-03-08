@@ -1,14 +1,12 @@
 
 
-## Problem
+## Plan: Usunięcie przycisków "Kopiuj" i "Drukuj" z widoku zamówień
 
-Na desktopie modal ma `md:rounded-2xl`, ale zdjecia hero wewnatrz (`img` w `SimpleProductContent`, `ExpandableProductContent`, `ConfigurableProductContent`) nie maja zaokraglonych gornych rogow — przez co kwadratowy obraz "odstaje" od zaokraglonego modala. Ten sam problem na dole — przycisk "Dodaj" w kontenerze bez zaokraglonych dolnych rogow.
+Dwie zmiany w `src/components/admin/OrdersView.tsx`:
 
-## Rozwiazanie
+1. **Lista zamówień (linia 2122-2127)** -- usunięcie dwóch przycisków ikon (Copy i Printer) z akcji przy każdym zamówieniu na liście.
 
-1. **Zdjecia hero** — dodac `md:rounded-t-2xl` do wszystkich trzech `<img>` w `ProductModal.tsx` (linie ok. 101, 157, 237) oraz do ich wrappera `<div className="relative">`.
+2. **Widok szczegółów zamówienia (linia 348-351)** -- usunięcie przycisku "Drukuj" z nagłówka widoku szczegółów.
 
-2. **Dolny pasek z przyciskiem "Dodaj"** — dodac `md:rounded-b-2xl` do `<div className="p-4 border-t ...">` (linia ok. 85).
-
-To 4 drobne zmiany CSS w jednym pliku, bez zmian logiki.
+3. **Import** -- usunięcie `Copy` i `Printer` z importu lucide-react (jeśli nie są używane gdzie indziej).
 
