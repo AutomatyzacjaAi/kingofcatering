@@ -44,6 +44,8 @@ interface Order {
   notes: string;
   items: OrderItem[];
   createdAt: string;
+  deliveryCost: number;
+  guestCount: number;
 }
 
 const statusColors: Record<OrderStatus, string> = {
@@ -63,7 +65,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC8L7K", dbId: "", clientId: null, client: "Anna Kowalska", email: "anna.k@email.pl", phone: "+48 500 111 222",
     event: "Urodziny", date: "28 sty 2026", deliveryAddress: "ul. Kwiatowa 5, Warszawa",
     amount: "2 211,00 zł", amountNum: 2211, status: "Nowe", notes: "Bez orzechów - alergia",
-    createdAt: "15 sty 2026",
+    createdAt: "15 sty 2026", deliveryCost: 50, guestCount: 30,
     items: [
       { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900, type: "simple", foodCostPerUnit: 135,
         subItems: [
@@ -98,7 +100,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC01SQ", dbId: "", clientId: null, client: "Jan Nowak", email: "jan.nowak@email.pl", phone: "+48 600 333 444",
     event: "", date: "21 sty 2026", deliveryAddress: "ul. Długa 12, Kraków",
     amount: "350,00 zł", amountNum: 350, status: "Potwierdzone", notes: "",
-    createdAt: "10 sty 2026",
+    createdAt: "10 sty 2026", deliveryCost: 0, guestCount: 10,
     items: [
       { name: "Antipasto Włoskie", quantity: 1, unit: "szt.", pricePerUnit: 350, total: 350 },
     ],
@@ -107,7 +109,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC5CJA", dbId: "", clientId: null, client: "Maria Wiśniewska", email: "maria.w@email.pl", phone: "+48 700 555 666",
     event: "Wesele", date: "28 sty 2026", deliveryAddress: "Dworek pod Lipami, Piaseczno",
     amount: "3 276,00 zł", amountNum: 3276, status: "Zrealizowane", notes: "Dekoracja stołu premium",
-    createdAt: "5 sty 2026",
+    createdAt: "5 sty 2026", deliveryCost: 0, guestCount: 30,
     items: [
       { name: "Zestaw nr 2 Premium", quantity: 30, unit: "os.", pricePerUnit: 95, total: 2850, type: "configurable", foodCostPerUnit: 32,
         subItems: [
@@ -125,7 +127,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC1RA9", dbId: "", clientId: null, client: "Piotr Zieliński", email: "piotr.z@email.pl", phone: "+48 800 777 888",
     event: "", date: "21 sty 2026", deliveryAddress: "ul. Polna 8, Gdańsk",
     amount: "246,00 zł", amountNum: 246, status: "Anulowane", notes: "Klient zrezygnował",
-    createdAt: "8 sty 2026",
+    createdAt: "8 sty 2026", deliveryCost: 30, guestCount: 12,
     items: [
       { name: "Tacos z kurczakiem", quantity: 12, unit: "szt.", pricePerUnit: 18, total: 216, type: "simple", foodCostPerUnit: 6 },
       { name: "Opakowanie jednorazowe", quantity: 1, unit: "szt.", pricePerUnit: 30, total: 30, type: "extra", foodCostPerUnit: 8 },
@@ -135,7 +137,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC0MII", dbId: "", clientId: null, client: "Katarzyna Wójcik", email: "k.wojcik@email.pl", phone: "+48 500 999 000",
     event: "Stypa", date: "26 sty 2026", deliveryAddress: "ul. Cicha 3, Warszawa",
     amount: "402,00 zł", amountNum: 402, status: "Zrealizowane", notes: "",
-    createdAt: "12 sty 2026",
+    createdAt: "12 sty 2026", deliveryCost: 0, guestCount: 15,
     items: [
       { name: "Patera Serów Europejskich", quantity: 1, unit: "szt.", pricePerUnit: 450, total: 450, type: "simple", foodCostPerUnit: 135,
         subItems: [
@@ -154,7 +156,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOCX6J3", dbId: "", clientId: null, client: "Tomasz Kamiński", email: "t.kaminski@email.pl", phone: "+48 600 111 333",
     event: "Impreza firmowa", date: "13 sty 2026", deliveryAddress: "Biurowiec Centrum, al. Jerozolimskie 100",
     amount: "14 970,00 zł", amountNum: 14970, status: "Potwierdzone", notes: "Faktura na firmę",
-    createdAt: "2 sty 2026",
+    createdAt: "2 sty 2026", deliveryCost: 120, guestCount: 100,
     items: [
       { name: "Zestaw nr 2 Premium", quantity: 100, unit: "os.", pricePerUnit: 95, total: 9500, type: "configurable", foodCostPerUnit: 32,
         subItems: [
@@ -181,7 +183,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC3UTX", dbId: "", clientId: null, client: "Agnieszka Lewandowska", email: "a.lew@email.pl", phone: "+48 700 222 444",
     event: "Impreza firmowa", date: "20 sty 2026", deliveryAddress: "Hotel Marriott, Warszawa",
     amount: "4 648,00 zł", amountNum: 4648, status: "W realizacji", notes: "",
-    createdAt: "6 sty 2026",
+    createdAt: "6 sty 2026", deliveryCost: 0, guestCount: 50,
     items: [
       { name: "Zestaw nr 1 Klasyczny", quantity: 50, unit: "os.", pricePerUnit: 70, total: 3500, type: "configurable", foodCostPerUnit: 22,
         subItems: [
@@ -308,6 +310,14 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
                     <TableCell className="text-right font-semibold">{fmtNum(item.total)} zł</TableCell>
                   </TableRow>
                 ))}
+                {order.deliveryCost > 0 && (
+                  <TableRow>
+                    <TableCell className="font-medium">Dostawa</TableCell>
+                    <TableCell className="text-center">1</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{fmtNum(order.deliveryCost)} zł</TableCell>
+                    <TableCell className="text-right font-semibold">{fmtNum(order.deliveryCost)} zł</TableCell>
+                  </TableRow>
+                )}
                 <TableRow className="hover:bg-transparent border-t-2">
                   <TableCell colSpan={3} className="text-right font-semibold">Suma:</TableCell>
                   <TableCell className="text-right font-bold text-primary text-lg">{order.amount}</TableCell>
@@ -596,6 +606,8 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }:
           <CardHeader className="pb-3"><CardTitle className="text-base">Podsumowanie</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div><span className="text-muted-foreground">Pozycji:</span> <span className="font-medium">{order.items.length}</span></div>
+            {order.guestCount > 0 && <div><span className="text-muted-foreground">Gości:</span> <span className="font-medium">{order.guestCount}</span></div>}
+            {order.deliveryCost > 0 && <div><span className="text-muted-foreground">Dostawa:</span> <span className="font-medium">{fmtNum(order.deliveryCost)} zł</span></div>}
             <div><span className="text-muted-foreground">Kwota:</span> <span className="font-semibold text-primary text-lg">{order.amount}</span></div>
             {order.notes && (
               <div className="pt-2 border-t border-border">
@@ -1241,6 +1253,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       event, date: date || dateStr, deliveryAddress, notes, items,
       amount: fmtNum(totalAmount) + " zł", amountNum: totalAmount,
       status: "Nowe zamówienie", createdAt: dateStr,
+      deliveryCost: 0, guestCount: 0,
     };
 
     onAdd(newOrder);
@@ -1515,6 +1528,8 @@ const OrdersView = () => {
           notes: o.notes || "",
           items,
           createdAt: formatDate(o.created_at),
+          deliveryCost: Number(o.delivery_cost) || 0,
+          guestCount: Number(o.guest_count) || 0,
         };
       });
 
