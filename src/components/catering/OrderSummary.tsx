@@ -262,7 +262,7 @@ export function OrderSummary({
                   return (
                     <div key={method.id} onClick={() => onPaymentMethodChange(method.id)} className={cn("p-3 rounded-lg border cursor-pointer transition-all", isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50")}>
                       <div className="flex items-center gap-2">
-                        {paymentIcons[method.icon] || <span>{method.icon}</span>}
+                        {paymentIcons[method.id] || <CreditCard className="w-5 h-5 text-primary" />}
                         <span className="font-medium text-sm">{method.name}</span>
                         {isSelected && <Check className="w-4 h-4 text-primary ml-auto" />}
                       </div>

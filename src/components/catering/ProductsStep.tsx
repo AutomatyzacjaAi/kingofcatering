@@ -1,15 +1,9 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Salad, Cookie, UtensilsCrossed } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product, Category } from "@/data/products";
 import { ProductCard } from "./ProductCard";
 import { ProductModal } from "./ProductModal";
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  Salad: <Salad className="w-4 h-4" />,
-  Cookie: <Cookie className="w-4 h-4" />,
-  UtensilsCrossed: <UtensilsCrossed className="w-4 h-4" />,
-};
 
 type ProductsStepProps = {
   simpleQuantities: Record<string, number>;
@@ -109,7 +103,6 @@ export function ProductsStep({
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span className="text-primary">{categoryIcons[category.icon] || <Salad className="w-4 h-4" />}</span>
                   <span className="text-sm">{category.name}</span>
                   {itemCount > 0 && (
                     <span className={cn(

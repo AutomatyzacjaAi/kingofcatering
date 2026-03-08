@@ -7,9 +7,8 @@ export type ExtraItem = {
   longDescription?: string;
   image?: string;
   price: number;
-  unitLabel: string; // "szt.", "event", "os."
-  icon: string;
-  contents?: string[]; // what's included
+  unitLabel: string;
+  contents?: string[];
 };
 
 export type PackagingOption = {
@@ -18,10 +17,9 @@ export type PackagingOption = {
   description: string;
   longDescription?: string;
   image?: string;
-  price: number; // 0 = free
-  priceLabel: string; // "Gratis", "25 zł/os."
+  price: number;
+  priceLabel: string;
   requiresPersonCount?: boolean;
-  icon: string;
   contents?: string[];
 };
 
@@ -31,9 +29,8 @@ export type WaiterServiceOption = {
   description: string;
   longDescription?: string;
   image?: string;
-  duration: string; // "4h", "8h", "12h"
+  duration: string;
   price: number;
-  icon: string;
   contents?: string[];
 };
 
@@ -41,7 +38,6 @@ export type ExtrasCategory = {
   id: string;
   name: string;
   description: string;
-  icon: string;
   required?: boolean;
 };
 
@@ -52,21 +48,18 @@ export const extrasCategories: ExtrasCategory[] = [
     id: "dodatki",
     name: "Dodatki",
     description: "Dodatkowe usługi",
-    icon: "Sparkles",
     required: false,
   },
   {
     id: "pakowanie",
     name: "Pakowanie",
     description: "Wybierz sposób pakowania",
-    icon: "Package",
     required: true,
   },
   {
     id: "obsluga",
     name: "Obsługa",
     description: "Obsługa kelnerska",
-    icon: "Users",
     required: false,
   },
 ];
@@ -82,7 +75,6 @@ export const extraItems: ExtraItem[] = [
     image: "/extras/wniesienie.jpg",
     price: 150,
     unitLabel: "event",
-    icon: "📦",
     contents: [
       "Wniesienie na wskazane piętro",
       "Rozstawienie na stołach",
@@ -98,7 +90,6 @@ export const extraItems: ExtraItem[] = [
     image: "/extras/dekoracja-stolu.jpg",
     price: 200,
     unitLabel: "event",
-    icon: "🌸",
     contents: [
       "Kompozycje kwiatowe",
       "Świece dekoracyjne",
@@ -115,7 +106,6 @@ export const extraItems: ExtraItem[] = [
     image: "/extras/led-swiece.jpg",
     price: 80,
     unitLabel: "zestaw",
-    icon: "🕯️",
     contents: [
       "12 świec LED różnej wysokości",
       "Baterie w zestawie",
@@ -131,7 +121,6 @@ export const extraItems: ExtraItem[] = [
     image: "/extras/podgrzewacze.jpg",
     price: 120,
     unitLabel: "zestaw",
-    icon: "🔥",
     contents: [
       "6 podgrzewaczy stalowych",
       "Świece podgrzewające (4h)",
@@ -147,7 +136,6 @@ export const extraItems: ExtraItem[] = [
     image: "/extras/odbior.jpg",
     price: 100,
     unitLabel: "event",
-    icon: "🚚",
     contents: [
       "Odbiór naczyń i zastawy",
       "Zabierzenie resztek jedzenia",
@@ -168,7 +156,6 @@ export const packagingOptions: PackagingOption[] = [
     image: "/extras/jednorazowa.jpg",
     price: 0,
     priceLabel: "W cenie",
-    icon: "🍃",
     contents: [
       "Talerze papierowe premium",
       "Sztućce drewniane",
@@ -186,7 +173,6 @@ export const packagingOptions: PackagingOption[] = [
     price: 25,
     priceLabel: "25 zł/os.",
     requiresPersonCount: true,
-    icon: "🍽️",
     contents: [
       "Talerz płytki porcelanowy",
       "Talerz deserowy",
@@ -206,7 +192,6 @@ export const packagingOptions: PackagingOption[] = [
     price: 45,
     priceLabel: "45 zł/os.",
     requiresPersonCount: true,
-    icon: "✨",
     contents: [
       "Talerz ze złotym rantem",
       "Talerz deserowy premium",
@@ -231,7 +216,6 @@ export const waiterServiceOptions: WaiterServiceOption[] = [
     image: "/extras/kelner-basic.jpg",
     duration: "4h",
     price: 350,
-    icon: "👤",
     contents: [
       "1 profesjonalny kelner",
       "4 godziny obsługi",
@@ -248,7 +232,6 @@ export const waiterServiceOptions: WaiterServiceOption[] = [
     image: "/extras/kelner-standard.jpg",
     duration: "8h",
     price: 600,
-    icon: "👥",
     contents: [
       "1 profesjonalny kelner",
       "8 godziny obsługi",
@@ -266,7 +249,6 @@ export const waiterServiceOptions: WaiterServiceOption[] = [
     image: "/extras/kelner-premium.jpg",
     duration: "12h",
     price: 950,
-    icon: "🌟",
     contents: [
       "1 profesjonalny kelner",
       "Dedykowany koordynator",
@@ -285,7 +267,6 @@ export type PaymentMethod = {
   id: string;
   name: string;
   description: string;
-  icon: string;
 };
 
 export const paymentMethods: PaymentMethod[] = [
@@ -293,24 +274,20 @@ export const paymentMethods: PaymentMethod[] = [
     id: "online",
     name: "Płatność online",
     description: "Szybka płatność kartą lub przelewem",
-    icon: "💳",
   },
   {
     id: "gotowka",
     name: "Gotówka",
     description: "Płatność przy odbiorze",
-    icon: "💵",
   },
   {
     id: "oferta",
     name: "Oferta",
     description: "Otrzymasz szczegółową ofertę mailem",
-    icon: "📧",
   },
   {
     id: "proforma",
     name: "Faktura proforma",
     description: "Płatność na podstawie proformy",
-    icon: "📄",
   },
 ];

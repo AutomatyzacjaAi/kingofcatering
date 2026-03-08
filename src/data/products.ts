@@ -6,14 +6,13 @@ export type SimpleProduct = {
   id: string;
   name: string;
   description: string;
-  longDescription?: string; // detailed description for modal
-  image?: string; // image path
-  contents: string[]; // what's included
+  longDescription?: string;
+  image?: string;
+  contents: string[];
   allergens: string[];
   pricePerUnit: number;
-  unitLabel: string; // "szt.", "kg", "patera"
+  unitLabel: string;
   minQuantity: number;
-  icon: string;
   category: string;
 };
 
@@ -27,7 +26,6 @@ export type ExpandableProduct = {
   image?: string;
   basePrice: number;
   minQuantity: number;
-  icon: string;
   category: string;
   variants: ProductVariant[];
 };
@@ -51,7 +49,6 @@ export type ConfigurableProduct = {
   image?: string;
   pricePerPerson: number;
   minPersons: number;
-  icon: string;
   category: string;
   optionGroups: OptionGroup[];
 };
@@ -75,26 +72,24 @@ export type Product = SimpleProduct | ExpandableProduct | ConfigurableProduct;
 export type EventType = {
   id: string;
   name: string;
-  icon: string;
 };
 
 export type Category = {
   id: string;
-  dbId?: string; // UUID from database, used for event_category_mappings
+  dbId?: string;
   name: string;
   description: string;
-  icon: string;
 };
 
 // ============= EVENT TYPES =============
 
 export const eventTypes: EventType[] = [
-  { id: "wedding", name: "Wesele", icon: "Heart" },
-  { id: "corporate", name: "Konferencja", icon: "Presentation" },
-  { id: "birthday", name: "Urodziny", icon: "Gift" },
-  { id: "business", name: "Spotkanie firmowe", icon: "Briefcase" },
-  { id: "party", name: "Impreza", icon: "Music" },
-  { id: "other", name: "Inne", icon: "CalendarDays" },
+  { id: "wedding", name: "Wesele" },
+  { id: "corporate", name: "Konferencja" },
+  { id: "birthday", name: "Urodziny" },
+  { id: "business", name: "Spotkanie firmowe" },
+  { id: "party", name: "Impreza" },
+  { id: "other", name: "Inne" },
 ];
 
 // ============= CATEGORIES =============
@@ -104,19 +99,16 @@ export const categories: Category[] = [
     id: "patery",
     name: "Patery",
     description: "Gotowe kompozycje na każdą okazję",
-    icon: "Salad",
   },
   {
     id: "mini",
     name: "Mini",
     description: "Małe przekąski z wieloma wariantami",
-    icon: "Cookie",
   },
   {
     id: "zestawy",
     name: "Zestawy",
     description: "Pełne menu do konfiguracji",
-    icon: "UtensilsCrossed",
   },
 ];
 
@@ -144,7 +136,6 @@ export const products: Product[] = [
     pricePerUnit: 450,
     unitLabel: "szt.",
     minQuantity: 1,
-    icon: "🧀",
     category: "patery",
   },
   {
@@ -166,7 +157,6 @@ export const products: Product[] = [
     pricePerUnit: 520,
     unitLabel: "szt.",
     minQuantity: 1,
-    icon: "🥓",
     category: "patery",
   },
   {
@@ -188,7 +178,6 @@ export const products: Product[] = [
     pricePerUnit: 680,
     unitLabel: "szt.",
     minQuantity: 1,
-    icon: "🦐",
     category: "patery",
   },
   {
@@ -210,7 +199,6 @@ export const products: Product[] = [
     pricePerUnit: 380,
     unitLabel: "szt.",
     minQuantity: 1,
-    icon: "🫒",
     category: "patery",
   },
   
@@ -224,7 +212,6 @@ export const products: Product[] = [
     image: "/products/tacos.jpg",
     basePrice: 18,
     minQuantity: 8,
-    icon: "🌮",
     category: "mini",
     variants: [
       {
@@ -270,7 +257,6 @@ export const products: Product[] = [
     image: "/products/mini-burgery.jpg",
     basePrice: 15,
     minQuantity: 10,
-    icon: "🍔",
     category: "mini",
     variants: [
       {
@@ -308,7 +294,6 @@ export const products: Product[] = [
     image: "/products/sushi.jpg",
     basePrice: 8,
     minQuantity: 16,
-    icon: "🍣",
     category: "mini",
     variants: [
       {
@@ -356,7 +341,6 @@ export const products: Product[] = [
     image: "/products/zestaw-1.jpg",
     pricePerPerson: 70,
     minPersons: 12,
-    icon: "🍽️",
     category: "zestawy",
     optionGroups: [
       {
@@ -408,7 +392,6 @@ export const products: Product[] = [
     image: "/products/zestaw-2.jpg",
     pricePerPerson: 95,
     minPersons: 15,
-    icon: "👨‍🍳",
     category: "zestawy",
     optionGroups: [
       {
@@ -456,7 +439,6 @@ export const products: Product[] = [
     image: "/products/zestaw-3.jpg",
     pricePerPerson: 60,
     minPersons: 10,
-    icon: "🥗",
     category: "zestawy",
     optionGroups: [
       {

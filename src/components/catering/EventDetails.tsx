@@ -11,7 +11,6 @@ import {
   CalendarDays, 
   ChevronRight, 
   Clock,
-  icons,
 } from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
 
@@ -103,7 +102,6 @@ export function EventDetails({
         <CardContent>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {eventTypes.map((type) => {
-              const IconComponent = (icons as any)[type.icon] || CalendarDays;
               const isSelected = eventType === type.id;
               
               return (
@@ -126,7 +124,7 @@ export function EventDetails({
                         : "bg-muted text-muted-foreground"
                     )}
                   >
-                    <IconComponent className="w-5 h-5" strokeWidth={1.5} />
+                    <CalendarDays className="w-5 h-5" strokeWidth={1.5} />
                   </div>
                   <span 
                     className={cn(

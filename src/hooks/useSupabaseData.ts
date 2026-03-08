@@ -22,7 +22,6 @@ async function fetchCategories(): Promise<Category[]> {
     dbId: c.id,
     name: c.name,
     description: c.description ?? "",
-    icon: c.icon,
   }));
 }
 
@@ -35,7 +34,6 @@ async function fetchEventTypes(): Promise<EventType[]> {
   return (data ?? []).map((e) => ({
     id: e.id,
     name: e.name,
-    icon: e.icon,
   }));
 }
 
@@ -83,7 +81,6 @@ async function fetchProducts(): Promise<Product[]> {
       pricePerUnit: Number(d.price_per_unit ?? d.price_brutto),
       unitLabel: d.unit_label ?? "szt.",
       minQuantity: d.min_quantity ?? 1,
-      icon: d.icon ?? "🍽️",
       category: d.category_slug ?? "patery",
     } satisfies SimpleProduct);
   }
@@ -110,7 +107,6 @@ async function fetchProducts(): Promise<Product[]> {
       image: b.image_url ?? undefined,
       basePrice: Number(b.base_price),
       minQuantity: b.min_quantity,
-      icon: b.icon ?? "🍽️",
       category: b.category_slug ?? "mini",
       variants,
     } satisfies ExpandableProduct);
@@ -143,7 +139,6 @@ async function fetchProducts(): Promise<Product[]> {
       image: s.image_url ?? undefined,
       pricePerPerson: Number(s.price_per_person),
       minPersons: s.min_persons,
-      icon: s.icon ?? "🍽️",
       category: s.category_slug ?? "zestawy",
       optionGroups,
     } satisfies ConfigurableProduct);
@@ -177,7 +172,6 @@ async function fetchExtras(): Promise<{
         image: e.image_url ?? undefined,
         price: Number(e.price),
         unitLabel: e.unit_label ?? "szt.",
-        icon: e.icon ?? "✨",
         contents: (e.contents as string[]) ?? [],
       });
     } else if (e.category === "pakowanie") {
@@ -190,7 +184,6 @@ async function fetchExtras(): Promise<{
         price: Number(e.price),
         priceLabel: e.price_label ?? (Number(e.price) === 0 ? "W cenie" : `${e.price} zł/os.`),
         requiresPersonCount: e.requires_person_count ?? false,
-        icon: e.icon ?? "📦",
         contents: (e.contents as string[]) ?? [],
       });
     } else if (e.category === "obsluga") {
@@ -202,7 +195,6 @@ async function fetchExtras(): Promise<{
         image: e.image_url ?? undefined,
         duration: e.duration ?? "4h",
         price: Number(e.price),
-        icon: e.icon ?? "👤",
         contents: (e.contents as string[]) ?? [],
       });
     }

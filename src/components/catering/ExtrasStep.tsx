@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronRight, Minus, Plus, X, Sparkles, Package, Users } from "lucide-react";
+import { Check, ChevronRight, Minus, Plus, X, Sparkles, Package, Users, UtensilsCrossed } from "lucide-react";
 import { QuantityInput } from "./QuantityInput";
 import {
   Dialog,
@@ -16,12 +16,6 @@ import type {
   WaiterServiceOption,
 } from "@/data/extras";
 import { extrasCategories } from "@/data/extras";
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  Sparkles: <Sparkles className="w-4 h-4" />,
-  Package: <Package className="w-4 h-4" />,
-  Users: <Users className="w-4 h-4" />,
-};
 
 type ExtrasStepProps = {
   selectedExtras: Record<string, number>;
@@ -82,7 +76,7 @@ export function ExtrasStep({
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
-                <span className="text-primary">{categoryIcons[category.icon] || <Sparkles className="w-4 h-4" />}</span>
+                <span className="text-sm">{category.name}</span>
                 <span className="text-sm">{category.name}</span>
                 {category.required && !itemCount && (
                   <Badge variant="destructive" className="text-xs px-1.5 py-0">!</Badge>
@@ -162,7 +156,7 @@ function ExtrasListSection({
             <CardContent className="p-3">
               <div className="flex items-center gap-3">
                 <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                  {hasImage ? <img src={extra.image} alt={extra.name} className="w-full h-full object-cover" /> : <span className="text-2xl">{extra.icon}</span>}
+                  {hasImage ? <img src={extra.image} alt={extra.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground text-sm">{extra.name}</h3>
@@ -197,7 +191,7 @@ function ExtraItemModal({ item, isOpen, onClose, quantity, onQuantityChange }: {
           {item.image ? (
             <div className="relative"><img src={item.image} alt={item.name} className="w-full h-56 object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" /></div>
           ) : (
-            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><span className="text-4xl">{item.icon}</span></div></div>
+            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><UtensilsCrossed className="w-8 h-8 text-muted-foreground" /></div></div>
           )}
           <div className="p-4 space-y-6">
             <div>
@@ -242,7 +236,7 @@ function PackagingSection({ options, selectedId, onOptionClick }: { options: Pac
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
                   <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                    {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <span className="text-2xl">{option.icon}</span>}
+                    {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
@@ -274,7 +268,7 @@ function PackagingModal({ option, isOpen, onClose, isSelected, personCount, onSe
           {option.image ? (
             <div className="relative"><img src={option.image} alt={option.name} className="w-full h-56 object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" /></div>
           ) : (
-            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><span className="text-4xl">{option.icon}</span></div></div>
+            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><UtensilsCrossed className="w-8 h-8 text-muted-foreground" /></div></div>
           )}
           <div className="p-4 space-y-6">
             <div>
@@ -330,7 +324,7 @@ function WaiterServiceSection({ options, selectedId, onOptionClick, onNoServiceC
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
                   <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                    {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <span className="text-2xl">{option.icon}</span>}
+                    {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
@@ -363,7 +357,7 @@ function WaiterServiceModal({ option, isOpen, onClose, isSelected, waiterCount, 
           {option.image ? (
             <div className="relative"><img src={option.image} alt={option.name} className="w-full h-56 object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" /></div>
           ) : (
-            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><span className="text-4xl">{option.icon}</span></div></div>
+            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><UtensilsCrossed className="w-8 h-8 text-muted-foreground" /></div></div>
           )}
           <div className="p-4 space-y-6">
             <div>
