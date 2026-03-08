@@ -35,6 +35,7 @@ interface Extra {
   priceNetto: number;
   vatRate: number;
   priceBrutto: number;
+  priceOnSite: number | null;
   unitLabel: string;
   priceLabel: string;
   requiresPersonCount: boolean;
@@ -90,6 +91,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
   const [formDuration, setFormDuration] = useState("");
   const [formContents, setFormContents] = useState("");
   const [formFoodCost, setFormFoodCost] = useState("");
+  const [formPriceOnSite, setFormPriceOnSite] = useState("");
 
   const filtered = extras.filter(e => e.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -98,7 +100,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
     setFormCategory("dodatki"); setFormExtrasCategoryId(null);
     setFormPriceNetto(""); setFormVat(23); setFormPriceBrutto("");
     setFormUnitLabel("szt."); setFormPriceLabel(""); setFormRequiresPersonCount(false);
-    setFormDuration(""); setFormContents(""); setFormFoodCost("");
+    setFormDuration(""); setFormContents(""); setFormFoodCost(""); setFormPriceOnSite("");
     setShowForm(false); setEditingId(null);
   };
 
@@ -137,6 +139,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
     setFormDuration(extra.duration || "");
     setFormContents(extra.contents.join("\n"));
     setFormFoodCost(extra.foodCost.toFixed(2));
+    setFormPriceOnSite(extra.priceOnSite != null ? extra.priceOnSite.toFixed(2) : "");
     setShowForm(true);
   };
 
@@ -154,6 +157,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
       long_description: formLongDesc.trim(),
       image_url: formImage,
       category: formCategory,
+      price_on_site: formPriceOnSite ? parseFloat(formPriceOnSite) || null : null,
       extras_category_id: formExtrasCategoryId,
       price: priceBrutto,
       price_netto: priceNetto,
@@ -259,7 +263,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
                 className="w-full min-h-[60px] rounded-md border border-border bg-background px-3 py-2 text-sm resize-none" />
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena netto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => updatePriceFromNetto(e.target.value, formVat)} />
@@ -276,6 +280,10 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
               <div className="space-y-1">
                 <Label className="text-xs">Cena brutto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => updatePriceFromBrutto(e.target.value, formVat)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena brutto sala (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceOnSite} onChange={(e) => setFormPriceOnSite(e.target.value)} placeholder="—" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Food cost (zł)</Label>

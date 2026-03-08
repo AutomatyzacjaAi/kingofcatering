@@ -34,6 +34,8 @@ export type CateringOrder = {
   contactStreet: string;
   contactBuildingNumber: string;
   contactApartmentNumber: string;
+  companyName: string;
+  companyNip: string;
   notes: string;
   paymentMethod: string;
   deliveryZoneId: string | null;
@@ -64,6 +66,8 @@ const initialOrder: CateringOrder = {
   contactStreet: "",
   contactBuildingNumber: "",
   contactApartmentNumber: "",
+  companyName: "",
+  companyNip: "",
   notes: "",
   paymentMethod: "",
   deliveryZoneId: null,

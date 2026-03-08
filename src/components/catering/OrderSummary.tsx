@@ -326,6 +326,7 @@ export function OrderSummary({
           ) : (
             "regulamin i politykę prywatności"
           )}
+          <span className="text-destructive ml-0.5">*</span>
         </label>
       </div>
 

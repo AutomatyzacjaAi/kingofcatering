@@ -2,7 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Phone, MessageSquare, MapPin, Building2, Home, Truck, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { User, Mail, Phone, MessageSquare, MapPin, Building2, Home, Truck, AlertCircle, CheckCircle2, Loader2, Briefcase } from "lucide-react";
 import { useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,6 +24,8 @@ type ContactFormProps = {
   contactBuildingNumber: string;
   contactApartmentNumber: string;
   notes: string;
+  companyName: string;
+  companyNip: string;
   onNameChange: (name: string) => void;
   onEmailChange: (email: string) => void;
   onPhoneChange: (phone: string) => void;
@@ -31,6 +34,8 @@ type ContactFormProps = {
   onBuildingNumberChange: (num: string) => void;
   onApartmentNumberChange: (num: string) => void;
   onNotesChange: (notes: string) => void;
+  onCompanyNameChange: (name: string) => void;
+  onCompanyNipChange: (nip: string) => void;
   deliveryConfig: DeliveryConfig;
   orderTotal: number;
   onDeliveryCalculated: (price: number, distanceKm: number | null) => void;
@@ -47,10 +52,13 @@ interface DeliveryResult {
 export function ContactForm({
   contactName, contactEmail, contactPhone, contactCity, contactStreet,
   contactBuildingNumber, contactApartmentNumber, notes,
+  companyName, companyNip,
   onNameChange, onEmailChange, onPhoneChange, onCityChange, onStreetChange,
   onBuildingNumberChange, onApartmentNumberChange, onNotesChange,
+  onCompanyNameChange, onCompanyNipChange,
   deliveryConfig, orderTotal, onDeliveryCalculated,
 }: ContactFormProps) {
+  const [isCompany, setIsCompany] = useState(!!(companyName || companyNip));
   const [deliveryResult, setDeliveryResult] = useState<DeliveryResult | null>(null);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
   const [calculating, setCalculating] = useState(false);
@@ -265,7 +273,40 @@ export function ContactForm({
             )}
           </div>
 
-          {/* Notes */}
+          {/* Company section */}
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center gap-3 mb-4">
+              <Checkbox
+                id="isCompany"
+                checked={isCompany}
+                onCheckedChange={(checked) => {
+                  setIsCompany(checked === true);
+                  if (!checked) { onCompanyNameChange(""); onCompanyNipChange(""); }
+                }}
+              />
+              <label htmlFor="isCompany" className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                <Briefcase className="w-4 h-4 text-primary" />
+                Kupuję jako firma
+              </label>
+            </div>
+            {isCompany && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName" className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    Nazwa firmy
+                  </Label>
+                  <Input id="companyName" placeholder="Firma Sp. z o.o." value={companyName} onChange={(e) => onCompanyNameChange(e.target.value)} className="h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="companyNip">NIP</Label>
+                  <Input id="companyNip" placeholder="123-456-78-90" value={companyNip} onChange={(e) => onCompanyNipChange(e.target.value)} className="h-12" />
+                </div>
+              </div>
+            )}
+          </div>
+
+
           <div className="pt-4 border-t border-border">
             <div className="space-y-2">
               <Label htmlFor="notes" className="flex items-center gap-2">

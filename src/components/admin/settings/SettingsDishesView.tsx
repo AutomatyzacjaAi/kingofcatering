@@ -36,14 +36,14 @@ interface DishIngredient {
 interface Dish {
   id: string; name: string; description: string; longDescription: string;
   image: string | null; priceNetto: number; vatRate: number; priceBrutto: number;
-  pricePerUnit: number; unitLabel: string; minQuantity: number; icon: string;
+  pricePerUnit: number; pricePerUnitOnSite: number | null; unitLabel: string; minQuantity: number; icon: string;
   categorySlug: string | null; contents: string[]; allergens: string[];
   dietaryTags: string[]; productType: string;
   dishIngredients: DishIngredient[];
 }
 
 interface BundleVariant {
-  id: string; name: string; description: string; price: number;
+  id: string; name: string; description: string; price: number; priceOnSite: number | null;
   allergens: string[]; dietaryTags: string[]; sortOrder: number;
   dishId: string | null;
 }
@@ -67,7 +67,7 @@ interface ConfigGroup {
 
 interface ConfigSet {
   id: string; name: string; description: string; longDescription: string;
-  image: string | null; pricePerPerson: number; minPersons: number;
+  image: string | null; pricePerPerson: number; pricePerPersonOnSite: number | null; minPersons: number;
   icon: string; categorySlug: string | null; groups: ConfigGroup[];
 }
 
@@ -386,6 +386,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
   const [formDietaryTags, setFormDietaryTags] = useState<string[]>([]);
   const [formContents, setFormContents] = useState("");
   const [formIngredients, setFormIngredients] = useState<DishIngredient[]>([]);
+  const [formPriceBruttoOnSite, setFormPriceBruttoOnSite] = useState("");
 
   const filtered = dishes.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -405,7 +406,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
     setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPriceNetto(""); setFormVat(8);
     setFormPriceBrutto(""); setFormUnitLabel("szt."); setFormMinQty("1"); setFormIcon("🍽️");
     setFormCategorySlug(null); setFormAllergens([]); setFormDietaryTags([]); setFormContents("");
-    setFormIngredients([]); setShowForm(false); setEditingId(null);
+    setFormIngredients([]); setFormPriceBruttoOnSite(""); setShowForm(false); setEditingId(null);
   };
 
   const startEdit = (d: Dish) => {
@@ -415,6 +416,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
     setFormIcon(d.icon); setFormCategorySlug(d.categorySlug); setFormAllergens([...d.allergens]);
     setFormDietaryTags([...d.dietaryTags]); setFormContents(d.contents.join("\n"));
     setFormIngredients([...d.dishIngredients]);
+    setFormPriceBruttoOnSite(d.pricePerUnitOnSite != null ? d.pricePerUnitOnSite.toString() : "");
     setShowForm(true);
   };
 
@@ -425,7 +427,9 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
     const payload = {
       name: formName.trim(), description: formDesc.trim(), long_description: formLongDesc.trim(),
       image_url: formImage, price_netto: parseFloat(formPriceNetto) || 0, vat_rate: formVat,
-      price_brutto: priceBrutto, price_per_unit: priceBrutto, unit_label: formUnitLabel,
+      price_brutto: priceBrutto, price_per_unit: priceBrutto,
+      price_per_unit_on_site: formPriceBruttoOnSite ? parseFloat(formPriceBruttoOnSite) || null : null,
+      unit_label: formUnitLabel,
       min_quantity: parseInt(formMinQty) || 1, icon: formIcon, category_slug: formCategorySlug,
       allergens: formAllergens, dietary_tags: formDietaryTags,
       contents: formContents.split("\n").map(s => s.trim()).filter(Boolean),
@@ -504,7 +508,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} placeholder="Szczegółowy opis widoczny w modalu..." />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena netto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} />
@@ -519,6 +523,10 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               <div className="space-y-1">
                 <Label className="text-xs">Cena brutto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena brutto sala (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceBruttoOnSite} onChange={(e) => setFormPriceBruttoOnSite(e.target.value)} placeholder="—" />
               </div>
             </div>
 
@@ -666,7 +674,7 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
     }
     const v: BundleVariant = {
       id: crypto.randomUUID(), name: dish.name, description: dish.description,
-      price: dish.priceBrutto, allergens: [...dish.allergens],
+      price: dish.priceBrutto, priceOnSite: null, allergens: [...dish.allergens],
       dietaryTags: [...dish.dietaryTags], sortOrder: formVariants.length,
       dishId: dish.id,
     };
@@ -708,6 +716,7 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
     if (formVariants.length > 0) {
       const variantsPayload = formVariants.map((v, i) => ({
         bundle_id: bundleId!, name: v.name, description: v.description, price: v.price,
+        price_on_site: v.priceOnSite,
         allergens: v.allergens, dietary_tags: v.dietaryTags, sort_order: i,
         dish_id: v.dishId || null,
       }));
@@ -798,11 +807,16 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
                 const linkedDish = v.dishId ? dishes.find(d => d.id === v.dishId) : null;
                 return (
                   <div key={v.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
-                    <div>
+                    <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{v.name}</span>
                         <span className="text-xs text-muted-foreground">{v.price.toFixed(2)} zł</span>
+                        {v.priceOnSite != null && <span className="text-xs text-muted-foreground">(sala: {v.priceOnSite.toFixed(2)} zł)</span>}
                         {linkedDish && <Badge variant="outline" className="text-[10px] px-1.5 py-0">🔗 danie</Badge>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input type="number" step="0.01" value={v.price} onChange={(e) => setFormVariants(formVariants.map(fv => fv.id === v.id ? {...fv, price: parseFloat(e.target.value) || 0} : fv))} className="h-7 w-24 text-xs" placeholder="Cena" />
+                        <Input type="number" step="0.01" value={v.priceOnSite ?? ""} onChange={(e) => setFormVariants(formVariants.map(fv => fv.id === v.id ? {...fv, priceOnSite: e.target.value ? parseFloat(e.target.value) : null} : fv))} className="h-7 w-24 text-xs" placeholder="Cena sala" />
                       </div>
                       {v.allergens.length > 0 && (
                         <div className="flex gap-1 mt-0.5">
@@ -873,6 +887,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   const [formLongDesc, setFormLongDesc] = useState("");
   const [formImage, setFormImage] = useState<string | null>(null);
   const [formPrice, setFormPrice] = useState("");
+  const [formPriceOnSite, setFormPriceOnSite] = useState("");
   const [formMinPersons, setFormMinPersons] = useState("10");
   const [formIcon, setFormIcon] = useState("🍽️");
   const [formCategorySlug, setFormCategorySlug] = useState<string | null>(null);
@@ -895,6 +910,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   };
   const resetForm = () => {
     setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPrice("");
+    setFormPriceOnSite("");
     setFormMinPersons("10"); setFormIcon("🍽️"); setFormCategorySlug(null); setFormGroups([]);
     setShowForm(false); setEditingId(null); resetGroupForm();
   };
@@ -931,7 +947,9 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
   const startEdit = (cs: ConfigSet) => {
     setEditingId(cs.id); setFormName(cs.name); setFormDesc(cs.description); setFormLongDesc(cs.longDescription);
-    setFormImage(cs.image); setFormPrice(cs.pricePerPerson.toString()); setFormMinPersons(cs.minPersons.toString());
+    setFormImage(cs.image); setFormPrice(cs.pricePerPerson.toString());
+    setFormPriceOnSite(cs.pricePerPersonOnSite != null ? cs.pricePerPersonOnSite.toString() : "");
+    setFormMinPersons(cs.minPersons.toString());
     setFormIcon(cs.icon); setFormCategorySlug(cs.categorySlug); setFormGroups([...cs.groups]); setShowForm(true);
   };
 
@@ -941,6 +959,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
     const setPayload = {
       name: formName.trim(), description: formDesc.trim(), long_description: formLongDesc.trim(),
       image_url: formImage, price_per_person: parseFloat(formPrice) || 0,
+      price_per_person_on_site: formPriceOnSite ? parseFloat(formPriceOnSite) || null : null,
       min_persons: parseInt(formMinPersons) || 10, icon: formIcon, category_slug: formCategorySlug,
     };
 
@@ -1025,10 +1044,14 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
             <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena za osobę (zł)</Label>
                 <Input type="number" step="0.01" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena za osobę sala (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceOnSite} onChange={(e) => setFormPriceOnSite(e.target.value)} placeholder="—" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Min. osób</Label>
@@ -1193,7 +1216,8 @@ const SettingsDishesView = () => {
     const dishesList: Dish[] = (dishData ?? []).map(d => ({
       id: d.id, name: d.name, description: d.description ?? "", longDescription: d.long_description ?? "",
       image: d.image_url, priceNetto: Number(d.price_netto), vatRate: d.vat_rate, priceBrutto: Number(d.price_brutto),
-      pricePerUnit: Number(d.price_per_unit ?? d.price_brutto), unitLabel: d.unit_label ?? "szt.",
+      pricePerUnit: Number(d.price_per_unit ?? d.price_brutto), pricePerUnitOnSite: d.price_per_unit_on_site != null ? Number(d.price_per_unit_on_site) : null,
+      unitLabel: d.unit_label ?? "szt.",
       minQuantity: d.min_quantity ?? 1, icon: d.icon ?? "🍽️", categorySlug: d.category_slug,
       contents: (d.contents as string[]) ?? [], allergens: (d.allergens as string[]) ?? [],
       dietaryTags: (d.dietary_tags as string[]) ?? [], productType: d.product_type,
@@ -1208,7 +1232,7 @@ const SettingsDishesView = () => {
       basePrice: Number(b.base_price), minQuantity: b.min_quantity, icon: b.icon ?? "🍽️",
       categorySlug: b.category_slug,
       variants: ((b.bundle_variants as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((v: any) => ({
-        id: v.id, name: v.name, description: v.description ?? "", price: Number(v.price),
+        id: v.id, name: v.name, description: v.description ?? "", price: Number(v.price), priceOnSite: v.price_on_site != null ? Number(v.price_on_site) : null,
         allergens: (v.allergens as string[]) ?? [], dietaryTags: (v.dietary_tags as string[]) ?? [],
         sortOrder: v.sort_order, dishId: v.dish_id || null,
       })),
@@ -1217,7 +1241,8 @@ const SettingsDishesView = () => {
     const { data: setData } = await supabase.from("configurable_sets").select("*, config_groups(*, config_group_options(*))").order("created_at");
     setConfigSets((setData ?? []).map(s => ({
       id: s.id, name: s.name, description: s.description ?? "", longDescription: s.long_description ?? "",
-      image: s.image_url, pricePerPerson: Number(s.price_per_person), minPersons: s.min_persons,
+      image: s.image_url, pricePerPerson: Number(s.price_per_person), pricePerPersonOnSite: s.price_per_person_on_site != null ? Number(s.price_per_person_on_site) : null,
+      minPersons: s.min_persons,
       icon: s.icon ?? "🍽️", categorySlug: s.category_slug,
       groups: ((s.config_groups as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((g: any) => ({
         id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, sortOrder: g.sort_order,
@@ -1233,7 +1258,8 @@ const SettingsDishesView = () => {
       id: e.id, name: e.name, description: e.description ?? "", longDescription: e.long_description ?? "",
       image: e.image_url, category: e.category, extrasCategoryId: (e as any).extras_category_id || null,
       price: Number(e.price), priceNetto: Number(e.price_netto ?? 0), vatRate: e.vat_rate ?? 23,
-      priceBrutto: Number(e.price_brutto ?? e.price), unitLabel: e.unit_label ?? "szt.",
+      priceBrutto: Number(e.price_brutto ?? e.price), priceOnSite: e.price_on_site != null ? Number(e.price_on_site) : null,
+      unitLabel: e.unit_label ?? "szt.",
       priceLabel: e.price_label ?? "", requiresPersonCount: e.requires_person_count ?? false,
       duration: e.duration, contents: (e.contents as string[]) ?? [],
       foodCost: Number(e.food_cost ?? 0),
