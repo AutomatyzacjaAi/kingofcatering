@@ -11,6 +11,7 @@ export type OrderItem = {
 };
 
 export type CateringOrder = {
+  cateringType: CateringType;
   guestCount: number;
   eventType: string;
   eventDate: string;
