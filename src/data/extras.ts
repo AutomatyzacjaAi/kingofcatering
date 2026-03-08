@@ -35,6 +35,7 @@ export type WaiterServiceOption = {
   image?: string;
   duration: string;
   price: number;
+  priceOnSite?: number | null;
   contents?: string[];
   extrasCategoryId?: string;
 };
