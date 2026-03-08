@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Send, Users, Phone, Mail, PartyPopper, MapPin, Check, Calendar,
-  UtensilsCrossed, Sparkles, Package, CreditCard, Banknote, FileText, Receipt
+  UtensilsCrossed, Sparkles, Package, CreditCard, Banknote, FileText, Receipt, Truck
 } from "lucide-react";
 import type { Product, Category, EventType } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption, PaymentMethod } from "@/data/extras";
