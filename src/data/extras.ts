@@ -20,6 +20,7 @@ export type PackagingOption = {
   longDescription?: string;
   image?: string;
   price: number;
+  priceOnSite?: number | null;
   priceLabel: string;
   requiresPersonCount?: boolean;
   contents?: string[];
