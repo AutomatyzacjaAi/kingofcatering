@@ -1053,8 +1053,11 @@ const InlineAmountInput = ({ value, onChange }: { value: number; onChange: (v: n
 };
 
 // ===== ADD ORDER SHEET =====
+interface DbClient { id: string; first_name: string; last_name: string; email: string; phone: string; address: string | null; city: string | null; company_name: string | null; }
+
 const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () => void; onAdd: (order: Order) => void }) => {
   const [clientSearch, setClientSearch] = useState("");
+  const [dbClients, setDbClients] = useState<DbClient[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -1067,17 +1070,24 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
   const [showProducts, setShowProducts] = useState(false);
   const [productSearch, setProductSearch] = useState("");
 
-  const filteredClients = mockClients.filter(c =>
-    `${c.firstName} ${c.lastName}`.toLowerCase().includes(clientSearch.toLowerCase()) ||
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("clients").select("id, first_name, last_name, email, phone, address, city, company_name").then(({ data }) => {
+      if (data) setDbClients(data);
+    });
+  }, [open]);
+
+  const filteredClients = dbClients.filter(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(clientSearch.toLowerCase()) ||
     c.email.toLowerCase().includes(clientSearch.toLowerCase()) ||
-    c.companyName.toLowerCase().includes(clientSearch.toLowerCase())
+    (c.company_name || "").toLowerCase().includes(clientSearch.toLowerCase())
   );
 
   const selectClient = (id: string) => {
-    const c = mockClients.find(cl => cl.id === id);
+    const c = dbClients.find(cl => cl.id === id);
     if (!c) return;
     setSelectedClientId(id);
-    setClientName(`${c.firstName} ${c.lastName}`);
+    setClientName(`${c.first_name} ${c.last_name}`);
     setClientEmail(c.email);
     setClientPhone(c.phone);
     if (c.address && c.city) setDeliveryAddress(`${c.address}, ${c.city}`);
