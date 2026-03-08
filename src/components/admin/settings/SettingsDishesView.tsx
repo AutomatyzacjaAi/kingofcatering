@@ -911,6 +911,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   };
   const resetForm = () => {
     setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPrice("");
+    setFormPriceOnSite("");
     setFormMinPersons("10"); setFormIcon("🍽️"); setFormCategorySlug(null); setFormGroups([]);
     setShowForm(false); setEditingId(null); resetGroupForm();
   };
