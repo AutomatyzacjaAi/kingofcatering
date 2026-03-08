@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, GripVertical, icons } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 type LucideIconName = keyof typeof icons;
 
@@ -20,16 +22,8 @@ interface EventType {
   id: string;
   name: string;
   icon: LucideIconName;
+  sort_order: number;
 }
-
-const defaultEvents: EventType[] = [
-  { id: "1", name: "Wesele", icon: "Heart" },
-  { id: "2", name: "Konferencja", icon: "Presentation" },
-  { id: "3", name: "Urodziny", icon: "Gift" },
-  { id: "4", name: "Spotkanie firmowe", icon: "Briefcase" },
-  { id: "5", name: "Impreza", icon: "Music" },
-  { id: "6", name: "Inne", icon: "CalendarDays" },
-];
 
 const IconPicker = ({ value, onChange }: { value: LucideIconName; onChange: (icon: LucideIconName) => void }) => {
   const [open, setOpen] = useState(false);
@@ -103,28 +97,80 @@ const IconPicker = ({ value, onChange }: { value: LucideIconName; onChange: (ico
 };
 
 const SettingsEventsView = () => {
-  const [events, setEvents] = useState<EventType[]>(defaultEvents);
+  const [events, setEvents] = useState<EventType[]>([]);
   const [newEventName, setNewEventName] = useState("");
   const [newEventIcon, setNewEventIcon] = useState<LucideIconName>("CalendarDays");
+  const [loading, setLoading] = useState(true);
 
-  const addEvent = () => {
+  useEffect(() => {
+    const fetch = async () => {
+      const { data, error } = await supabase
+        .from("event_types")
+        .select("*")
+        .order("sort_order", { ascending: true });
+
+      if (data) {
+        setEvents(data.map((e) => ({
+          id: e.id,
+          name: e.name,
+          icon: (e.icon as LucideIconName) || "CalendarDays",
+          sort_order: e.sort_order,
+        })));
+      }
+      if (error) console.error(error);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const addEvent = async () => {
     if (!newEventName.trim()) return;
-    setEvents([...events, { id: Date.now().toString(), name: newEventName.trim(), icon: newEventIcon }]);
+    const nextOrder = events.length > 0 ? Math.max(...events.map((e) => e.sort_order)) + 1 : 0;
+
+    const { data, error } = await supabase
+      .from("event_types")
+      .insert({ name: newEventName.trim(), icon: newEventIcon, sort_order: nextOrder })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Błąd: " + error.message);
+      return;
+    }
+
+    setEvents([...events, { id: data.id, name: data.name, icon: data.icon as LucideIconName, sort_order: data.sort_order }]);
     setNewEventName("");
     setNewEventIcon("CalendarDays");
+    toast.success("Dodano typ wydarzenia");
   };
 
-  const removeEvent = (id: string) => {
+  const removeEvent = async (id: string) => {
+    const { error } = await supabase.from("event_types").delete().eq("id", id);
+    if (error) {
+      toast.error("Błąd: " + error.message);
+      return;
+    }
     setEvents(events.filter((e) => e.id !== id));
+    toast.success("Usunięto typ wydarzenia");
   };
 
-  const updateEventName = (id: string, name: string) => {
+  const updateEventName = async (id: string, name: string) => {
     setEvents(events.map((e) => (e.id === id ? { ...e, name } : e)));
+    await supabase.from("event_types").update({ name }).eq("id", id);
   };
 
-  const updateEventIcon = (id: string, icon: LucideIconName) => {
+  const updateEventIcon = async (id: string, icon: LucideIconName) => {
     setEvents(events.map((e) => (e.id === id ? { ...e, icon } : e)));
+    await supabase.from("event_types").update({ icon }).eq("id", id);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -175,8 +221,6 @@ const SettingsEventsView = () => {
             </div>
           </CardContent>
         </Card>
-
-        <Button className="w-full sm:w-auto">Zapisz zmiany</Button>
       </div>
     </div>
   );
