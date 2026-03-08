@@ -1404,6 +1404,8 @@ const OrdersView = () => {
 
         return {
           id: o.order_number,
+          dbId: o.id,
+          clientId: o.client_id || null,
           client: o.client_name,
           email: o.client_email || "",
           phone: o.client_phone || "",
