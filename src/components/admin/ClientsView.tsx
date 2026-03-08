@@ -65,6 +65,8 @@ const ClientsView = () => {
   const [selectedClient, setSelectedClient] = useState<ClientData | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [addForm, setAddForm] = useState<ClientData>(newClientForm());
 
   const fetchClients = async () => {
     const { data: dbClients, error } = await supabase
