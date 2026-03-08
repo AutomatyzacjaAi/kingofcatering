@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download } from "lucide-react";
-import { generateOfferPdf, generateShoppingListPdf, generateFoodCostPdf, generateKitchenPdf, generateSummaryPdf, type SummaryDocType } from "@/lib/generatePdf";
+import { generateOfferPdf, generateShoppingListPdf, generateFoodCostPdf, generateKitchenPdf, generateSummaryPdf, type SummaryDocType, type FoodCostExtra as FoodCostExtraPdf } from "@/lib/generatePdf";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { LucideIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
