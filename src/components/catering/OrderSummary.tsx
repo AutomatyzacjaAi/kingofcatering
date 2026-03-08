@@ -97,7 +97,7 @@ export function OrderSummary({
         productLines.push({
           name: product.name,
           quantity: data.quantity,
-          price: product.pricePerPerson * data.quantity,
+          price: getConfigurablePrice(product, ct) * data.quantity,
           note: order.productNotes[productId] || undefined,
           time: order.servingTimes[productId] || undefined,
         });
