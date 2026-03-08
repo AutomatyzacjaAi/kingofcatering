@@ -1099,7 +1099,6 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">{cs.name}</p>
-                    <p className="text-sm font-medium">{cs.name}</p>
                     {cs.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{cs.categorySlug}</Badge>}
                   </div>
                   <p className="text-xs text-muted-foreground">{cs.groups.length} grup · min. {cs.minPersons} os.</p>
