@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download } from "lucide-react";
+import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download, Clock, ChevronRight } from "lucide-react";
 import { generateOfferPdf, generateShoppingListPdf, generateFoodCostPdf, generateKitchenPdf, generateSummaryPdf, type SummaryDocType, type FoodCostExtra as FoodCostExtraPdf } from "@/lib/generatePdf";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { LucideIcon } from "lucide-react";
@@ -15,6 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/sonner";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { FullscreenDateTimePicker } from "@/components/catering/FullscreenDateTimePicker";
 
 type OrderStatus = "Nowe zamówienie" | "Nowa oferta" | "Potwierdzone" | "W realizacji" | "Zrealizowane" | "Anulowane";
 
@@ -1368,7 +1371,17 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
   const [clientPhone, setClientPhone] = useState("");
   const [event, setEvent] = useState("");
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("blocked_dates").select("blocked_date").then(({ data }) => {
+      if (data) setBlockedDates(data.map(d => new Date(d.blocked_date)));
+    });
+  }, [open]);
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<OrderItem[]>([]);
   const [showProducts, setShowProducts] = useState(false);
@@ -1471,7 +1484,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
     // Reset
     setSelectedClientId(null); setClientName(""); setClientEmail(""); setClientPhone("");
-    setEvent(""); setDate(""); setDeliveryAddress(""); setNotes(""); setItems([]);
+    setEvent(""); setDate(""); setTime(""); setDeliveryAddress(""); setNotes(""); setItems([]);
     setClientSearch("");
     onClose();
   };
@@ -1555,7 +1568,42 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                   {eventTypes.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <button
+                onClick={() => setIsDatePickerOpen(true)}
+                className={cn(
+                  "w-full flex items-center justify-between p-3 rounded-lg border transition-all text-sm",
+                  "hover:border-primary focus:outline-none",
+                  date && time ? "border-primary bg-accent" : "border-input"
+                )}
+              >
+                <div className="text-left">
+                  {date && time ? (
+                    <>
+                      <p className="font-medium text-foreground">
+                        {format(new Date(date), "d MMMM yyyy", { locale: pl })}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {time}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground">Wybierz datę i godzinę</p>
+                  )}
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <FullscreenDateTimePicker
+                isOpen={isDatePickerOpen}
+                selectedDate={date ? new Date(date) : undefined}
+                selectedTime={time}
+                onConfirm={(d, t) => {
+                  setDate(format(d, "yyyy-MM-dd"));
+                  setTime(t);
+                }}
+                onClose={() => setIsDatePickerOpen(false)}
+                busyDates={blockedDates}
+              />
             </div>
           </div>
 
