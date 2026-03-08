@@ -2,7 +2,7 @@ import { useMemo, useCallback } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useCateringOrder } from "@/hooks/useCateringOrder";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { submitOrder } from "@/lib/submitOrder";
+import { submitOrder, type SubmissionType } from "@/lib/submitOrder";
 import { MobileNav } from "./MobileNav";
 import { EventDetails } from "./EventDetails";
 import { ProductsStep } from "./ProductsStep";
