@@ -2,7 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Phone, MessageSquare, MapPin, Building2, Home, Truck, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { User, Mail, Phone, MessageSquare, MapPin, Building2, Home, Truck, AlertCircle, CheckCircle2, Loader2, Briefcase } from "lucide-react";
 import { useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
