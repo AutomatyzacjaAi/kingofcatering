@@ -5,20 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { EventType } from "@/data/products";
+import type { CateringType } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { 
   Users, 
   CalendarDays, 
   ChevronRight, 
   Clock,
+  Truck,
+  Building2,
 } from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
 
 type EventDetailsProps = {
+  cateringType: CateringType;
   guestCount: number;
   eventType: string;
   eventDate: string;
   eventTime: string;
+  onCateringTypeChange: (type: CateringType) => void;
   onGuestCountChange: (count: number) => void;
   onEventTypeChange: (type: string) => void;
   onEventDateChange: (date: string) => void;
