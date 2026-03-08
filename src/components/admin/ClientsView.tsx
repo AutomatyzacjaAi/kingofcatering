@@ -38,6 +38,13 @@ export interface ClientData {
 
 type View = "list" | "detail";
 
+const newClientForm = (): ClientData => ({
+  id: crypto.randomUUID(), firstName: "", lastName: "", email: "", phone: "", phoneAlt: "",
+  companyName: "", nip: "", companyAddress: "", companyCity: "", companyPostalCode: "",
+  address: "", city: "", postalCode: "",
+  notes: "", orders: 0, totalSpent: "0,00 zł", lastOrder: "—", createdAt: "",
+});
+
 const fmtPLN = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtDate = (d: string) => {
   const date = new Date(d);
