@@ -335,18 +335,17 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
               {extra.image && <img src={extra.image} alt="" className="w-10 h-10 rounded-lg object-cover" />}
               <div>
                 <p className="text-sm font-medium">{extra.name}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{getTypeLabel(extra.category)}</Badge>
-                  {getCategoryName(extra.extrasCategoryId) && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{getCategoryName(extra.extrasCategoryId)}</Badge>
-                  )}
-                  <span className="text-xs text-muted-foreground">{extra.priceBrutto.toFixed(2)} zł</span>
-                </div>
+                {getCategoryName(extra.extrasCategoryId) && (
+                  <p className="text-xs text-muted-foreground">{getCategoryName(extra.extrasCategoryId)}</p>
+                )}
               </div>
             </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => startEdit(extra)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
-              <button onClick={() => removeExtra(extra.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-primary">{extra.priceBrutto.toFixed(2)} zł</span>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => startEdit(extra)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                <button onClick={() => removeExtra(extra.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
             </div>
           </div>
         ))}
