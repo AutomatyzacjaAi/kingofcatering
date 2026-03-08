@@ -103,7 +103,6 @@ export function ProductsStep({
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span className="text-primary">{categoryIcons[category.icon] || <Salad className="w-4 h-4" />}</span>
                   <span className="text-sm">{category.name}</span>
                   {itemCount > 0 && (
                     <span className={cn(
