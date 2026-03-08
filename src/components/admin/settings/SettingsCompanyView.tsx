@@ -18,6 +18,7 @@ const SettingsCompanyView = () => {
   const [bankAccount, setBankAccount] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -38,6 +39,7 @@ const SettingsCompanyView = () => {
         setBankAccount(data.bank_account || "");
         setLogoUrl((data as any).logo_url || null);
         setFaviconUrl((data as any).favicon_url || null);
+        setPrivacyPolicyUrl((data as any).privacy_policy_url || "");
       } else if (error && error.code === "PGRST116") {
         // No row yet — will insert on save
       }
@@ -121,6 +123,7 @@ const SettingsCompanyView = () => {
       bank_account: bankAccount,
       logo_url: logoUrl,
       favicon_url: faviconUrl,
+      privacy_policy_url: privacyPolicyUrl || null,
     };
 
     let error;
@@ -281,6 +284,11 @@ const SettingsCompanyView = () => {
             <div className="space-y-2">
               <Label htmlFor="bankAccount">Numer konta bankowego</Label>
               <Input id="bankAccount" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="privacyPolicy">Link do regulaminu / polityki prywatności</Label>
+              <Input id="privacyPolicy" placeholder="https://example.com/regulamin" value={privacyPolicyUrl} onChange={(e) => setPrivacyPolicyUrl(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Wyświetlany w formularzu zamówienia do akceptacji</p>
             </div>
           </CardContent>
         </Card>
