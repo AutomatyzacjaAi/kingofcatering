@@ -1321,7 +1321,7 @@ const OrdersView = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [view, setView] = useState<"list" | "detail" | "edit" | "summary" | "document">("list");
+  const [view, setView] = useState<"list" | "detail" | "edit" | "document">("list");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedDocType, setSelectedDocType] = useState<DocType>("offer");
   const [showAddOrder, setShowAddOrder] = useState(false);
