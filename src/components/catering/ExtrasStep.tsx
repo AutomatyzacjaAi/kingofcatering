@@ -227,8 +227,9 @@ function ExtrasListSection({
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground text-sm">{extra.name}</h3>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{extra.description}</p>
-                  <span className="text-sm font-bold text-primary">{extra.price.toFixed(0)} zł / {extra.unitLabel}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-sm font-bold text-primary">{extra.price.toFixed(0)} zł / {extra.unitLabel}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {quantity > 0 && <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">{quantity}</Badge>}
@@ -292,31 +293,29 @@ function ExtraItemModal({ item, isOpen, onClose, quantity, onQuantityChange }: {
 
 function PackagingSection({ options, selectedId, onOptionClick }: { options: PackagingOption[]; selectedId: string | null; onOptionClick: (option: PackagingOption) => void; }) {
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Wybierz sposób pakowania i serwowania</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-        {options.map((option) => {
-          const isSelected = selectedId === option.id;
-          const hasImage = option.image;
-          return (
-            <Card key={option.id} onClick={() => onOptionClick(option)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
-                  <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                    {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{option.description}</p>
-                    <Badge variant={option.price === 0 ? "secondary" : "outline"} className={cn("mt-1", option.price === 0 && "bg-green-100 text-green-700")}>{option.priceLabel}</Badge>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+      {options.map((option) => {
+        const isSelected = selectedId === option.id;
+        const hasImage = option.image;
+        return (
+          <Card key={option.id} onClick={() => onOptionClick(option)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-3">
+                <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
+                  {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-sm font-bold text-primary">{option.priceLabel}</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -371,14 +370,20 @@ function PackagingModal({ option, isOpen, onClose, isSelected, personCount, onSe
 
 function WaiterServiceSection({ options, selectedId, onOptionClick, onNoServiceClick }: { options: WaiterServiceOption[]; selectedId: string | null; onOptionClick: (option: WaiterServiceOption) => void; onNoServiceClick: () => void; }) {
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Wybierz pakiet obsługi kelnerskiej (opcjonalne)</p>
+    <div className="space-y-3">
       <Card onClick={onNoServiceClick} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md", !selectedId && "ring-2 ring-primary")}>
         <CardContent className="p-3">
           <div className="flex items-center gap-3">
-            <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0", !selectedId ? "bg-primary/10" : "bg-muted")}><span className="text-2xl">🚫</span></div>
-            <div className="flex-1"><h3 className="font-semibold text-foreground text-sm">Bez obsługi</h3><p className="text-xs text-muted-foreground">Samodzielna obsługa bufetu</p></div>
-            {!selectedId && <Check className="w-5 h-5 text-primary shrink-0" />}
+            <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0", !selectedId ? "bg-primary/10" : "bg-muted")}>
+              <X className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground text-sm">Bez obsługi</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-sm font-bold text-primary">W cenie</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
           </div>
         </CardContent>
       </Card>
@@ -395,8 +400,9 @@ function WaiterServiceSection({ options, selectedId, onOptionClick, onNoServiceC
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{option.description}</p>
-                    <span className="text-sm font-bold text-primary">{option.price.toFixed(0)} zł / {option.duration}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-sm font-bold text-primary">{option.price.toFixed(0)} zł / {option.duration}</span>
+                    </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                 </div>

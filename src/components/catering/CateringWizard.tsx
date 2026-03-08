@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
+import { toast } from "@/components/ui/sonner";
 import { useCateringOrder } from "@/hooks/useCateringOrder";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { submitOrder } from "@/lib/submitOrder";
@@ -74,17 +75,50 @@ export function CateringWizard() {
     );
   };
 
-  const canGoNext = (): boolean => {
+  const getValidationErrors = useCallback((): string[] => {
+    const errors: string[] = [];
     if (currentStep === 0) {
-      return !!(order.guestCount > 0 && order.eventType && order.eventDate);
+      if (!order.guestCount || order.guestCount <= 0) errors.push("Podaj liczbę gości");
+      if (!order.eventType) errors.push("Wybierz rodzaj wydarzenia");
+      if (!order.eventDate) errors.push("Wybierz datę wydarzenia");
     }
     if (currentStep === 2) {
-      return !!order.selectedPackaging;
+      // Check required extras categories
+      const requiredCats = extrasCategories.filter(c => c.required);
+      for (const cat of requiredCats) {
+        const catExtras = extraItems.filter(e => e.extrasCategoryId === cat.id);
+        const catPkgs = packagingOptions.filter(p => p.extrasCategoryId === cat.id);
+        const catWaiters = waiterServiceOptions.filter(w => w.extrasCategoryId === cat.id);
+        
+        const hasExtraSelected = catExtras.some(e => (order.selectedExtras[e.id] || 0) > 0);
+        const hasPkgSelected = catPkgs.some(p => order.selectedPackaging === p.id);
+        const hasWaiterSelected = catWaiters.some(w => order.selectedWaiterService === w.id);
+        
+        if (!hasExtraSelected && !hasPkgSelected && !hasWaiterSelected) {
+          errors.push(`Uzupełnij kategorię „${cat.name}"`);
+        }
+      }
     }
     if (currentStep === 3) {
-      return !!(order.contactName && order.contactEmail && order.contactPhone && order.contactCity && order.contactStreet && order.contactBuildingNumber);
+      if (!order.contactName) errors.push("Podaj imię i nazwisko");
+      if (!order.contactEmail) errors.push("Podaj adres e-mail");
+      if (!order.contactPhone) errors.push("Podaj numer telefonu");
+      if (!order.contactCity) errors.push("Podaj miasto");
+      if (!order.contactStreet) errors.push("Podaj ulicę");
+      if (!order.contactBuildingNumber) errors.push("Podaj numer budynku");
     }
-    return true;
+    return errors;
+  }, [currentStep, order, extrasCategories, extraItems, packagingOptions, waiterServiceOptions]);
+
+  const canGoNext = (): boolean => getValidationErrors().length === 0;
+
+  const handleNext = () => {
+    const errors = getValidationErrors();
+    if (errors.length > 0) {
+      toast.error(errors.join("\n"), { duration: 4000 });
+      return;
+    }
+    nextStep();
   };
 
   const getNextLabel = () => {
@@ -215,9 +249,8 @@ export function CateringWizard() {
         steps={steps}
         currentStep={currentStep}
         totalSteps={steps.length}
-        onNext={nextStep}
+        onNext={handleNext}
         onPrev={prevStep}
-        canGoNext={canGoNext()}
         nextLabel={getNextLabel()}
         showNav={!isLastStep}
         order={order}
