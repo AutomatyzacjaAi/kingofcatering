@@ -213,6 +213,48 @@ const SettingsFormView = () => {
     }));
   };
 
+  // ─── Extras categories CRUD ───
+  const addExtrasCategory = async () => {
+    if (!newExCatName.trim()) return;
+    const slug = newExCatName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-ąćęłńóśźż]/g, "");
+    const nextOrder = extrasCategories.length;
+
+    const { data, error } = await supabase
+      .from("extras_categories")
+      .insert({
+        name: newExCatName.trim(), description: newExCatDesc.trim(),
+        icon: newExCatIcon, slug, sort_order: nextOrder, is_required: newExCatRequired,
+      })
+      .select()
+      .single();
+
+    if (error) { toast.error("Błąd: " + error.message); return; }
+    setExtrasCategories([...extrasCategories, {
+      id: data.id, name: data.name, description: (data as any).description || "",
+      icon: ((data as any).icon as LucideIconName) || "Sparkles", slug: (data as any).slug,
+      isRequired: (data as any).is_required ?? false,
+    }]);
+    setNewExCatName(""); setNewExCatDesc(""); setNewExCatIcon("Sparkles"); setNewExCatRequired(false);
+    setShowExCatForm(false);
+    toast.success("Dodano kategorię dodatków");
+  };
+
+  const removeExtrasCategory = async (id: string) => {
+    const { error } = await supabase.from("extras_categories").delete().eq("id", id);
+    if (error) { toast.error("Błąd: " + error.message); return; }
+    setExtrasCategories(extrasCategories.filter(c => c.id !== id));
+    toast.success("Usunięto kategorię dodatków");
+  };
+
+  const toggleExtrasCategoryRequired = async (id: string) => {
+    const cat = extrasCategories.find(c => c.id === id);
+    if (!cat) return;
+    const newVal = !cat.isRequired;
+    const { error } = await supabase.from("extras_categories").update({ is_required: newVal }).eq("id", id);
+    if (error) { toast.error("Błąd: " + error.message); return; }
+    setExtrasCategories(extrasCategories.map(c => c.id === id ? { ...c, isRequired: newVal } : c));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -225,10 +267,11 @@ const SettingsFormView = () => {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Formularz</h1>
-        <p className="text-muted-foreground text-sm">Zarządzaj kategoriami produktów i ich dostępnością dla rodzajów wydarzeń</p>
+        <p className="text-muted-foreground text-sm">Zarządzaj kategoriami produktów, dodatków i ich dostępnością</p>
       </div>
 
       <div className="space-y-6">
+        {/* Product categories */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -283,6 +326,87 @@ const SettingsFormView = () => {
           </CardContent>
         </Card>
 
+        {/* Extras categories */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Kategorie dodatków</CardTitle>
+                <CardDescription>Zarządzaj kategoriami dodatków. Zaznacz "wymagane" aby klient musiał wybrać co najmniej jeden element z tej kategorii.</CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setShowExCatForm(!showExCatForm)}>
+                <Plus className="w-4 h-4 mr-1" />
+                Dodaj kategorię
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {showExCatForm && (
+              <div className="p-4 rounded-lg border border-border bg-muted/20 space-y-3">
+                <div className="flex items-start gap-3">
+                  <IconPickerSmall value={newExCatIcon} onChange={setNewExCatIcon} />
+                  <div className="flex-1 space-y-2">
+                    <Input value={newExCatName} onChange={(e) => setNewExCatName(e.target.value)} placeholder="Nazwa kategorii dodatków" />
+                    <Input value={newExCatDesc} onChange={(e) => setNewExCatDesc(e.target.value)} placeholder="Krótki opis (opcjonalnie)" />
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox checked={newExCatRequired} onCheckedChange={(v) => setNewExCatRequired(!!v)} className="w-4 h-4" />
+                      <span className="font-medium">Wymagane</span>
+                      <span className="text-muted-foreground text-xs">— klient musi wybrać min. 1 element</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={addExtrasCategory} disabled={!newExCatName.trim()}>Dodaj</Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowExCatForm(false)}>Anuluj</Button>
+                </div>
+              </div>
+            )}
+
+            {extrasCategories.map((cat) => {
+              const CatIcon = icons[cat.icon];
+              return (
+                <div key={cat.id} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-muted/30 group hover:bg-muted/50 transition-colors">
+                  <GripVertical className="w-4 h-4 text-muted-foreground/40 cursor-grab" />
+                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+                    <CatIcon className="w-4 h-4 text-accent-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{cat.name}</p>
+                      {cat.isRequired && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">
+                          <AlertCircle className="w-3 h-3" />
+                          Wymagane
+                        </span>
+                      )}
+                    </div>
+                    {cat.description && <p className="text-xs text-muted-foreground">{cat.description}</p>}
+                  </div>
+                  <button
+                    onClick={() => toggleExtrasCategoryRequired(cat.id)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors",
+                      cat.isRequired
+                        ? "bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/20"
+                        : "bg-muted/30 border-border text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {cat.isRequired ? "Wymagane ✓" : "Opcjonalne"}
+                  </button>
+                  <button
+                    onClick={() => removeExtrasCategory(cat.id)}
+                    className="p-1.5 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+            {extrasCategories.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Brak kategorii dodatków — dodaj pierwszą</p>}
+          </CardContent>
+        </Card>
+
+        {/* Event → category mappings */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Kategorie dla rodzajów wydarzeń</CardTitle>
