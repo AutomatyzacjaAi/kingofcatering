@@ -187,7 +187,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC3UTX", dbId: "", clientId: null, client: "Agnieszka Lewandowska", email: "a.lew@email.pl", phone: "+48 700 222 444",
     event: "Impreza firmowa", date: "20 sty 2026", deliveryAddress: "Hotel Marriott, Warszawa",
     amount: "4 648,00 zł", amountNum: 4648, status: "W realizacji", notes: "",
-    createdAt: "6 sty 2026", deliveryCost: 0, guestCount: 50,
+    createdAt: "6 sty 2026", deliveryCost: 0, guestCount: 50, discount: 0,
     items: [
       { name: "Zestaw nr 1 Klasyczny", quantity: 50, unit: "os.", pricePerUnit: 70, total: 3500, type: "configurable", foodCostPerUnit: 22,
         subItems: [
