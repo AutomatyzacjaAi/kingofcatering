@@ -406,7 +406,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
     setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPriceNetto(""); setFormVat(8);
     setFormPriceBrutto(""); setFormUnitLabel("szt."); setFormMinQty("1"); setFormIcon("🍽️");
     setFormCategorySlug(null); setFormAllergens([]); setFormDietaryTags([]); setFormContents("");
-    setFormIngredients([]); setShowForm(false); setEditingId(null);
+    setFormIngredients([]); setFormPriceBruttoOnSite(""); setShowForm(false); setEditingId(null);
   };
 
   const startEdit = (d: Dish) => {
