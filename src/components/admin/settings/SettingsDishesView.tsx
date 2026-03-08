@@ -395,6 +395,7 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
       id: editingId || Date.now().toString(), name: formName.trim(), image: formImage,
       priceNetto: parseFloat(formPriceNetto) || 0, vatRate: formVat,
       priceBrutto: parseFloat(formPriceBrutto) || 0, ingredients: formIngredients,
+      dietaryTags: formDietaryTags,
     };
     if (editingId) {
       setDishes(dishes.map((d) => (d.id === editingId ? dish : d)));
