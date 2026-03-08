@@ -189,6 +189,7 @@ async function fetchExtras(): Promise<{
         longDescription: e.long_description ?? undefined,
         image: e.image_url ?? undefined,
         price: Number(e.price),
+        priceOnSite: (e as any).price_on_site != null ? Number((e as any).price_on_site) : null,
         unitLabel: e.unit_label ?? "szt.",
         contents: (e.contents as string[]) ?? [],
         extrasCategoryId: e.extras_category_id ?? undefined,
