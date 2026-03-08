@@ -1,1 +1,4 @@
 project_id = "nzcbboigpstffizshcxm"
+
+[functions.calculate-delivery]
+verify_jwt = false
