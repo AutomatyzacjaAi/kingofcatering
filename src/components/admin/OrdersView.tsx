@@ -1588,16 +1588,19 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                   <Input placeholder="Szukaj produktu..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-9" autoFocus />
                 </div>
                 <div className="max-h-40 overflow-y-auto space-y-0.5">
-                  {filteredProducts.map(p => (
-                    <button key={p.name} onClick={() => addProduct(p)}
+                  {filteredCatalogAdd.map(p => (
+                    <button key={p.id} onClick={() => addProduct(p)}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
                     >
                       <span className="font-medium text-foreground">{p.name}</span>
                       <span className="text-muted-foreground text-xs">{fmtNum(p.defaultPrice)} zł/{p.unit}</span>
                     </button>
                   ))}
-                  {filteredProducts.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">Brak wyników</p>}
+                  {filteredCatalogAdd.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">Brak wyników</p>}
                 </div>
+                {configuringProduct && (
+                  <SubItemSelector product={configuringProduct} onConfirm={handleSubItemConfirm} onCancel={() => setConfiguringProduct(null)} />
+                )}
               </div>
             )}
 
