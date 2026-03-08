@@ -34,6 +34,7 @@ export type WaiterServiceOption = {
   duration: string;
   price: number;
   contents?: string[];
+  extrasCategoryId?: string;
 };
 
 export type ExtrasCategory = {
