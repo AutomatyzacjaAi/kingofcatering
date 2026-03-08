@@ -79,6 +79,7 @@ async function fetchProducts(): Promise<Product[]> {
       contents: (d.contents as string[]) ?? [],
       allergens: (d.allergens as string[]) ?? [],
       pricePerUnit: Number(d.price_per_unit ?? d.price_brutto),
+      pricePerUnitOnSite: (d as any).price_per_unit_on_site != null ? Number((d as any).price_per_unit_on_site) : null,
       unitLabel: d.unit_label ?? "szt.",
       minQuantity: d.min_quantity ?? 1,
       category: d.category_slug ?? "patery",
