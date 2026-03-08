@@ -281,8 +281,10 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Cena za 1 {newUnit} (zł)</Label>
-                <Input type="number" step="0.001" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0.00" />
+                <Label className="text-xs">
+                  {newUnit === "szt." ? "Cena za 1 szt. (zł)" : newUnit === "g" ? "Cena za 1 kg (zł)" : "Cena za 1 litr (zł)"}
+                </Label>
+                <Input type="number" step="0.01" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0.00" />
               </div>
             </div>
             <div className="space-y-1">
