@@ -3,12 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight, UtensilsCrossed } from "lucide-react";
 import type { Product } from "@/data/products";
+import type { CateringType } from "@/lib/pricing";
+import { getProductPrice, getSimplePrice, getVariantPrice, getConfigurablePrice } from "@/lib/pricing";
 
 type ProductCardProps = {
   product: Product;
   isSelected: boolean;
   selectedCount?: number;
   subtitle?: string;
+  cateringType: CateringType;
   onClick: () => void;
 };
 
