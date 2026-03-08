@@ -36,7 +36,7 @@ interface DishIngredient {
 interface Dish {
   id: string; name: string; description: string; longDescription: string;
   image: string | null; priceNetto: number; vatRate: number; priceBrutto: number;
-  pricePerUnit: number; unitLabel: string; minQuantity: number; icon: string;
+  pricePerUnit: number; pricePerUnitOnSite: number | null; unitLabel: string; minQuantity: number; icon: string;
   categorySlug: string | null; contents: string[]; allergens: string[];
   dietaryTags: string[]; productType: string;
   dishIngredients: DishIngredient[];
