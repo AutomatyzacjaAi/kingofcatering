@@ -1013,7 +1013,7 @@ const SummarySheet = ({ open, onClose, orders }: { open: boolean; onClose: () =>
           {/* Download */}
           <Button className="w-full" size="lg" onClick={handleDownload} disabled={filteredOrders.length === 0}>
             <Download className="w-4 h-4 mr-2" />
-            Pobierz {summaryDocLabels[docType].label} (CSV)
+            Pobierz {summaryDocLabels[docType].label} (PDF)
           </Button>
         </div>
       </SheetContent>
