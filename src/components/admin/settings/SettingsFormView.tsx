@@ -18,6 +18,15 @@ interface ProductCategory {
   slug: string;
 }
 
+interface ExtrasCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: LucideIconName;
+  slug: string;
+  isRequired: boolean;
+}
+
 interface EventType {
   id: string;
   name: string;
