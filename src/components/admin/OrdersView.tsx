@@ -1152,7 +1152,6 @@ const InlineAmountInput = ({ value, onChange }: { value: number; onChange: (v: n
 };
 
 // ===== ADD ORDER SHEET =====
-interface DbClient { id: string; first_name: string; last_name: string; email: string; phone: string; address: string | null; city: string | null; company_name: string | null; }
 
 const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () => void; onAdd: (order: Order) => void }) => {
   const [clientSearch, setClientSearch] = useState("");
