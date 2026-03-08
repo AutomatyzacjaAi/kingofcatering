@@ -191,7 +191,7 @@ function ExtraItemModal({ item, isOpen, onClose, quantity, onQuantityChange }: {
           {item.image ? (
             <div className="relative"><img src={item.image} alt={item.name} className="w-full h-56 object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" /></div>
           ) : (
-            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><span className="text-4xl">{item.icon}</span></div></div>
+            <div className="pt-16 flex justify-center"><div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center"><UtensilsCrossed className="w-8 h-8 text-muted-foreground" /></div></div>
           )}
           <div className="p-4 space-y-6">
             <div>
