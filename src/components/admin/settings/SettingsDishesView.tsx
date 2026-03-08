@@ -43,7 +43,7 @@ interface Dish {
 }
 
 interface BundleVariant {
-  id: string; name: string; description: string; price: number;
+  id: string; name: string; description: string; price: number; priceOnSite: number | null;
   allergens: string[]; dietaryTags: string[]; sortOrder: number;
   dishId: string | null;
 }
