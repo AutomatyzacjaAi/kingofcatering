@@ -112,7 +112,7 @@ const mockIngredients: Ingredient[] = [
 const mockDishes: Dish[] = [
   {
     id: "d1", name: "Roladki z indyka ze szpinakiem", image: null,
-    priceNetto: 25.93, vatRate: 8, priceBrutto: 28,
+    priceNetto: 25.93, vatRate: 8, priceBrutto: 28, dietaryTags: [],
     ingredients: [
       { ingredientId: "i1", quantity: 200 },
       { ingredientId: "i2", quantity: 100 },
@@ -122,7 +122,7 @@ const mockDishes: Dish[] = [
   },
   {
     id: "d2", name: "Łosoś grillowany", image: null,
-    priceNetto: 38.89, vatRate: 8, priceBrutto: 42,
+    priceNetto: 38.89, vatRate: 8, priceBrutto: 42, dietaryTags: ["Pescetariańskie", "Bezglutenowe"],
     ingredients: [
       { ingredientId: "i6", quantity: 250 },
       { ingredientId: "i5", quantity: 20 },
@@ -130,27 +130,27 @@ const mockDishes: Dish[] = [
   },
   {
     id: "d3", name: "Pierogi ruskie", image: null,
-    priceNetto: 13.89, vatRate: 8, priceBrutto: 15,
+    priceNetto: 13.89, vatRate: 8, priceBrutto: 15, dietaryTags: ["Wegetariańskie"],
     ingredients: [],
   },
   {
     id: "d4", name: "Pierogi z mięsem", image: null,
-    priceNetto: 14.81, vatRate: 8, priceBrutto: 16,
+    priceNetto: 14.81, vatRate: 8, priceBrutto: 16, dietaryTags: [],
     ingredients: [],
   },
   {
     id: "d5", name: "Pierogi z kapustą i grzybami", image: null,
-    priceNetto: 12.96, vatRate: 8, priceBrutto: 14,
+    priceNetto: 12.96, vatRate: 8, priceBrutto: 14, dietaryTags: ["Wegetariańskie", "Wegańskie"],
     ingredients: [],
   },
   {
     id: "d6", name: "Żurek", image: null,
-    priceNetto: 18.52, vatRate: 8, priceBrutto: 20,
+    priceNetto: 18.52, vatRate: 8, priceBrutto: 20, dietaryTags: [],
     ingredients: [],
   },
   {
     id: "d7", name: "Krem z pomidorów", image: null,
-    priceNetto: 16.67, vatRate: 8, priceBrutto: 18,
+    priceNetto: 16.67, vatRate: 8, priceBrutto: 18, dietaryTags: ["Wegetariańskie", "Wegańskie", "Bezglutenowe"],
     ingredients: [],
   },
 ];
