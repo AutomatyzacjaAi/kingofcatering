@@ -139,9 +139,43 @@ const ClientsView = () => {
   };
 
   const handleAdd = () => {
-    const newClient = { ...emptyClient, id: crypto.randomUUID() };
-    setSelectedClient(newClient);
-    setView("detail");
+    setAddForm(newClientForm());
+    setIsAddSheetOpen(true);
+  };
+
+  const setAddField = (field: keyof ClientData, value: string) =>
+    setAddForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleAddSave = async () => {
+    if (!addForm.firstName || !addForm.lastName || !addForm.email || !addForm.phone) {
+      toast.error("Wypełnij wymagane pola (imię, nazwisko, email, telefon)");
+      return;
+    }
+    const payload = {
+      id: addForm.id,
+      first_name: addForm.firstName,
+      last_name: addForm.lastName,
+      email: addForm.email,
+      phone: addForm.phone,
+      phone_alt: addForm.phoneAlt || null,
+      company_name: addForm.companyName || null,
+      nip: addForm.nip || null,
+      company_address: addForm.companyAddress || null,
+      company_city: addForm.companyCity || null,
+      company_postal_code: addForm.companyPostalCode || null,
+      address: addForm.address || null,
+      city: addForm.city || null,
+      postal_code: addForm.postalCode || null,
+      notes: addForm.notes || null,
+    };
+    const { error } = await supabase.from("clients").insert(payload);
+    if (error) {
+      toast.error("Błąd zapisu: " + error.message);
+      return;
+    }
+    toast.success("Klient dodany");
+    setIsAddSheetOpen(false);
+    fetchClients();
   };
 
   const handleSave = async (client: ClientData) => {
