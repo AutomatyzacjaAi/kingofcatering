@@ -4,7 +4,7 @@ import { pl } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { eventTypes } from "@/data/products";
+import type { EventType } from "@/data/products";
 import { cn } from "@/lib/utils";
 import { 
   Users, 
@@ -19,14 +19,14 @@ import {
 } from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
 
-const iconMap = {
+const iconMap: Record<string, any> = {
   Heart,
   Presentation,
   Gift,
   Briefcase,
   Music,
   CalendarDays,
-} as const;
+};
 
 type EventDetailsProps = {
   guestCount: number;
@@ -37,6 +37,8 @@ type EventDetailsProps = {
   onEventTypeChange: (type: string) => void;
   onEventDateChange: (date: string) => void;
   onEventTimeChange: (time: string) => void;
+  eventTypes: EventType[];
+  blockedDates: Date[];
 };
 
 export function EventDetails({
@@ -48,6 +50,8 @@ export function EventDetails({
   onEventTypeChange,
   onEventDateChange,
   onEventTimeChange,
+  eventTypes,
+  blockedDates,
 }: EventDetailsProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
@@ -112,7 +116,7 @@ export function EventDetails({
         <CardContent>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {eventTypes.map((type) => {
-              const IconComponent = iconMap[type.icon as keyof typeof iconMap];
+              const IconComponent = iconMap[type.icon] || CalendarDays;
               const isSelected = eventType === type.id;
               
               return (
@@ -199,6 +203,7 @@ export function EventDetails({
         selectedTime={eventTime}
         onConfirm={handleConfirm}
         onClose={() => setIsPickerOpen(false)}
+        busyDates={blockedDates}
       />
     </div>
   );

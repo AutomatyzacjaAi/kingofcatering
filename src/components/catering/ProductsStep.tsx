@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Salad, Cookie, UtensilsCrossed } from "lucide-react";
-import { categories, products, type Product } from "@/data/products";
+import type { Product, Category } from "@/data/products";
 import { ProductCard } from "./ProductCard";
 import { ProductModal } from "./ProductModal";
 
@@ -22,6 +22,8 @@ type ProductsStepProps = {
   onConfigurableChange: (productId: string, quantity: number, groupId?: string, optionIds?: string[]) => void;
   onServingTimeChange: (productId: string, time: string) => void;
   onProductNotesChange: (productId: string, notes: string) => void;
+  products: Product[];
+  categories: Category[];
 };
 
 export function ProductsStep({
@@ -35,8 +37,10 @@ export function ProductsStep({
   onConfigurableChange,
   onServingTimeChange,
   onProductNotesChange,
+  products,
+  categories,
 }: ProductsStepProps) {
-  const [activeCategory, setActiveCategory] = useState(categories[0].id);
+  const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const categoryProducts = products.filter((p) => p.category === activeCategory);
@@ -56,39 +60,29 @@ export function ProductsStep({
   };
 
   const isProductSelected = (product: Product): boolean => {
-    if (product.type === "simple") {
-      return (simpleQuantities[product.id] || 0) > 0;
-    }
+    if (product.type === "simple") return (simpleQuantities[product.id] || 0) > 0;
     if (product.type === "expandable") {
       const variants = expandableQuantities[product.id] || {};
       return Object.values(variants).some(q => q > 0);
     }
-    if (product.type === "configurable") {
-      return (configurableData[product.id]?.quantity || 0) > 0;
-    }
+    if (product.type === "configurable") return (configurableData[product.id]?.quantity || 0) > 0;
     return false;
   };
 
   const getProductSelectedCount = (product: Product): number => {
-    if (product.type === "simple") {
-      return simpleQuantities[product.id] || 0;
-    }
+    if (product.type === "simple") return simpleQuantities[product.id] || 0;
     if (product.type === "expandable") {
       const variants = expandableQuantities[product.id] || {};
       return Object.values(variants).reduce((sum, q) => sum + q, 0);
     }
-    if (product.type === "configurable") {
-      return configurableData[product.id]?.quantity || 0;
-    }
+    if (product.type === "configurable") return configurableData[product.id]?.quantity || 0;
     return 0;
   };
 
   return (
     <div className="pb-24">
-      {/* Category Tabs - Horizontal Scroll */}
       <div className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="relative flex items-center">
-          {/* Left Arrow */}
           <button
             onClick={() => {
               const container = document.getElementById('category-tabs');
@@ -130,7 +124,6 @@ export function ProductsStep({
             })}
           </div>
           
-          {/* Right Arrow */}
           <button
             onClick={() => {
               const container = document.getElementById('category-tabs');
@@ -143,7 +136,6 @@ export function ProductsStep({
         </div>
       </div>
 
-      {/* Products Grid */}
       <div className="px-4 py-4 md:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {categoryProducts.map((product) => (
@@ -158,7 +150,6 @@ export function ProductsStep({
         </div>
       </div>
 
-      {/* Product Modal */}
       <ProductModal
         product={selectedProduct}
         isOpen={!!selectedProduct}
