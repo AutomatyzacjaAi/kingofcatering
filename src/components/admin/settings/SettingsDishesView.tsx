@@ -532,6 +532,19 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
               )}
             </div>
 
+            {/* Dietary tags */}
+            <div className="space-y-2">
+              <Label className="text-xs">Rodzaj diety</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {DIETARY_OPTIONS.map((tag) => (
+                  <button key={tag} type="button" onClick={() => toggleDietaryTag(tag)}
+                    className={cn("px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                      formDietaryTags.includes(tag) ? "bg-accent text-accent-foreground border-accent" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
+                    )}>{tag}</button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-2">
               <Button size="sm" onClick={saveDish} disabled={!formName.trim()}>
                 <Check className="w-4 h-4 mr-1" />{editingId ? "Zapisz" : "Dodaj danie"}
