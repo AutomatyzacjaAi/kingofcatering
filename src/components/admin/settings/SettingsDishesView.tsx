@@ -806,12 +806,18 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
               {formVariants.map((v) => {
                 const linkedDish = v.dishId ? dishes.find(d => d.id === v.dishId) : null;
                 return (
-                  <div key={v.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
-                    <div>
+                    <div key={v.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
+                    <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{v.name}</span>
                         <span className="text-xs text-muted-foreground">{v.price.toFixed(2)} zł</span>
+                        {v.priceOnSite != null && <span className="text-xs text-muted-foreground">(sala: {v.priceOnSite.toFixed(2)} zł)</span>}
                         {linkedDish && <Badge variant="outline" className="text-[10px] px-1.5 py-0">🔗 danie</Badge>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input type="number" step="0.01" value={v.price} onChange={(e) => setFormVariants(formVariants.map(fv => fv.id === v.id ? {...fv, price: parseFloat(e.target.value) || 0} : fv))} className="h-7 w-24 text-xs" placeholder="Cena" />
+                        <Input type="number" step="0.01" value={v.priceOnSite ?? ""} onChange={(e) => setFormVariants(formVariants.map(fv => fv.id === v.id ? {...fv, priceOnSite: e.target.value ? parseFloat(e.target.value) : null} : fv))} className="h-7 w-24 text-xs" placeholder="Cena sala" />
+                      </div>
                       </div>
                       {v.allergens.length > 0 && (
                         <div className="flex gap-1 mt-0.5">
