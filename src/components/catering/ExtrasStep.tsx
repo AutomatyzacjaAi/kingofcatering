@@ -377,11 +377,7 @@ function WaiterServiceModal({ option, isOpen, onClose, isSelected, waiterCount, 
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Liczba kelnerów:</span>
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" size="icon" onClick={() => setCount(Math.max(1, count - 1))} disabled={count <= 1}><Minus className="w-4 h-4" /></Button>
-                  <span className="w-8 text-center text-xl font-bold">{count}</span>
-                  <Button variant="outline" size="icon" onClick={() => setCount(count + 1)}><Plus className="w-4 h-4" /></Button>
-                </div>
+                <QuantityInput value={count} onChange={(v) => setCount(Math.max(1, v))} min={1} size="sm" />
               </div>
               <div className="pt-2 border-t border-border flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Suma:</span>
