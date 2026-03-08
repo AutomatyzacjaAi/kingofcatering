@@ -1,73 +1,242 @@
-# 🚀 Migracja na własną infrastrukturę (DigitalOcean)
+# 🚀 King of Catering — Dokumentacja i Migracja na DigitalOcean
 
-## Stan projektu
+## Opis aplikacji
 
-Cała aplikacja frontendowa jest **gotowa** — kreator zamówień, panel admina, logowanie, zarządzanie produktami, klientami, zamówieniami. Jedyne co trzeba zrobić to **podpiąć własną bazę danych PostgreSQL** i (opcjonalnie) przenieść edge function.
+**King of Catering** to pełna platforma do zarządzania firmą cateringową, składająca się z:
+
+### 🛒 Kreator zamówień (strona klienta — `/`)
+
+5-etapowy wizard do składania zamówień cateringowych:
+
+1. **Wydarzenie** — typ wydarzenia (wesele, konferencja, urodziny...), data, godzina, liczba gości, typ cateringu (wyjazdowy/na miejscu)
+2. **Produkty** — wybór dań (simple), pakietów z wariantami (expandable/bundle), zestawów konfigurowalnych (configurable) z kategoriami filtrowanymi wg typu wydarzenia
+3. **Dodatki** — dekoracje, sprzęt, opakowania jednorazowe/porcelanowe, obsługa kelnerska
+4. **Kontakt** — dane klienta, adres dostawy, automatyczne obliczanie kosztu dostawy (geocoding Nominatim + routing OSRM), dane firmowe (NIP, faktura)
+5. **Podsumowanie** — przegląd zamówienia z dwoma opcjami: **Zapłać online** (Stripe Checkout) lub **Wyślij zapytanie** (oferta mailem)
+
+### 🔧 Panel admina (`/admin`)
+
+Pełne zarządzanie biznesem:
+
+- **Zamówienia** — lista, szczegóły, edycja statusów/pozycji/cen, generowanie dokumentów:
+  - Oferta (PDF)
+  - Lista zakupów (PDF z agregacją składników)
+  - Rozpiska na kuchnię (PDF z rozbiciem zestawów na dania)
+  - Food cost (PDF z analizą marży + ręczne pozycje kosztowe)
+  - Podsumowania zbiorcze pogrupowane wg dni
+- **Klienci** — CRUD, automatyczne powiązywanie z zamówieniami, historia zamówień
+- **Raporty** — analityka sprzedaży, porównania YoY, średnia wartość zamówienia
+- **Ustawienia**:
+  - Dania (simple, dish) + składniki + food cost
+  - Pakiety (bundle) z wariantami powiązanymi z daniami
+  - Zestawy konfigurowalne z grupami i opcjami
+  - Dodatki z kategoriami
+  - Kategorie produktów + mapowanie na typy wydarzeń
+  - Typy wydarzeń
+  - Strefy dostaw
+  - Metody płatności
+  - Zablokowane daty
+  - Ustawienia firmy (logo, dane, adresy, parametry dostawy)
+  - Kalendarz zamówień
+
+### 🔐 Logowanie (`/login`)
+
+Autentykacja admina przez Supabase Auth (email + hasło).
+
+---
+
+## Stos technologiczny
+
+| Warstwa | Technologia |
+|---------|-------------|
+| Frontend | React 18 + TypeScript + Vite |
+| Styling | Tailwind CSS + shadcn/ui |
+| State | React hooks (useState, useCallback, useMemo) |
+| Data fetching | Supabase JS SDK + TanStack Query |
+| Routing | React Router v6 |
+| PDF | jsPDF + jspdf-autotable (font Roboto z polskimi znakami) |
+| Płatności | Stripe Checkout (edge function) |
+| Geokodowanie | Nominatim (OSM) + OSRM (routing) |
+| Baza danych | PostgreSQL (via Supabase) |
+| Auth | Supabase Auth |
+| Backend functions | Supabase Edge Functions (Deno) |
+
+---
+
+## Struktura plików
 
 ```
-┌─────────────────────────────────────────────┐
-│  FRONTEND (React + Vite + TypeScript)  ✅   │
-│  - Kreator zamówień klienta                 │
-│  - Panel admina (/admin)                    │
-│  - Logowanie (/login)                       │
-│  - Cała logika biznesowa                    │
-├─────────────────────────────────────────────┤
-│  BACKEND — do podpięcia                     │
-│  - PostgreSQL (DigitalOcean Managed DB)     │
-│  - Auth (Supabase Cloud / self-hosted)      │
-│  - 1 edge function (calculate-delivery)     │
-└─────────────────────────────────────────────┘
+src/
+├── components/
+│   ├── catering/               ← Kreator zamówień klienta
+│   │   ├── CateringWizard.tsx    - Główny stepper (5 kroków)
+│   │   ├── EventDetails.tsx      - Krok 1: Wydarzenie
+│   │   ├── ProductsStep.tsx      - Krok 2: Produkty
+│   │   ├── ProductCard.tsx       - Karta produktu
+│   │   ├── ProductModal.tsx      - Modal szczegółów produktu
+│   │   ├── ExtrasStep.tsx        - Krok 3: Dodatki + pakowanie + kelner
+│   │   ├── ContactForm.tsx       - Krok 4: Kontakt + obliczanie dostawy
+│   │   ├── OrderSummary.tsx      - Krok 5: Podsumowanie + Stripe
+│   │   ├── CartDrawer.tsx        - Koszyk (drawer)
+│   │   ├── QuantityInput.tsx     - Komponent ilości
+│   │   ├── MobileNav.tsx         - Nawigacja mobilna
+│   │   └── FullscreenDateTimePicker.tsx
+│   ├── admin/                  ← Panel admina
+│   │   ├── AdminSidebar.tsx      - Menu boczne
+│   │   ├── OrdersView.tsx        - Zamówienia (CRUD + dokumenty + podsumowania)
+│   │   ├── ClientsView.tsx       - Klienci
+│   │   ├── ClientDetailView.tsx  - Szczegóły klienta
+│   │   ├── ClientFormView.tsx    - Formularz klienta
+│   │   ├── ReportsView.tsx       - Raporty
+│   │   ├── SettingsView.tsx      - Router ustawień
+│   │   └── settings/
+│   │       ├── SettingsDishesView.tsx     - Dania + pakiety + zestawy
+│   │       ├── ExtrasTab.tsx             - Dodatki
+│   │       ├── SettingsEventsView.tsx     - Typy wydarzeń + kategorie + mapowania
+│   │       ├── SettingsDeliveryView.tsx   - Strefy dostaw
+│   │       ├── SettingsOrdersView.tsx     - Metody płatności + zablokowane daty
+│   │       ├── SettingsCompanyView.tsx    - Dane firmy
+│   │       ├── SettingsCalendarView.tsx   - Kalendarz
+│   │       └── SettingsFormView.tsx       - Ustawienia formularza
+│   └── ui/                     ← shadcn/ui (gotowe)
+├── hooks/
+│   ├── useSupabaseData.ts        - Pobieranie wszystkich danych z bazy
+│   ├── useCateringOrder.ts       - Stan zamówienia klienta
+│   ├── useAdminAuth.ts           - Autentykacja admina
+│   └── use-mobile.tsx            - Detekcja mobilna
+├── lib/
+│   ├── submitOrder.ts            - Zapis zamówienia do bazy
+│   ├── generatePdf.ts            - Generowanie PDF (oferta, food cost, itp.)
+│   ├── pricing.ts                - Logika cenowa (wyjazdowy vs na miejscu)
+│   └── utils.ts                  - cn() helper
+├── data/
+│   ├── products.ts               - Typy Product, Category, EventType
+│   └── extras.ts                 - Typy Extra, Packaging, Waiter, Payment
+├── pages/
+│   ├── Index.tsx                 - Strona główna (kreator)
+│   ├── Admin.tsx                 - Panel admina
+│   ├── Login.tsx                 - Logowanie
+│   └── NotFound.tsx
+├── integrations/supabase/
+│   ├── client.ts                 - ⚠️ ZMIEŃ URL + KLUCZ przy migracji
+│   └── types.ts                  - ⚠️ WYGENERUJ NOWE po migracji
+└── assets/                       - Zdjęcia produktów
+
+supabase/
+├── config.toml                   - Konfiguracja Supabase
+└── functions/
+    ├── calculate-delivery/       - Obliczanie kosztu dostawy
+    │   └── index.ts
+    ├── create-stripe-checkout/   - Tworzenie sesji Stripe Checkout
+    │   └── index.ts
+    └── stripe-webhook/           - Webhook Stripe (aktualizacja statusu)
+        └── index.ts
+
+public/
+├── fonts/Roboto-Regular.ttf      - Font do PDF z polskimi znakami
+├── products/                     - Zdjęcia produktów
+└── extras/                       - Zdjęcia dodatków
 ```
 
 ---
 
-## Spis treści
+## Baza danych — schemat
 
-1. [Co jest gotowe, a co trzeba podpiąć](#1-co-jest-gotowe)
-2. [Krok 1: Baza danych na DigitalOcean](#krok-1-baza-danych)
-3. [Krok 2: Podpięcie Supabase do własnej bazy](#krok-2-podpięcie-supabase)
-4. [Krok 3: Przeniesienie edge function](#krok-3-edge-function)
-5. [Krok 4: Zmienne środowiskowe](#krok-4-zmienne)
-6. [Krok 5: Deploy frontendu](#krok-5-deploy)
-7. [Schemat bazy danych (pełny SQL)](#schemat-bazy-danych)
-8. [Mapa plików](#mapa-plików)
-9. [Checklist](#checklist)
+```
+company_settings (1 wiersz — konfiguracja firmy)
+
+event_types ──┐
+              ├── event_category_mappings (filtrowanie kategorii wg wydarzenia)
+product_categories ──┘
+
+extras_categories ──── extras (dodatki z kategoriami)
+
+dishes ──── dish_ingredients ──── ingredients (składniki + food cost)
+  │
+  ├── bundle_variants ──── bundles (pakiety z wariantami)
+  │
+  └── config_group_options ──── config_groups ──── configurable_sets (zestawy)
+
+clients ──── orders ──── order_items ──── order_item_sub_items
+                │
+                └── order_food_cost_extras (ręczne pozycje kosztowe)
+
+payment_methods (metody płatności)
+blocked_dates (zablokowane daty)
+delivery_zones (strefy dostaw)
+```
+
+### Tabele — 22 tabel
+
+| Tabela | Opis |
+|--------|------|
+| `company_settings` | Dane firmy, logo, parametry dostawy |
+| `event_types` | Typy wydarzeń (wesele, konferencja...) |
+| `product_categories` | Kategorie produktów (patery, zestawy...) |
+| `event_category_mappings` | Które kategorie widoczne dla jakiego wydarzenia |
+| `extras_categories` | Kategorie dodatków |
+| `dishes` | Dania (simple, dish) |
+| `bundles` | Pakiety (expandable) |
+| `bundle_variants` | Warianty pakietów |
+| `configurable_sets` | Zestawy konfigurowalne |
+| `config_groups` | Grupy w zestawach |
+| `config_group_options` | Opcje w grupach |
+| `extras` | Dodatki |
+| `ingredients` | Składniki |
+| `dish_ingredients` | Powiązania danie↔składnik |
+| `delivery_zones` | Strefy dostawy |
+| `clients` | Klienci |
+| `orders` | Zamówienia |
+| `order_items` | Pozycje zamówienia |
+| `order_item_sub_items` | Sub-pozycje (składowe zestawów) |
+| `order_food_cost_extras` | Ręczne pozycje kosztowe FC |
+| `payment_methods` | Metody płatności |
+| `blocked_dates` | Zablokowane daty |
 
 ---
 
-## 1. Co jest gotowe
+## Edge Functions — 3 funkcje
 
-### ✅ Gotowe (nie wymaga zmian):
-- Cały frontend React (kreator, admin, logowanie)
-- Wszystkie hooki do pobierania danych (`useSupabaseData.ts`)
-- Logika zamówień (`useCateringOrder.ts`, `submitOrder.ts`)
-- Komponenty UI (shadcn/ui)
-- Panel admina z CRUD-em dla produktów, klientów, zamówień, ustawień
-- Zarządzanie kategoriami, typami wydarzeń, mapowaniami
-- Obliczanie dostawy (geocoding + routing)
+### 1. `calculate-delivery`
+- **Cel:** Obliczanie kosztu dostawy
+- **Input:** `{ address, companyLat, companyLng }`
+- **Logika:** Nominatim → OSRM → dystans km
+- **Bez klucza API** (Nominatim/OSRM darmowe)
 
-### 🔧 Do podpięcia (minimalna praca):
-| Element | Co zrobić | Trudność |
-|---------|-----------|----------|
-| **Baza PostgreSQL** | Stworzyć tabele na DigitalOcean (SQL gotowy poniżej) | ⭐ Łatwa |
-| **Supabase Client** | Zmienić URL + klucz w jednym pliku | ⭐ Łatwa |
-| **Typy TypeScript** | Wygenerować automatycznie z nowej bazy | ⭐ Łatwa |
-| **Edge Function** | Przenieść na własny backend LUB zostawić na Supabase | ⭐⭐ Średnia |
-| **Auth** | Skonfigurować użytkownika admina w nowym Supabase | ⭐ Łatwa |
+### 2. `create-stripe-checkout`
+- **Cel:** Tworzenie Stripe Checkout Session
+- **Input:** `{ orderId, orderNumber, amount, customerEmail, customerName, lineItems, successUrl, cancelUrl }`
+- **Wymaga:** `STRIPE_SECRET_KEY` w secretach
+- **Metody płatności:** Karta, Przelewy24, BLIK
+
+### 3. `stripe-webhook`
+- **Cel:** Odbiera powiadomienia Stripe o statusie płatności
+- **Event:** `checkout.session.completed` → aktualizuje status zamówienia na "Potwierdzone"
+- **Wymaga:** `STRIPE_WEBHOOK_SECRET` (opcjonalny, ale zalecany)
 
 ---
 
-## Krok 1: Baza danych
+## Migracja na DigitalOcean — krok po kroku
 
-### DigitalOcean Managed Database (PostgreSQL 15+)
+### Wymagania
+- DigitalOcean Droplet (Ubuntu 22+) lub App Platform
+- PostgreSQL 15+ (DigitalOcean Managed Database lub self-hosted)
+- Node.js 18+ (do budowania frontendu)
+- Supabase (Cloud lub self-hosted) — do obsługi Auth + SDK
 
-1. W panelu DigitalOcean → **Databases** → **Create Database Cluster**
-2. Wybierz PostgreSQL 15+, region najbliżej klientów (np. Frankfurt)
-3. Po utworzeniu — skopiuj connection string
+---
 
-### Tworzenie tabel
+### Krok 1: Baza danych
 
-Wykonaj poniższy SQL na nowej bazie. **Cały schemat jest identyczny z tym co działa teraz** — wystarczy skopiować i wykonać:
+#### DigitalOcean Managed Database (PostgreSQL 15+)
+
+1. Panel DigitalOcean → **Databases** → **Create Database Cluster**
+2. PostgreSQL 15+, region Frankfurt (eu)
+3. Skopiuj connection string
+
+#### Tworzenie tabel
+
+Wykonaj poniższy SQL na nowej bazie:
 
 ```sql
 -- ================================================
@@ -83,6 +252,7 @@ CREATE TABLE public.company_settings (
   bank_account text DEFAULT '',
   logo_url text,
   favicon_url text,
+  privacy_policy_url text,
   min_order_value numeric DEFAULT 200,
   min_lead_days integer DEFAULT 3,
   auto_confirm boolean DEFAULT false,
@@ -163,6 +333,7 @@ CREATE TABLE public.dishes (
   vat_rate integer NOT NULL DEFAULT 8,
   price_brutto numeric NOT NULL DEFAULT 0,
   price_per_unit numeric DEFAULT 0,
+  price_per_unit_on_site numeric,
   unit_label text DEFAULT 'szt.',
   min_quantity integer DEFAULT 1,
   icon text DEFAULT '🍽️',
@@ -199,6 +370,7 @@ CREATE TABLE public.bundle_variants (
   name text NOT NULL,
   description text DEFAULT '',
   price numeric NOT NULL DEFAULT 0,
+  price_on_site numeric,
   dish_id uuid REFERENCES public.dishes(id),
   dietary_tags text[] DEFAULT '{}',
   allergens text[] DEFAULT '{}',
@@ -216,6 +388,7 @@ CREATE TABLE public.configurable_sets (
   image_url text,
   category_slug text,
   price_per_person numeric NOT NULL DEFAULT 0,
+  price_per_person_on_site numeric,
   min_persons integer NOT NULL DEFAULT 10,
   icon text DEFAULT '🍽️',
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -255,6 +428,7 @@ CREATE TABLE public.extras (
   price_netto numeric DEFAULT 0,
   vat_rate integer DEFAULT 23,
   price_brutto numeric DEFAULT 0,
+  price_on_site numeric,
   food_cost numeric DEFAULT 0,
   unit_label text DEFAULT 'szt.',
   price_label text DEFAULT '',
@@ -380,6 +554,17 @@ CREATE TABLE public.order_item_sub_items (
 );
 
 -- ================================================
+-- TABELA: order_food_cost_extras
+-- ================================================
+CREATE TABLE public.order_food_cost_extras (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  amount numeric NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- ================================================
 -- TABELA: payment_methods
 -- ================================================
 CREATE TABLE public.payment_methods (
@@ -412,7 +597,6 @@ BEGIN
 END;
 $$;
 
--- Dodaj trigger do tabel z updated_at:
 CREATE TRIGGER update_company_settings_updated_at BEFORE UPDATE ON public.company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_event_types_updated_at BEFORE UPDATE ON public.event_types FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_product_categories_updated_at BEFORE UPDATE ON public.product_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -427,7 +611,7 @@ CREATE TRIGGER update_clients_updated_at BEFORE UPDATE ON public.clients FOR EAC
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ================================================
--- RLS (Row-Level Security) — domyślnie full access
+-- RLS (Row-Level Security)
 -- W produkcji ogranicz dostęp!
 -- ================================================
 ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
@@ -449,6 +633,7 @@ ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_item_sub_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_food_cost_extras ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blocked_dates ENABLE ROW LEVEL SECURITY;
 
@@ -472,32 +657,32 @@ CREATE POLICY "full_access" ON public.clients FOR ALL USING (true) WITH CHECK (t
 CREATE POLICY "full_access" ON public.orders FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "full_access" ON public.order_items FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "full_access" ON public.order_item_sub_items FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.order_food_cost_extras FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "full_access" ON public.payment_methods FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "full_access" ON public.blocked_dates FOR ALL USING (true) WITH CHECK (true);
 ```
 
 ---
 
-## Krok 2: Podpięcie Supabase do własnej bazy
+### Krok 2: Supabase
 
-### Opcja A: Supabase Cloud (rekomendowana — najmniej pracy)
+#### Opcja A: Supabase Cloud (rekomendowana)
 
-1. Załóż konto na [supabase.com](https://supabase.com)
-2. Utwórz projekt → wykonaj SQL z powyżej w SQL Editor
+1. [supabase.com](https://supabase.com) → Nowy projekt
+2. SQL Editor → wklej SQL z Kroku 1
 3. Skopiuj **Project URL** i **Anon Key**
 
-### Opcja B: Self-hosted Supabase na DigitalOcean
+#### Opcja B: Self-hosted na DigitalOcean
 
 ```bash
-# Na Droplet z Docker:
 git clone --depth 1 https://github.com/supabase/supabase
 cd supabase/docker
 cp .env.example .env
-# Edytuj .env — ustaw connection string do Managed Database
+# Edytuj .env — ustaw connection string do DigitalOcean Managed DB
 docker compose up -d
 ```
 
-### Zmiana w kodzie (JEDYNY plik do zmiany):
+#### Zmiana w kodzie (JEDYNY plik do zmiany):
 
 ```typescript
 // src/integrations/supabase/client.ts
@@ -505,112 +690,137 @@ const SUPABASE_URL = "https://TWOJ-PROJEKT.supabase.co"
 const SUPABASE_ANON_KEY = "TWOJ-ANON-KEY"
 ```
 
-### Regeneracja typów:
+#### Regeneracja typów:
 ```bash
 npx supabase gen types typescript --project-id TWOJ-PROJECT-ID > src/integrations/supabase/types.ts
 ```
 
 ---
 
-## Krok 3: Edge Function
+### Krok 3: Edge Functions
 
-### Jedyna edge function: `calculate-delivery`
+#### Opcja A: Zostaw na Supabase (najprostsza)
 
-**Co robi:** Geokoduje adres klienta (Nominatim) → oblicza trasę (OSRM) → zwraca km i czas.
-
-**Opcja 1 — Zostaw na Supabase:**
 ```bash
 npx supabase functions deploy calculate-delivery --project-ref TWOJ-PROJECT-ID
+npx supabase functions deploy create-stripe-checkout --project-ref TWOJ-PROJECT-ID
+npx supabase functions deploy stripe-webhook --project-ref TWOJ-PROJECT-ID
 ```
 
-**Opcja 2 — Przenieś na własny backend (Express/Node.js):**
+Dodaj sekrety:
+```bash
+npx supabase secrets set STRIPE_SECRET_KEY=sk_live_XXXXX --project-ref TWOJ-PROJECT-ID
+npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_XXXXX --project-ref TWOJ-PROJECT-ID
+```
 
-Utwórz `server/routes/delivery.js`:
+#### Opcja B: Express.js na DigitalOcean
+
+Utwórz `server/index.js`:
 
 ```javascript
 const express = require('express');
-const router = express.Router();
+const cors = require('cors');
+const Stripe = require('stripe');
+const app = express();
 
-function cleanPolishAddress(address) {
-  return address
-    .replace(/\bul\.\s*/gi, '')
-    .replace(/\baleja\s*/gi, '')
-    .replace(/\bal\.\s*/gi, '')
-    .replace(/\bos\.\s*/gi, '')
-    .replace(/\bpl\.\s*/gi, '')
-    .replace(/\bplac\s+/gi, '')
-    .trim();
-}
+app.use(cors());
+app.use(express.json());
 
-async function geocodeAddress(address) {
-  const cleaned = cleanPolishAddress(address);
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleaned)}&countrycodes=pl&limit=1`;
-  const res = await fetch(url, { headers: { 'User-Agent': 'KingOfCatering/1.0' } });
-  const data = await res.json();
-  if (!data?.length) return null;
-  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), displayName: data[0].display_name };
-}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-async function calculateRoute(fromLat, fromLng, toLat, toLng) {
-  const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=false`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!data.routes?.length) return null;
-  return { distanceKm: Math.round(data.routes[0].distance / 100) / 10, durationMin: Math.round(data.routes[0].duration / 60) };
-}
-
-router.post('/calculate-delivery', async (req, res) => {
-  try {
-    const { address, companyLat, companyLng } = req.body;
-    if (!address || companyLat == null || companyLng == null) return res.status(400).json({ error: 'Missing params' });
-
-    const geo = await geocodeAddress(address);
-    if (!geo) return res.json({ error: 'address_not_found', message: 'Nie znaleziono adresu' });
-
-    const route = await calculateRoute(companyLat, companyLng, geo.lat, geo.lng);
-    if (!route) return res.json({ error: 'route_not_found', message: 'Nie udało się obliczyć trasy' });
-
-    return res.json({ distanceKm: route.distanceKm, durationMin: route.durationMin, customerLat: geo.lat, customerLng: geo.lng, customerAddress: geo.displayName });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'internal_error' });
-  }
+// === Calculate Delivery ===
+app.post('/api/calculate-delivery', async (req, res) => {
+  const { address, companyLat, companyLng } = req.body;
+  // ... (kod z supabase/functions/calculate-delivery/index.ts)
 });
 
-module.exports = router;
+// === Stripe Checkout ===
+app.post('/api/create-stripe-checkout', async (req, res) => {
+  const { orderId, orderNumber, amount, customerEmail, lineItems, successUrl, cancelUrl } = req.body;
+  
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card', 'p24', 'blik'],
+    mode: 'payment',
+    customer_email: customerEmail,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: { order_id: orderId, order_number: orderNumber },
+    line_items: lineItems.map(item => ({
+      price_data: {
+        currency: 'pln',
+        product_data: { name: item.name },
+        unit_amount: Math.round(item.unitPrice * 100),
+      },
+      quantity: item.quantity,
+    })),
+  });
+
+  res.json({ sessionId: session.id, url: session.url });
+});
+
+// === Stripe Webhook ===
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const event = stripe.webhooks.constructEvent(
+    req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET
+  );
+  if (event.type === 'checkout.session.completed') {
+    const orderId = event.data.object.metadata.order_id;
+    // UPDATE orders SET status = 'Potwierdzone' WHERE id = orderId
+  }
+  res.json({ received: true });
+});
+
+app.listen(3001, () => console.log('API running on :3001'));
 ```
 
-Zmiana w frontendzie (`src/components/catering/ContactForm.tsx`):
+Jeśli przenosisz na Express, zmień w frontendzie:
 ```typescript
-// Zamień:
-const { data } = await supabase.functions.invoke("calculate-delivery", { body: { ... } });
+// src/components/catering/OrderSummary.tsx — zamień:
+const { data } = await supabase.functions.invoke("create-stripe-checkout", { body: { ... } });
 
 // Na:
-const res = await fetch("https://TWOJ-BACKEND/api/calculate-delivery", {
+const res = await fetch("https://TWOJ-BACKEND/api/create-stripe-checkout", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ address, companyLat, companyLng }),
+  body: JSON.stringify({ ... }),
 });
 const data = await res.json();
 ```
 
-**Opcja 3 — Bez backendu:** Wywołaj Nominatim i OSRM bezpośrednio z frontendu (jak w `SettingsDeliveryView.tsx`).
+---
+
+### Krok 4: Stripe
+
+1. [stripe.com](https://stripe.com) → Dashboard → Developers → API keys
+2. Skopiuj **Secret Key** (sk_live_... lub sk_test_...)
+3. Dodaj do Supabase Secrets lub zmiennych środowiskowych
+4. Webhooks → Add endpoint:
+   - URL: `https://TWOJ-PROJECT-ID.supabase.co/functions/v1/stripe-webhook`
+   - Events: `checkout.session.completed`
+   - Skopiuj Signing Secret → `STRIPE_WEBHOOK_SECRET`
 
 ---
 
-## Krok 4: Zmienne środowiskowe
+### Krok 5: Zmienne środowiskowe
 
-Utwórz `.env` z nowymi wartościami:
 ```
 VITE_SUPABASE_URL=https://TWOJ-PROJEKT.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=TWOJ-ANON-KEY
 ```
 
-⚠️ Zmienne `VITE_` są publiczne w przeglądarce — to OK dla anon key.
+⚠️ Zmienne `VITE_` są publiczne — to OK dla anon key.
+
+Sekrety po stronie serwera (edge functions / Express):
+```
+STRIPE_SECRET_KEY=sk_live_XXXXX
+STRIPE_WEBHOOK_SECRET=whsec_XXXXX
+SUPABASE_URL=https://...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+```
 
 ---
 
-## Krok 5: Deploy frontendu
+### Krok 6: Deploy frontendu
 
 ```bash
 npm install
@@ -618,7 +828,7 @@ npm run build
 # Wynik → dist/
 ```
 
-### Nginx na DigitalOcean Droplet:
+#### Nginx na DigitalOcean Droplet:
 ```nginx
 server {
     listen 80;
@@ -636,97 +846,93 @@ Alternatywnie: Vercel, Netlify, DigitalOcean App Platform.
 
 ---
 
-## Mapa plików
+### Krok 7: Export danych z obecnej bazy
 
-### 🔧 Pliki do zmiany przy migracji (2-3 pliki):
+Eksport danych z Lovable Cloud → import do nowej bazy:
+
+```bash
+# Eksport (z obecnej bazy)
+pg_dump --data-only --inserts \
+  --table=company_settings \
+  --table=event_types \
+  --table=product_categories \
+  --table=event_category_mappings \
+  --table=extras_categories \
+  --table=dishes \
+  --table=bundles \
+  --table=bundle_variants \
+  --table=configurable_sets \
+  --table=config_groups \
+  --table=config_group_options \
+  --table=extras \
+  --table=ingredients \
+  --table=dish_ingredients \
+  --table=delivery_zones \
+  --table=clients \
+  --table=orders \
+  --table=order_items \
+  --table=order_item_sub_items \
+  --table=order_food_cost_extras \
+  --table=payment_methods \
+  --table=blocked_dates \
+  "postgresql://..." > data_export.sql
+
+# Import (do nowej bazy)
+psql "postgresql://NOWA-BAZA..." < data_export.sql
+```
+
+---
+
+## Checklist migracji
+
+- [ ] PostgreSQL na DigitalOcean — tabele utworzone (SQL z Kroku 1)
+- [ ] Supabase projekt (Cloud lub self-hosted) podpięty do bazy
+- [ ] `client.ts` — nowy URL + klucz
+- [ ] `types.ts` — wygenerowane z nowej bazy
+- [ ] `.env` — nowe wartości
+- [ ] Export danych z Lovable Cloud → import do nowej bazy
+- [ ] Edge functions wdrożone (Supabase lub Express)
+- [ ] Stripe — klucze dodane do secretów
+- [ ] Stripe — webhook skonfigurowany
+- [ ] Użytkownik admina utworzony w nowym Supabase Auth
+- [ ] `npm run build` → deploy na DigitalOcean
+- [ ] Test: złożenie zamówienia end-to-end
+- [ ] Test: płatność Stripe (tryb testowy)
+- [ ] Test: panel admina — zamówienia, dokumenty, food cost
+- [ ] Domena + SSL (Let's Encrypt / Cloudflare)
+
+---
+
+## Pliki do zmiany przy migracji (2-3 pliki)
 
 | Plik | Co zmienić |
 |------|-----------|
 | `src/integrations/supabase/client.ts` | URL + klucz nowego Supabase |
 | `src/integrations/supabase/types.ts` | Wygeneruj z `supabase gen types` |
 | `.env` | Nowy URL i klucz |
+| *(opcjonalnie)* `ContactForm.tsx` | Jeśli przenosisz delivery na Express |
+| *(opcjonalnie)* `OrderSummary.tsx` | Jeśli przenosisz Stripe na Express |
 
-### ✅ Pliki których NIE zmieniasz:
-
-Cała reszta — komponenty, hooki, strony, logika biznesowa, style. Wszystko działa z dowolnym Supabase backendem.
-
-### 📁 Struktura:
-
-```
-src/
-├── components/
-│   ├── catering/           ← Kreator zamówień (gotowy)
-│   ├── admin/              ← Panel admina (gotowy)
-│   └── ui/                 ← shadcn/ui (gotowy)
-├── hooks/
-│   ├── useSupabaseData.ts  ← Pobieranie danych (gotowy)
-│   ├── useCateringOrder.ts ← Stan zamówienia (gotowy)
-│   └── useAdminAuth.ts     ← Auth admina (gotowy)
-├── lib/
-│   ├── submitOrder.ts      ← Składanie zamówień (gotowy)
-│   └── utils.ts
-├── pages/                  ← Strony (gotowe)
-└── integrations/supabase/
-    ├── client.ts           ← ⚠️ ZMIEŃ URL + KLUCZ
-    └── types.ts            ← ⚠️ WYGENERUJ NOWE
-```
-
----
-
-## Schemat bazy danych
-
-```
-company_settings (1 wiersz — konfiguracja firmy)
-
-event_types ──┐
-              ├── event_category_mappings (filtrowanie kategorii wg wydarzenia)
-product_categories ──┘
-
-extras_categories ──── extras (dodatki z kategoriami)
-
-dishes ──── dish_ingredients ──── ingredients
-  │
-  ├── bundle_variants ──── bundles
-  │
-  └── config_group_options ──── config_groups ──── configurable_sets
-
-clients ──── orders ──── order_items ──── order_item_sub_items
-
-payment_methods (niezależna)
-blocked_dates (niezależna)
-delivery_zones (strefy dostaw)
-```
-
----
-
-## Checklist
-
-- [ ] Utworzenie PostgreSQL na DigitalOcean
-- [ ] Wykonanie SQL (tworzenie tabel) — skopiuj z tego pliku
-- [ ] Nowy projekt Supabase (Cloud lub self-hosted) podpięty do bazy
-- [ ] Zmiana URL + klucz w `client.ts`
-- [ ] Regeneracja `types.ts`
-- [ ] Export danych z Lovable Cloud → import do nowej bazy
-- [ ] Deploy edge function LUB przeniesienie na backend
-- [ ] `npm run build` → deploy na DigitalOcean
-- [ ] Test zamówienia end-to-end
-- [ ] Konfiguracja domeny + SSL (Let's Encrypt)
+**Cała reszta kodu pozostaje bez zmian.**
 
 ---
 
 ## FAQ
 
 **Q: Ile plików muszę zmienić?**
-A: Maksymalnie 2-3 pliki (`client.ts`, `types.ts`, `.env`). Opcjonalnie `ContactForm.tsx` jeśli przenosisz edge function.
+A: 2-3 pliki (`client.ts`, `types.ts`, `.env`). Opcjonalnie 2 więcej jeśli przenosisz edge functions.
 
 **Q: Czy mogę użyć MySQL?**
-A: Nie. Cały kod korzysta z Supabase SDK który wymaga PostgreSQL.
-
-**Q: Jak przenieść dane z Lovable Cloud?**
-A: Eksport SQL dump z panelu Lovable Cloud → import do nowej bazy.
+A: Nie. Supabase SDK wymaga PostgreSQL.
 
 **Q: Nominatim/OSRM kosztują?**
-A: Nie, oba API są darmowe. Nominatim: ~1 req/s. Dla cateringu to więcej niż wystarczające.
+A: Nie, oba są darmowe. Nominatim: ~1 req/s — dla cateringu wystarczające.
 
 **Q: Co z autentykacją admina?**
-A: Supabase Auth — wystarczy utworzyć użytkownika admina w nowym projekcie Supabase. Cała logika logowania jest gotowa w kodzie.
+A: Supabase Auth — wystarczy utworzyć użytkownika w nowym projekcie. Logika jest gotowa.
+
+**Q: Jak działa Stripe w tej aplikacji?**
+A: Klient klika "Zapłać online" → tworzona jest Stripe Checkout Session → przekierowanie do Stripe → po płatności webhook aktualizuje status zamówienia. Obsługiwane metody: karta, Przelewy24, BLIK.
+
+**Q: Co jeśli Stripe nie jest skonfigurowany?**
+A: Przycisk "Zapłać online" wyświetli komunikat, że płatności nie są jeszcze dostępne. Zamówienie zostanie zapisane z możliwością kontaktu mailowego.
