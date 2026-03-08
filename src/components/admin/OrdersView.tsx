@@ -1616,8 +1616,17 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
             {items.length > 0 && (
               <div className="space-y-1.5">
                 {items.map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/30">
-                    <span className="text-sm font-medium flex-1 truncate">{item.name}</span>
+                  <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-md bg-muted/30">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium truncate block">{item.name}</span>
+                      {item.subItems && item.subItems.length > 0 && (
+                        <div className="mt-0.5 space-y-0.5">
+                          {item.subItems.map((sub, si) => (
+                            <p key={si} className="text-[11px] text-muted-foreground pl-2 border-l-2 border-primary/20">{sub.name}{sub.quantity > 1 ? ` ×${sub.quantity}` : ""}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <Input
                       type="number" min={1} value={item.quantity}
                       onChange={(e) => updateItem(i, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
