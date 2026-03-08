@@ -157,7 +157,6 @@ export const products: Product[] = [
     pricePerUnit: 520,
     unitLabel: "szt.",
     minQuantity: 1,
-    icon: "🥓",
     category: "patery",
   },
   {
