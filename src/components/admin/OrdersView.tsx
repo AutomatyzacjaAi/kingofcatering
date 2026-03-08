@@ -1033,6 +1033,82 @@ const SummaryView = ({ orders, onBack }: { orders: Order[]; onBack: () => void }
   );
 };
 
+// ===== INLINE EDITABLE CELL COMPONENTS =====
+const eventTypes = ["Urodziny", "Wesele", "Stypa", "Impreza firmowa", "Komunia", "Chrzciny", "Konferencja", "Inne"];
+
+const InlineStatusSelect = ({ value, onChange }: { value: OrderStatus; onChange: (v: OrderStatus) => void }) => (
+  <div onClick={(e) => e.stopPropagation()}>
+    <Select value={value} onValueChange={(v) => onChange(v as OrderStatus)}>
+      <SelectTrigger className="h-7 text-xs w-[130px] border-transparent bg-transparent hover:border-border focus:border-border transition-colors">
+        <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border", statusColors[value])}>
+          {value}
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        {allStatuses.map((s) => (
+          <SelectItem key={s} value={s}>
+            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border", statusColors[s])}>
+              {s}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
+
+const InlineEventSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+  <div onClick={(e) => e.stopPropagation()}>
+    <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? "" : v)}>
+      <SelectTrigger className="h-7 text-xs w-[140px] border-transparent bg-transparent hover:border-border focus:border-border transition-colors text-muted-foreground">
+        <SelectValue placeholder="—" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__none__">— Brak —</SelectItem>
+        {eventTypes.map((e) => (
+          <SelectItem key={e} value={e}>{e}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
+
+const InlineAmountInput = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => {
+  const [editing, setEditing] = useState(false);
+  const [tempVal, setTempVal] = useState(value.toString());
+
+  const commit = () => {
+    const num = parseFloat(tempVal.replace(",", "."));
+    if (!isNaN(num) && num >= 0) onChange(num);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div onClick={(e) => e.stopPropagation()}>
+        <Input
+          autoFocus
+          value={tempVal}
+          onChange={(e) => setTempVal(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }}
+          className="h-7 text-xs w-[100px] font-semibold"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <span
+      onClick={(e) => { e.stopPropagation(); setTempVal(value.toString()); setEditing(true); }}
+      className="font-semibold text-foreground cursor-text hover:bg-muted/50 px-1.5 py-0.5 rounded transition-colors"
+      title="Kliknij aby edytować"
+    >
+      {fmtNum(value)} zł
+    </span>
+  );
+};
+
 // ===== MAIN VIEW =====
 const OrdersView = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
@@ -1054,6 +1130,10 @@ const OrdersView = () => {
   const openDetail = (order: Order) => { setSelectedOrder(order); setView("detail"); };
   const openEdit = (order: Order) => { setSelectedOrder(order); setView("edit"); };
   const goBack = () => { setView("list"); setSelectedOrder(null); };
+
+  const updateOrderField = (orderId: string, field: Partial<Order>) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...field } : o));
+  };
 
   const handleSaveOrder = (updated: Order) => {
     setOrders(orders.map((o) => o.id === updated.id ? updated : o));
@@ -1137,13 +1217,24 @@ const OrdersView = () => {
                     <div className="text-xs text-muted-foreground">{order.email}</div>
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{order.event || "—"}</TableCell>
-                <TableCell className="text-muted-foreground">{order.date}</TableCell>
-                <TableCell className="font-semibold text-foreground">{order.amount}</TableCell>
                 <TableCell>
-                  <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border", statusColors[order.status])}>
-                    {order.status}
-                  </span>
+                  <InlineEventSelect
+                    value={order.event}
+                    onChange={(v) => updateOrderField(order.id, { event: v })}
+                  />
+                </TableCell>
+                <TableCell className="text-muted-foreground">{order.date}</TableCell>
+                <TableCell>
+                  <InlineAmountInput
+                    value={order.amountNum}
+                    onChange={(v) => updateOrderField(order.id, { amountNum: v, amount: fmtNum(v) + " zł" })}
+                  />
+                </TableCell>
+                <TableCell>
+                  <InlineStatusSelect
+                    value={order.status}
+                    onChange={(v) => updateOrderField(order.id, { status: v })}
+                  />
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
