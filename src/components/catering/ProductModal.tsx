@@ -91,6 +91,7 @@ export function ProductModal({
               onServingTimeChange={(time) => onServingTimeChange?.(product.id, time)}
               notes={productNotes}
               onNotesChange={(n) => onProductNotesChange?.(product.id, n)}
+              cateringType={cateringType}
             />
           )}
           {product.type === "configurable" && (
