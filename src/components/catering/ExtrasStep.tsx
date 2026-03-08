@@ -284,49 +284,6 @@ export function ExtrasStep({
   );
 }
 
-// ============= EXTRAS LIST SECTION =============
-
-function ExtrasListSection({
-  extras,
-  selectedExtras,
-  onExtraClick,
-}: {
-  extras: ExtraItem[];
-  selectedExtras: Record<string, number>;
-  onExtraClick: (extra: ExtraItem) => void;
-}) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-      {extras.map((extra) => {
-        const quantity = selectedExtras[extra.id] || 0;
-        const isSelected = quantity > 0;
-        const hasImage = extra.image;
-        return (
-          <Card key={extra.id} onClick={() => onExtraClick(extra)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                  {hasImage ? <img src={extra.image} alt={extra.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground text-sm">{extra.name}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-sm font-bold text-primary">{extra.price.toFixed(0)} zł / {extra.unitLabel}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {quantity > 0 && <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">{quantity}</Badge>}
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
-}
-
 // ============= EXTRA ITEM MODAL =============
 
 function ExtraItemModal({ item, isOpen, onClose, quantity, onQuantityChange }: { item: ExtraItem | null; isOpen: boolean; onClose: () => void; quantity: number; onQuantityChange: (qty: number) => void; }) {
