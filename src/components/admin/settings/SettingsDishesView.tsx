@@ -316,7 +316,12 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
               <Apple className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium">{ingredient.name}</span>
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">{ingredient.unit}</Badge>
-              <span className="text-xs text-muted-foreground">{ingredient.pricePerUnit.toFixed(3)} zł/{ingredient.unit}</span>
+              <span className="text-xs text-muted-foreground">
+                {ingredient.unit === "szt."
+                  ? `${ingredient.pricePerUnit.toFixed(2)} zł/szt.`
+                  : `${(ingredient.pricePerUnit * 1000).toFixed(2)} zł/${ingredient.unit === "g" ? "kg" : "l"}`
+                }
+              </span>
               {ingredient.allergens.map((a) => (
                 <Badge key={a} variant="secondary" className="text-[10px] px-1.5 py-0">{a}</Badge>
               ))}
