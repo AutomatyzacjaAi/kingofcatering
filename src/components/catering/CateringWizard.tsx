@@ -145,10 +145,12 @@ export function CateringWizard() {
       case 0:
         return (
           <EventDetails
+            cateringType={order.cateringType}
             guestCount={order.guestCount}
             eventType={order.eventType}
             eventDate={order.eventDate}
             eventTime={order.eventTime}
+            onCateringTypeChange={(type) => updateOrder({ cateringType: type })}
             onGuestCountChange={setGuestCount}
             onEventTypeChange={(type) => updateOrder({ eventType: type })}
             onEventDateChange={(date) => updateOrder({ eventDate: date })}
