@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format, addDays, isBefore, startOfDay } from "date-fns";
+import { format, isBefore, startOfDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -24,25 +24,13 @@ const TIME_SLOTS = [
   "20:00", "20:30", "21:00",
 ];
 
-// Mock busy dates - in real app these would come from backend
-const generateBusyDates = (): Date[] => {
-  const busy: Date[] = [];
-  const today = new Date();
-  [3, 7, 12, 15, 20, 25].forEach((day) => {
-    busy.push(addDays(today, day));
-  });
-  return busy;
-};
-
-const BUSY_DATES = generateBusyDates();
-
 export function FullscreenDateTimePicker({
   isOpen,
   selectedDate,
   selectedTime,
   onConfirm,
   onClose,
-  busyDates = BUSY_DATES,
+  busyDates = [],
 }: FullscreenDateTimePickerProps) {
   const [tempDate, setTempDate] = useState<Date | undefined>(selectedDate);
   const [tempTime, setTempTime] = useState<string>(selectedTime || "");

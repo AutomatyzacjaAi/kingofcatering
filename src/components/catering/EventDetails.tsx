@@ -11,22 +11,9 @@ import {
   CalendarDays, 
   ChevronRight, 
   Clock,
-  Heart,
-  Presentation,
-  Gift,
-  Briefcase,
-  Music,
+  icons,
 } from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
-
-const iconMap: Record<string, any> = {
-  Heart,
-  Presentation,
-  Gift,
-  Briefcase,
-  Music,
-  CalendarDays,
-};
 
 type EventDetailsProps = {
   guestCount: number;
