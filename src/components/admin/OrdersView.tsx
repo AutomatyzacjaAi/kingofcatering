@@ -104,7 +104,7 @@ const mockOrders: Order[] = [
     ],
   },
   {
-    id: "ZAM-KOC5CJA", client: "Maria Wiśniewska", email: "maria.w@email.pl", phone: "+48 700 555 666",
+    id: "ZAM-KOC5CJA", dbId: "", clientId: null, client: "Maria Wiśniewska", email: "maria.w@email.pl", phone: "+48 700 555 666",
     event: "Wesele", date: "28 sty 2026", deliveryAddress: "Dworek pod Lipami, Piaseczno",
     amount: "3 276,00 zł", amountNum: 3276, status: "Zrealizowane", notes: "Dekoracja stołu premium",
     createdAt: "5 sty 2026",
