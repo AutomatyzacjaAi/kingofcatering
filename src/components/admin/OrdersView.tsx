@@ -1531,7 +1531,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
   const removeItem = (index: number) => setItems(prev => prev.filter((_, i) => i !== index));
 
-  const totalAmount = items.reduce((s, i) => s + i.total, 0);
+  // totalAmount is declared above near items state
 
   const filteredCatalogAdd = catalogProducts.filter(p =>
     p.name.toLowerCase().includes(productSearch.toLowerCase())
