@@ -38,6 +38,8 @@ export async function submitOrder(
       notes: order.notes || "",
       payment_method: order.paymentMethod,
       delivery_address: `${order.contactStreet} ${order.contactBuildingNumber}${order.contactApartmentNumber ? `/${order.contactApartmentNumber}` : ""}, ${order.contactCity}`,
+      delivery_zone_id: order.deliveryZoneId || null,
+      delivery_cost: order.deliveryPrice || 0,
     })
     .select("id")
     .single();
