@@ -345,10 +345,6 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
             <Download className="w-4 h-4 mr-1" />
             Pobierz PDF
           </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="w-4 h-4 mr-1" />
-            Drukuj
-          </Button>
         </div>
       </div>
 
