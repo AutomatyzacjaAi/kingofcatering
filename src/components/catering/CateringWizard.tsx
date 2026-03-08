@@ -174,6 +174,7 @@ export function CateringWizard() {
             onProductNotesChange={updateProductNotes}
             products={filteredProducts}
             categories={filteredCategories}
+            cateringType={order.cateringType}
           />
         );
       case 2:

@@ -35,6 +35,7 @@ export function ProductsStep({
   onProductNotesChange,
   products,
   categories,
+  cateringType,
 }: ProductsStepProps) {
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
