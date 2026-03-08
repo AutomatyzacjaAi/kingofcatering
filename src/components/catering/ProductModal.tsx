@@ -227,15 +227,12 @@ function SimpleProductContent({
             <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
             <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => onQuantityChange(Math.max(0, quantity - 1))} disabled={quantity === 0}>
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-            <Button variant="outline" size="icon" onClick={() => onQuantityChange(quantity + 1)}>
-              <Plus className="w-4 h-4" />
-            </Button>
+          <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
+          <div>
+            <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
+            <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
           </div>
+          <QuantityInput value={quantity} onChange={onQuantityChange} />
         </div>
 
         <div>
