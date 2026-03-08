@@ -605,6 +605,7 @@ export type Database = {
           created_at: string
           description: string | null
           duration: string | null
+          extras_category_id: string | null
           food_cost: number | null
           icon: string | null
           id: string
@@ -627,6 +628,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: string | null
+          extras_category_id?: string | null
           food_cost?: number | null
           icon?: string | null
           id?: string
@@ -649,6 +651,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: string | null
+          extras_category_id?: string | null
           food_cost?: number | null
           icon?: string | null
           id?: string
@@ -664,6 +667,50 @@ export type Database = {
           unit_label?: string | null
           updated_at?: string
           vat_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extras_extras_category_id_fkey"
+            columns: ["extras_category_id"]
+            isOneToOne: false
+            referencedRelation: "extras_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extras_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_required: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_required?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_required?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
