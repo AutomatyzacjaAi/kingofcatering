@@ -318,15 +318,7 @@ function ExpandableProductContent({
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onVariantQuantityChange(variant.id, Math.max(0, qty - 1))} disabled={qty === 0}>
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="w-8 text-center font-bold">{qty}</span>
-                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onVariantQuantityChange(variant.id, qty + 1)}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              <QuantityInput value={qty} onChange={(newQty) => onVariantQuantityChange(variant.id, newQty)} size="sm" />
             </div>
           );
         })}
