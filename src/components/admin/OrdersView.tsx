@@ -50,6 +50,7 @@ interface Order {
   createdAt: string;
   deliveryCost: number;
   guestCount: number;
+  discount: number;
 }
 
 const statusColors: Record<OrderStatus, string> = {
@@ -68,7 +69,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC8L7K", dbId: "", clientId: null, client: "Anna Kowalska", email: "anna.k@email.pl", phone: "+48 500 111 222",
     event: "Urodziny", date: "28 sty 2026", deliveryAddress: "ul. Kwiatowa 5, Warszawa",
     amount: "2 211,00 zł", amountNum: 2211, status: "Nowe zamówienie", notes: "Bez orzechów - alergia",
-    createdAt: "15 sty 2026", deliveryCost: 50, guestCount: 30,
+    createdAt: "15 sty 2026", deliveryCost: 50, guestCount: 30, discount: 0,
     items: [
       { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900, type: "simple", foodCostPerUnit: 135,
         subItems: [
@@ -103,7 +104,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC01SQ", dbId: "", clientId: null, client: "Jan Nowak", email: "jan.nowak@email.pl", phone: "+48 600 333 444",
     event: "", date: "21 sty 2026", deliveryAddress: "ul. Długa 12, Kraków",
     amount: "350,00 zł", amountNum: 350, status: "Potwierdzone", notes: "",
-    createdAt: "10 sty 2026", deliveryCost: 0, guestCount: 10,
+    createdAt: "10 sty 2026", deliveryCost: 0, guestCount: 10, discount: 0,
     items: [
       { name: "Antipasto Włoskie", quantity: 1, unit: "szt.", pricePerUnit: 350, total: 350 },
     ],
@@ -112,7 +113,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC5CJA", dbId: "", clientId: null, client: "Maria Wiśniewska", email: "maria.w@email.pl", phone: "+48 700 555 666",
     event: "Wesele", date: "28 sty 2026", deliveryAddress: "Dworek pod Lipami, Piaseczno",
     amount: "3 276,00 zł", amountNum: 3276, status: "Zrealizowane", notes: "Dekoracja stołu premium",
-    createdAt: "5 sty 2026", deliveryCost: 0, guestCount: 30,
+    createdAt: "5 sty 2026", deliveryCost: 0, guestCount: 30, discount: 0,
     items: [
       { name: "Zestaw nr 2 Premium", quantity: 30, unit: "os.", pricePerUnit: 95, total: 2850, type: "configurable", foodCostPerUnit: 32,
         subItems: [
@@ -130,7 +131,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC1RA9", dbId: "", clientId: null, client: "Piotr Zieliński", email: "piotr.z@email.pl", phone: "+48 800 777 888",
     event: "", date: "21 sty 2026", deliveryAddress: "ul. Polna 8, Gdańsk",
     amount: "246,00 zł", amountNum: 246, status: "Anulowane", notes: "Klient zrezygnował",
-    createdAt: "8 sty 2026", deliveryCost: 30, guestCount: 12,
+    createdAt: "8 sty 2026", deliveryCost: 30, guestCount: 12, discount: 0,
     items: [
       { name: "Tacos z kurczakiem", quantity: 12, unit: "szt.", pricePerUnit: 18, total: 216, type: "simple", foodCostPerUnit: 6 },
       { name: "Opakowanie jednorazowe", quantity: 1, unit: "szt.", pricePerUnit: 30, total: 30, type: "extra", foodCostPerUnit: 8 },
@@ -140,7 +141,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC0MII", dbId: "", clientId: null, client: "Katarzyna Wójcik", email: "k.wojcik@email.pl", phone: "+48 500 999 000",
     event: "Stypa", date: "26 sty 2026", deliveryAddress: "ul. Cicha 3, Warszawa",
     amount: "402,00 zł", amountNum: 402, status: "Zrealizowane", notes: "",
-    createdAt: "12 sty 2026", deliveryCost: 0, guestCount: 15,
+    createdAt: "12 sty 2026", deliveryCost: 0, guestCount: 15, discount: 0,
     items: [
       { name: "Patera Serów Europejskich", quantity: 1, unit: "szt.", pricePerUnit: 450, total: 450, type: "simple", foodCostPerUnit: 135,
         subItems: [
@@ -159,7 +160,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOCX6J3", dbId: "", clientId: null, client: "Tomasz Kamiński", email: "t.kaminski@email.pl", phone: "+48 600 111 333",
     event: "Impreza firmowa", date: "13 sty 2026", deliveryAddress: "Biurowiec Centrum, al. Jerozolimskie 100",
     amount: "14 970,00 zł", amountNum: 14970, status: "Potwierdzone", notes: "Faktura na firmę",
-    createdAt: "2 sty 2026", deliveryCost: 120, guestCount: 100,
+    createdAt: "2 sty 2026", deliveryCost: 120, guestCount: 100, discount: 0,
     items: [
       { name: "Zestaw nr 2 Premium", quantity: 100, unit: "os.", pricePerUnit: 95, total: 9500, type: "configurable", foodCostPerUnit: 32,
         subItems: [
@@ -186,7 +187,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC3UTX", dbId: "", clientId: null, client: "Agnieszka Lewandowska", email: "a.lew@email.pl", phone: "+48 700 222 444",
     event: "Impreza firmowa", date: "20 sty 2026", deliveryAddress: "Hotel Marriott, Warszawa",
     amount: "4 648,00 zł", amountNum: 4648, status: "W realizacji", notes: "",
-    createdAt: "6 sty 2026", deliveryCost: 0, guestCount: 50,
+    createdAt: "6 sty 2026", deliveryCost: 0, guestCount: 50, discount: 0,
     items: [
       { name: "Zestaw nr 1 Klasyczny", quantity: 50, unit: "os.", pricePerUnit: 70, total: 3500, type: "configurable", foodCostPerUnit: 22,
         subItems: [
@@ -764,9 +765,25 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }:
                 </TableRow>
               ))}
               <TableRow className="hover:bg-transparent border-t-2">
-                <TableCell colSpan={3} className="text-right font-semibold text-foreground">Suma:</TableCell>
-                <TableCell className="text-right font-bold text-primary text-lg">{order.amount}</TableCell>
+                <TableCell colSpan={3} className="text-right font-semibold text-foreground">
+                  {order.discount > 0 ? "Suma pozycji:" : "Suma:"}
+                </TableCell>
+                <TableCell className="text-right font-semibold text-foreground">
+                  {order.discount > 0 ? fmtNum(order.items.reduce((s, i) => s + i.total, 0)) + " zł" : order.amount}
+                </TableCell>
               </TableRow>
+              {order.discount > 0 && (
+                <>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="text-right font-semibold text-destructive">Rabat:</TableCell>
+                    <TableCell className="text-right font-semibold text-destructive">-{fmtNum(order.discount)} zł</TableCell>
+                  </TableRow>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="text-right font-bold text-foreground text-base">Do zapłaty:</TableCell>
+                    <TableCell className="text-right font-bold text-primary text-lg">{order.amount}</TableCell>
+                  </TableRow>
+                </>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -916,6 +933,7 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
   const [notes, setNotes] = useState(order.notes);
   const [deliveryAddress, setDeliveryAddress] = useState(order.deliveryAddress);
   const [items, setItems] = useState<OrderItem[]>(order.items.map(i => ({ ...i })));
+  const [discount, setDiscount] = useState(order.discount || 0);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [addSearch, setAddSearch] = useState("");
   const [configuringProduct, setConfiguringProduct] = useState<CatalogProduct | null>(null);
@@ -961,12 +979,13 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
   };
 
   const totalAmount = items.reduce((s, i) => s + i.total, 0);
+  const finalAmount = totalAmount - discount;
 
   const handleSave = () => {
     onSave({
-      ...order, status, notes, deliveryAddress, items,
-      amount: fmtNum(totalAmount) + " zł",
-      amountNum: totalAmount,
+      ...order, status, notes, deliveryAddress, items, discount,
+      amount: fmtNum(finalAmount) + " zł",
+      amountNum: finalAmount,
     });
   };
 
@@ -987,7 +1006,7 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
       </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Status</CardTitle></CardHeader>
             <CardContent>
@@ -1003,6 +1022,23 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
             <CardHeader className="pb-3"><CardTitle className="text-base">Adres dostawy</CardTitle></CardHeader>
             <CardContent>
               <Input value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Rabat</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={discount}
+                  onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="text-right"
+                  placeholder="0"
+                />
+                <span className="text-sm text-muted-foreground whitespace-nowrap">zł</span>
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -1120,8 +1156,20 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
                   </TableRow>
                 ))}
                 <TableRow className="hover:bg-transparent border-t-2">
-                  <TableCell colSpan={3} className="text-right font-semibold text-foreground">Suma:</TableCell>
-                  <TableCell className="text-right font-bold text-primary text-lg">{fmtNum(totalAmount)} zł</TableCell>
+                  <TableCell colSpan={3} className="text-right font-semibold text-foreground">Suma pozycji:</TableCell>
+                  <TableCell className="text-right font-semibold text-foreground">{fmtNum(totalAmount)} zł</TableCell>
+                  <TableCell />
+                </TableRow>
+                {discount > 0 && (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="text-right font-semibold text-destructive">Rabat:</TableCell>
+                    <TableCell className="text-right font-semibold text-destructive">-{fmtNum(discount)} zł</TableCell>
+                    <TableCell />
+                  </TableRow>
+                )}
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={3} className="text-right font-bold text-foreground text-base">Do zapłaty:</TableCell>
+                  <TableCell className="text-right font-bold text-primary text-lg">{fmtNum(finalAmount)} zł</TableCell>
                   <TableCell />
                 </TableRow>
               </TableBody>
@@ -1550,7 +1598,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       event, date: date || dateStr, deliveryAddress: cateringType === "na_sali" ? "Na sali" : (deliveryAddress || `${deliveryStreet} ${deliveryBuilding}, ${deliveryCity}`), notes, items,
       amount: fmtNum(totalAmount + effectiveDeliveryCost) + " zł", amountNum: totalAmount + effectiveDeliveryCost,
       status: "Nowe zamówienie", createdAt: dateStr,
-      deliveryCost: effectiveDeliveryCost, guestCount: 0,
+      deliveryCost: effectiveDeliveryCost, guestCount: 0, discount: 0,
     };
 
     onAdd(newOrder);
@@ -1964,6 +2012,7 @@ const OrdersView = () => {
           createdAt: formatDate(o.created_at),
           deliveryCost: Number(o.delivery_cost) || 0,
           guestCount: Number(o.guest_count) || 0,
+          discount: Number((o as any).discount) || 0,
         };
       });
 
@@ -2015,10 +2064,52 @@ const OrdersView = () => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...field } : o));
   };
 
-  const handleSaveOrder = (updated: Order) => {
+  const handleSaveOrder = async (updated: Order) => {
     setOrders(orders.map((o) => o.id === updated.id ? updated : o));
     setSelectedOrder(updated);
     setView("detail");
+
+    // Persist to DB
+    if (updated.dbId) {
+      await supabase.from("orders").update({
+        status: updated.status,
+        notes: updated.notes,
+        delivery_address: updated.deliveryAddress,
+        amount: updated.amountNum,
+        discount: updated.discount,
+      } as any).eq("id", updated.dbId);
+
+      // Rebuild order_items
+      await supabase.from("order_items").delete().eq("order_id", updated.dbId);
+      for (let idx = 0; idx < updated.items.length; idx++) {
+        const item = updated.items[idx];
+        const { data: insertedItem } = await supabase.from("order_items").insert({
+          order_id: updated.dbId,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          price_per_unit: item.pricePerUnit,
+          total: item.total,
+          item_type: item.type || "simple",
+          food_cost_per_unit: item.foodCostPerUnit || 0,
+          sort_order: idx,
+        }).select("id").single();
+
+        if (insertedItem && item.subItems && item.subItems.length > 0) {
+          await supabase.from("order_item_sub_items").insert(
+            item.subItems.map((sub, si) => ({
+              order_item_id: insertedItem.id,
+              name: sub.name,
+              quantity: sub.quantity,
+              unit: sub.unit,
+              food_cost_per_unit: sub.foodCostPerUnit || 0,
+              sort_order: si,
+            }))
+          );
+        }
+      }
+      toast.success("Zamówienie zapisane");
+    }
   };
 
   const handleGenerateDoc = (type: DocType) => {

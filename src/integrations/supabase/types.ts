@@ -891,6 +891,7 @@ export type Database = {
           delivery_address: string | null
           delivery_cost: number
           delivery_zone_id: string | null
+          discount: number
           event_date: string | null
           event_type: string | null
           guest_count: number | null
@@ -915,6 +916,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_cost?: number
           delivery_zone_id?: string | null
+          discount?: number
           event_date?: string | null
           event_type?: string | null
           guest_count?: number | null
@@ -939,6 +941,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_cost?: number
           delivery_zone_id?: string | null
+          discount?: number
           event_date?: string | null
           event_type?: string | null
           guest_count?: number | null
