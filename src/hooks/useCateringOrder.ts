@@ -33,6 +33,8 @@ export type CateringOrder = {
   contactApartmentNumber: string;
   notes: string;
   paymentMethod: string;
+  deliveryZoneId: string | null;
+  deliveryPrice: number;
 };
 
 const initialOrder: CateringOrder = {
