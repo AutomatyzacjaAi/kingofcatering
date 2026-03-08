@@ -1568,7 +1568,42 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                   {eventTypes.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <button
+                onClick={() => setIsDatePickerOpen(true)}
+                className={cn(
+                  "w-full flex items-center justify-between p-3 rounded-lg border transition-all text-sm",
+                  "hover:border-primary focus:outline-none",
+                  date && time ? "border-primary bg-accent" : "border-input"
+                )}
+              >
+                <div className="text-left">
+                  {date && time ? (
+                    <>
+                      <p className="font-medium text-foreground">
+                        {format(new Date(date), "d MMMM yyyy", { locale: pl })}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {time}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground">Wybierz datę i godzinę</p>
+                  )}
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <FullscreenDateTimePicker
+                isOpen={isDatePickerOpen}
+                selectedDate={date ? new Date(date) : undefined}
+                selectedTime={time}
+                onConfirm={(d, t) => {
+                  setDate(format(d, "yyyy-MM-dd"));
+                  setTime(t);
+                }}
+                onClose={() => setIsDatePickerOpen(false)}
+                busyDates={blockedDates}
+              />
             </div>
           </div>
 
