@@ -83,6 +83,7 @@ const IconPickerSmall = ({ value, onChange }: { value: LucideIconName; onChange:
 
 const SettingsFormView = () => {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [extrasCategories, setExtrasCategories] = useState<ExtrasCategory[]>([]);
   const [events, setEvents] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -91,45 +92,45 @@ const SettingsFormView = () => {
   const [newCatDesc, setNewCatDesc] = useState("");
   const [newCatIcon, setNewCatIcon] = useState<LucideIconName>("Salad");
 
+  const [showExCatForm, setShowExCatForm] = useState(false);
+  const [newExCatName, setNewExCatName] = useState("");
+  const [newExCatDesc, setNewExCatDesc] = useState("");
+  const [newExCatIcon, setNewExCatIcon] = useState<LucideIconName>("Sparkles");
+  const [newExCatRequired, setNewExCatRequired] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch categories
-      const { data: cats } = await supabase
-        .from("product_categories")
-        .select("*")
-        .order("sort_order", { ascending: true });
+      const [catsRes, evtsRes, mappingsRes, exCatsRes] = await Promise.all([
+        supabase.from("product_categories").select("*").order("sort_order", { ascending: true }),
+        supabase.from("event_types").select("*").order("sort_order", { ascending: true }),
+        supabase.from("event_category_mappings").select("*"),
+        supabase.from("extras_categories").select("*").order("sort_order", { ascending: true }),
+      ]);
 
-      // Fetch event types
-      const { data: evts } = await supabase
-        .from("event_types")
-        .select("*")
-        .order("sort_order", { ascending: true });
-
-      // Fetch mappings
-      const { data: mappings } = await supabase
-        .from("event_category_mappings")
-        .select("*");
-
-      if (cats) {
-        setCategories(cats.map((c) => ({
-          id: c.id,
-          name: c.name,
-          description: c.description || "",
-          icon: (c.icon as LucideIconName) || "Salad",
-          slug: c.slug,
+      if (catsRes.data) {
+        setCategories(catsRes.data.map((c) => ({
+          id: c.id, name: c.name, description: c.description || "",
+          icon: (c.icon as LucideIconName) || "Salad", slug: c.slug,
         })));
       }
 
-      if (evts) {
+      if (exCatsRes.data) {
+        setExtrasCategories(exCatsRes.data.map((c: any) => ({
+          id: c.id, name: c.name, description: c.description || "",
+          icon: (c.icon as LucideIconName) || "Sparkles", slug: c.slug,
+          isRequired: c.is_required ?? false,
+        })));
+      }
+
+      if (evtsRes.data) {
         const mappingsByEvent: Record<string, string[]> = {};
-        (mappings || []).forEach((m) => {
+        (mappingsRes.data || []).forEach((m) => {
           if (!mappingsByEvent[m.event_type_id]) mappingsByEvent[m.event_type_id] = [];
           mappingsByEvent[m.event_type_id].push(m.category_id);
         });
 
-        setEvents(evts.map((e) => ({
-          id: e.id,
-          name: e.name,
+        setEvents(evtsRes.data.map((e) => ({
+          id: e.id, name: e.name,
           icon: (e.icon as LucideIconName) || "CalendarDays",
           allowedCategoryIds: mappingsByEvent[e.id] || [],
         })));
