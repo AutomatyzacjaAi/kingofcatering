@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Trash2, Plus, Minus, UtensilsCrossed } from "lucide-react";
 import type { Product } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption } from "@/data/extras";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
@@ -26,7 +26,7 @@ export function CartDrawer({
   onExtraChange, onPackagingChange, onWaiterServiceChange,
   products, extraItems, packagingOptions, waiterServiceOptions,
 }: CartDrawerProps) {
-  type CartItem = { key: string; name: string; icon: string; price: number; quantity: number; type: "simple" | "expandable" | "configurable" | "extra" | "packaging" | "waiter"; productId: string; variantId?: string; isReadOnly?: boolean; };
+  type CartItem = { key: string; name: string; price: number; quantity: number; type: "simple" | "expandable" | "configurable" | "extra" | "packaging" | "waiter"; productId: string; variantId?: string; isReadOnly?: boolean; };
   
   const cartItems: CartItem[] = [];
   
@@ -34,7 +34,7 @@ export function CartDrawer({
     if (qty > 0) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "simple") {
-        cartItems.push({ key: productId, name: product.name, icon: product.icon, price: product.pricePerUnit, quantity: qty, type: "simple", productId });
+        cartItems.push({ key: productId, name: product.name, price: product.pricePerUnit, quantity: qty, type: "simple", productId });
       }
     }
   }
@@ -46,7 +46,7 @@ export function CartDrawer({
         if (qty > 0) {
           const variant = product.variants.find(v => v.id === variantId);
           if (variant) {
-            cartItems.push({ key: `${productId}-${variantId}`, name: variant.name, icon: product.icon, price: variant.price, quantity: qty, type: "expandable", productId, variantId });
+            cartItems.push({ key: `${productId}-${variantId}`, name: variant.name, price: variant.price, quantity: qty, type: "expandable", productId, variantId });
           }
         }
       }
@@ -57,7 +57,7 @@ export function CartDrawer({
     if (data.quantity > 0) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "configurable") {
-        cartItems.push({ key: productId, name: product.name, icon: product.icon, price: product.pricePerPerson, quantity: data.quantity, type: "configurable", productId });
+        cartItems.push({ key: productId, name: product.name, price: product.pricePerPerson, quantity: data.quantity, type: "configurable", productId });
       }
     }
   }
@@ -66,7 +66,7 @@ export function CartDrawer({
     if (qty > 0) {
       const extra = extraItems.find(e => e.id === extraId);
       if (extra) {
-        cartItems.push({ key: `extra-${extraId}`, name: extra.name, icon: extra.icon, price: extra.price, quantity: qty, type: "extra", productId: extraId });
+        cartItems.push({ key: `extra-${extraId}`, name: extra.name, price: extra.price, quantity: qty, type: "extra", productId: extraId });
       }
     }
   }
@@ -74,14 +74,14 @@ export function CartDrawer({
   if (order.selectedPackaging) {
     const packaging = packagingOptions.find(p => p.id === order.selectedPackaging);
     if (packaging && packaging.price > 0) {
-      cartItems.push({ key: `packaging-${order.selectedPackaging}`, name: packaging.name, icon: packaging.icon, price: packaging.price, quantity: order.packagingPersonCount, type: "packaging", productId: order.selectedPackaging, isReadOnly: true });
+      cartItems.push({ key: `packaging-${order.selectedPackaging}`, name: packaging.name, price: packaging.price, quantity: order.packagingPersonCount, type: "packaging", productId: order.selectedPackaging, isReadOnly: true });
     }
   }
 
   if (order.selectedWaiterService) {
     const service = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
     if (service) {
-      cartItems.push({ key: `waiter-${order.selectedWaiterService}`, name: service.name, icon: service.icon, price: service.price, quantity: order.waiterCount, type: "waiter", productId: order.selectedWaiterService, isReadOnly: true });
+      cartItems.push({ key: `waiter-${order.selectedWaiterService}`, name: service.name, price: service.price, quantity: order.waiterCount, type: "waiter", productId: order.selectedWaiterService, isReadOnly: true });
     }
   }
 
@@ -127,7 +127,9 @@ export function CartDrawer({
             <div className="flex-1 overflow-auto py-4 space-y-3">
               {cartItems.map((item) => (
                 <div key={item.key} className="flex gap-3 p-3 rounded-xl bg-muted/50">
-                  <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center text-xl shrink-0">{item.icon}</div>
+                  <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center shrink-0">
+                    <UtensilsCrossed className="w-5 h-5 text-muted-foreground" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm text-foreground line-clamp-2">{item.name}</h4>
                     <p className="text-xs text-muted-foreground">{item.price.toFixed(2)} zł × {item.quantity}</p>
