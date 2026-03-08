@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronRight, Minus, Plus, X, Sparkles, Package, Users } from "lucide-react";
+import { Check, ChevronRight, Minus, Plus, X, Sparkles, Package, Users, UtensilsCrossed } from "lucide-react";
 import { QuantityInput } from "./QuantityInput";
 import {
   Dialog,
@@ -16,12 +16,6 @@ import type {
   WaiterServiceOption,
 } from "@/data/extras";
 import { extrasCategories } from "@/data/extras";
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  Sparkles: <Sparkles className="w-4 h-4" />,
-  Package: <Package className="w-4 h-4" />,
-  Users: <Users className="w-4 h-4" />,
-};
 
 type ExtrasStepProps = {
   selectedExtras: Record<string, number>;
