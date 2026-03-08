@@ -807,7 +807,6 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">{b.name}</p>
-                    <p className="text-sm font-medium">{b.name}</p>
                     {b.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{b.categorySlug}</Badge>}
                   </div>
                   <p className="text-xs text-muted-foreground">{b.variants.length} wariantów</p>
