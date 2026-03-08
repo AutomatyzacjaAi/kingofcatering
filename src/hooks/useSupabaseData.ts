@@ -331,6 +331,7 @@ export function useSupabaseData() {
     categoriesQuery.isLoading ||
     eventTypesQuery.isLoading ||
     productsQuery.isLoading ||
+    extrasCategoriesQuery.isLoading ||
     extrasQuery.isLoading ||
     paymentMethodsQuery.isLoading ||
     blockedDatesQuery.isLoading ||
