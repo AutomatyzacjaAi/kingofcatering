@@ -1112,6 +1112,270 @@ const InlineAmountInput = ({ value, onChange }: { value: number; onChange: (v: n
   );
 };
 
+// ===== ADD ORDER SHEET =====
+const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () => void; onAdd: (order: Order) => void }) => {
+  const [clientSearch, setClientSearch] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [event, setEvent] = useState("");
+  const [date, setDate] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [notes, setNotes] = useState("");
+  const [items, setItems] = useState<OrderItem[]>([]);
+  const [showProducts, setShowProducts] = useState(false);
+  const [productSearch, setProductSearch] = useState("");
+
+  const filteredClients = mockClients.filter(c =>
+    `${c.firstName} ${c.lastName}`.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    c.email.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    c.companyName.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+
+  const selectClient = (id: string) => {
+    const c = mockClients.find(cl => cl.id === id);
+    if (!c) return;
+    setSelectedClientId(id);
+    setClientName(`${c.firstName} ${c.lastName}`);
+    setClientEmail(c.email);
+    setClientPhone(c.phone);
+    if (c.address && c.city) setDeliveryAddress(`${c.address}, ${c.city}`);
+    setClientSearch("");
+  };
+
+  const clearClient = () => {
+    setSelectedClientId(null);
+    setClientName(""); setClientEmail(""); setClientPhone("");
+  };
+
+  const addProduct = (product: typeof availableProducts[0]) => {
+    setItems(prev => [...prev, {
+      name: product.name, quantity: 1, unit: product.unit,
+      pricePerUnit: product.defaultPrice, total: product.defaultPrice, type: product.type,
+    }]);
+    setShowProducts(false);
+    setProductSearch("");
+  };
+
+  const updateItem = (index: number, field: "quantity" | "pricePerUnit", value: number) => {
+    setItems(prev => prev.map((item, i) => {
+      if (i !== index) return item;
+      const updated = { ...item, [field]: value };
+      updated.total = updated.quantity * updated.pricePerUnit;
+      return updated;
+    }));
+  };
+
+  const removeItem = (index: number) => setItems(prev => prev.filter((_, i) => i !== index));
+
+  const totalAmount = items.reduce((s, i) => s + i.total, 0);
+
+  const filteredProducts = availableProducts.filter(p =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  const handleSubmit = () => {
+    if (!clientName.trim()) { toast.error("Podaj dane klienta"); return; }
+    if (items.length === 0) { toast.error("Dodaj przynajmniej jedną pozycję"); return; }
+
+    const now = new Date();
+    const months = ["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
+    const dateStr = `${String(now.getDate()).padStart(2,"0")} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+    const newOrder: Order = {
+      id: `ZAM-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+      client: clientName, email: clientEmail, phone: clientPhone,
+      event, date: date || dateStr, deliveryAddress, notes, items,
+      amount: fmtNum(totalAmount) + " zł", amountNum: totalAmount,
+      status: "Nowe", createdAt: dateStr,
+    };
+
+    onAdd(newOrder);
+    toast.success("Zamówienie dodane");
+
+    // Reset
+    setSelectedClientId(null); setClientName(""); setClientEmail(""); setClientPhone("");
+    setEvent(""); setDate(""); setDeliveryAddress(""); setNotes(""); setItems([]);
+    setClientSearch("");
+    onClose();
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-xl">Nowe zamówienie</SheetTitle>
+        </SheetHeader>
+
+        <div className="space-y-6 mt-6">
+          {/* Client section */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
+              Klient
+            </Label>
+
+            {selectedClientId ? (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{clientName}</p>
+                  <p className="text-xs text-muted-foreground">{clientEmail} · {clientPhone}</p>
+                </div>
+                <button onClick={clearClient} className="p-1 text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Szukaj klienta..."
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                {clientSearch && (
+                  <div className="border border-border rounded-lg max-h-36 overflow-y-auto">
+                    {filteredClients.map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => selectClient(c.id)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors border-b border-border last:border-b-0"
+                      >
+                        <span className="font-medium">{c.firstName} {c.lastName}</span>
+                        <span className="text-muted-foreground ml-2 text-xs">{c.email}</span>
+                      </button>
+                    ))}
+                    {filteredClients.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-3">Nie znaleziono</p>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">lub wpisz ręcznie:</p>
+                <div className="grid grid-cols-1 gap-2">
+                  <Input placeholder="Imię i nazwisko" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input placeholder="Email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} />
+                    <Input placeholder="Telefon" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Event info */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              Wydarzenie
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Select value={event || "__none__"} onValueChange={(v) => setEvent(v === "__none__" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Typ wydarzenia" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Brak —</SelectItem>
+                  {eventTypes.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+          </div>
+
+          {/* Delivery */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" />
+              Adres dostawy
+            </Label>
+            <Input placeholder="ul. Przykładowa 10, Warszawa" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-primary" />
+              Uwagi
+            </Label>
+            <Textarea placeholder="Alergie, preferencje..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          </div>
+
+          {/* Products */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-primary" />
+                Pozycje ({items.length})
+              </Label>
+              <Button variant="outline" size="sm" onClick={() => setShowProducts(!showProducts)}>
+                {showProducts ? <X className="w-4 h-4 mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
+                {showProducts ? "Zamknij" : "Dodaj"}
+              </Button>
+            </div>
+
+            {showProducts && (
+              <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input placeholder="Szukaj produktu..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} className="pl-9" autoFocus />
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-0.5">
+                  {filteredProducts.map(p => (
+                    <button key={p.name} onClick={() => addProduct(p)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
+                    >
+                      <span className="font-medium text-foreground">{p.name}</span>
+                      <span className="text-muted-foreground text-xs">{fmtNum(p.defaultPrice)} zł/{p.unit}</span>
+                    </button>
+                  ))}
+                  {filteredProducts.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">Brak wyników</p>}
+                </div>
+              </div>
+            )}
+
+            {items.length > 0 && (
+              <div className="space-y-1.5">
+                {items.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/30">
+                    <span className="text-sm font-medium flex-1 truncate">{item.name}</span>
+                    <Input
+                      type="number" min={1} value={item.quantity}
+                      onChange={(e) => updateItem(i, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-16 h-7 text-xs text-center"
+                    />
+                    <span className="text-xs text-muted-foreground w-6">{item.unit}</span>
+                    <Input
+                      type="number" min={0} step={0.01} value={item.pricePerUnit}
+                      onChange={(e) => updateItem(i, "pricePerUnit", Math.max(0, parseFloat(e.target.value) || 0))}
+                      className="w-20 h-7 text-xs text-right"
+                    />
+                    <span className="text-xs text-muted-foreground">zł</span>
+                    <span className="text-xs font-semibold w-16 text-right">{fmtNum(item.total)} zł</span>
+                    <button onClick={() => removeItem(i)} className="p-1 text-destructive/60 hover:text-destructive">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+                <div className="flex justify-end pt-2 border-t border-border">
+                  <span className="text-sm font-bold text-primary">{fmtNum(totalAmount)} zł</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Submit */}
+          <Button className="w-full" size="lg" onClick={handleSubmit}>
+            <Check className="w-4 h-4 mr-2" />
+            Utwórz zamówienie
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
 // ===== MAIN VIEW =====
 const OrdersView = () => {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
