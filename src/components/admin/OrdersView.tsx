@@ -276,11 +276,11 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
           <p className="text-muted-foreground text-sm">{order.client} · {order.date}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => {
-            if (showOffer) generateOfferPdf(order);
-            else if (showShoppingList) generateShoppingListPdf(order);
-            else if (showKitchen) generateKitchenPdf(order);
-            else if (showFoodCost) generateFoodCostPdf(order);
+          <Button variant="outline" size="sm" onClick={async () => {
+            if (showOffer) await generateOfferPdf(order);
+            else if (showShoppingList) await generateShoppingListPdf(order);
+            else if (showKitchen) await generateKitchenPdf(order);
+            else if (showFoodCost) await generateFoodCostPdf(order);
           }}>
             <Download className="w-4 h-4 mr-1" />
             Pobierz PDF
