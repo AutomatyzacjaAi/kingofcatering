@@ -4,6 +4,7 @@ import { ShoppingCart, Trash2, Plus, Minus, UtensilsCrossed } from "lucide-react
 import type { Product } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption } from "@/data/extras";
 import type { CateringOrder } from "@/hooks/useCateringOrder";
+import { getSimplePrice, getVariantPrice, getConfigurablePrice, getExtraPrice, getPackagingPrice, getWaiterPrice } from "@/lib/pricing";
 
 type CartDrawerProps = {
   order: CateringOrder;
