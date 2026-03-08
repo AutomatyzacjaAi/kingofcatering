@@ -139,7 +139,6 @@ async function fetchProducts(): Promise<Product[]> {
       image: s.image_url ?? undefined,
       pricePerPerson: Number(s.price_per_person),
       minPersons: s.min_persons,
-      icon: s.icon ?? "🍽️",
       category: s.category_slug ?? "zestawy",
       optionGroups,
     } satisfies ConfigurableProduct);
