@@ -948,7 +948,9 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
   const startEdit = (cs: ConfigSet) => {
     setEditingId(cs.id); setFormName(cs.name); setFormDesc(cs.description); setFormLongDesc(cs.longDescription);
-    setFormImage(cs.image); setFormPrice(cs.pricePerPerson.toString()); setFormMinPersons(cs.minPersons.toString());
+    setFormImage(cs.image); setFormPrice(cs.pricePerPerson.toString());
+    setFormPriceOnSite(cs.pricePerPersonOnSite != null ? cs.pricePerPersonOnSite.toString() : "");
+    setFormMinPersons(cs.minPersons.toString());
     setFormIcon(cs.icon); setFormCategorySlug(cs.categorySlug); setFormGroups([...cs.groups]); setShowForm(true);
   };
 
