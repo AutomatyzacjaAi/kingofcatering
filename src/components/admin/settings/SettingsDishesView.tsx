@@ -206,7 +206,9 @@ const IngredientPicker = ({ ingredients, dishIngredients, onChange }: {
             <button key={i.id} type="button" onClick={() => toggleIngredient(i.id)}
               className="w-full text-left px-2.5 py-1.5 rounded text-xs hover:bg-muted flex items-center justify-between">
               <span>{i.name}</span>
-              <span className="text-[10px] text-muted-foreground">{i.pricePerUnit.toFixed(3)} zł/{i.unit}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {i.unit === "szt." ? `${i.pricePerUnit.toFixed(2)} zł/szt.` : `${(i.pricePerUnit * 1000).toFixed(2)} zł/${i.unit === "g" ? "kg" : "l"}`}
+              </span>
             </button>
           ))}
           {filtered.filter(i => !selectedIds.includes(i.id)).length === 0 && (
