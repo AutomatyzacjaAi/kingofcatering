@@ -172,7 +172,6 @@ async function fetchExtras(): Promise<{
         image: e.image_url ?? undefined,
         price: Number(e.price),
         unitLabel: e.unit_label ?? "szt.",
-        icon: e.icon ?? "✨",
         contents: (e.contents as string[]) ?? [],
       });
     } else if (e.category === "pakowanie") {
