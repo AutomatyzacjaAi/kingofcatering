@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3 } from "lucide-react";
+import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type AdminSection = "orders" | "clients" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form";
+export type AdminSection = "orders" | "clients" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
