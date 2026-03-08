@@ -53,6 +53,10 @@ async function calculateRouteDistance(
 ): Promise<{ distanceKm: number; durationMin: number } | null> {
   const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=false`;
   const res = await fetch(url);
+  if (!res.ok) {
+    console.error('OSRM error:', res.status, await res.text());
+    return null;
+  }
   const data: OsrmRoute = await res.json();
   if (!data.routes || data.routes.length === 0) return null;
   return {
