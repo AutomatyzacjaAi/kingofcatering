@@ -1,6 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import type { Product } from "@/data/products";
 import type { ExtraItem, PackagingOption, WaiterServiceOption } from "@/data/extras";
+import type { CateringType } from "@/lib/pricing";
+import { getSimplePrice, getVariantPrice, getConfigurablePrice, getExtraPrice, getPackagingPrice, getWaiterPrice } from "@/lib/pricing";
 
 export type OrderItem = {
   productId: string;
