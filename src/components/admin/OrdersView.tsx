@@ -1546,14 +1546,15 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
     const months = ["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
     const dateStr = `${String(now.getDate()).padStart(2,"0")} ${months[now.getMonth()]} ${now.getFullYear()}`;
 
+    const effectiveDeliveryCost = cateringType === "na_sali" ? 0 : deliveryCost;
     const newOrder: Order = {
       id: `ZAM-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
       dbId: "", clientId: selectedClientId,
       client: clientName, email: clientEmail, phone: clientPhone,
-      event, date: date || dateStr, deliveryAddress: deliveryAddress || `${deliveryStreet} ${deliveryBuilding}, ${deliveryCity}`, notes, items,
-      amount: fmtNum(totalAmount + deliveryCost) + " zł", amountNum: totalAmount + deliveryCost,
+      event, date: date || dateStr, deliveryAddress: cateringType === "na_sali" ? "Na sali" : (deliveryAddress || `${deliveryStreet} ${deliveryBuilding}, ${deliveryCity}`), notes, items,
+      amount: fmtNum(totalAmount + effectiveDeliveryCost) + " zł", amountNum: totalAmount + effectiveDeliveryCost,
       status: "Nowe zamówienie", createdAt: dateStr,
-      deliveryCost, guestCount: 0,
+      deliveryCost: effectiveDeliveryCost, guestCount: 0,
     };
 
     onAdd(newOrder);
