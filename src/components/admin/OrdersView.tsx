@@ -919,6 +919,8 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
   const [items, setItems] = useState<OrderItem[]>(order.items.map(i => ({ ...i })));
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [addSearch, setAddSearch] = useState("");
+  const [configuringProduct, setConfiguringProduct] = useState<CatalogProduct | null>(null);
+  const catalogProducts = useCatalogProducts();
 
   const updateItem = (index: number, field: "quantity" | "pricePerUnit", value: number) => {
     setItems(prev => prev.map((item, i) => {
@@ -933,15 +935,28 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
     setItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  const addProduct = (product: typeof availableProducts[0]) => {
+  const addProduct = (product: CatalogProduct) => {
+    if ((product.type === "bundle" && product.variants && product.variants.length > 0) ||
+        (product.type === "configurable" && product.optionGroups && product.optionGroups.length > 0)) {
+      setConfiguringProduct(product);
+      return;
+    }
     setItems(prev => [...prev, {
-      name: product.name,
-      quantity: 1,
-      unit: product.unit,
-      pricePerUnit: product.defaultPrice,
-      total: product.defaultPrice,
-      type: product.type,
+      name: product.name, quantity: 1, unit: product.unit,
+      pricePerUnit: product.defaultPrice, total: product.defaultPrice, type: product.type,
     }]);
+    setShowAddProduct(false);
+    setAddSearch("");
+  };
+
+  const handleSubItemConfirm = (subItems: OrderItem["subItems"]) => {
+    if (!configuringProduct) return;
+    setItems(prev => [...prev, {
+      name: configuringProduct.name, quantity: 1, unit: configuringProduct.unit,
+      pricePerUnit: configuringProduct.defaultPrice, total: configuringProduct.defaultPrice,
+      type: configuringProduct.type, subItems,
+    }]);
+    setConfiguringProduct(null);
     setShowAddProduct(false);
     setAddSearch("");
   };
@@ -956,7 +971,7 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
     });
   };
 
-  const filteredProducts = availableProducts.filter(p =>
+  const filteredCatalog = catalogProducts.filter(p =>
     p.name.toLowerCase().includes(addSearch.toLowerCase())
   );
 
