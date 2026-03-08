@@ -1195,7 +1195,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                         onClick={() => selectClient(c.id)}
                         className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors border-b border-border last:border-b-0"
                       >
-                        <span className="font-medium">{c.firstName} {c.lastName}</span>
+                        <span className="font-medium">{c.first_name} {c.last_name}</span>
                         <span className="text-muted-foreground ml-2 text-xs">{c.email}</span>
                       </button>
                     ))}
