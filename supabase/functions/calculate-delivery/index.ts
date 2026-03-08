@@ -27,12 +27,22 @@ function cleanPolishAddress(address: string): string {
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number; displayName: string } | null> {
   const cleaned = cleanPolishAddress(address);
-  // Try structured query first for better results
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleaned)}&countrycodes=pl&limit=1`;
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'KingOfCatering/1.0' },
+    headers: { 'User-Agent': 'KingOfCatering/1.0', 'Accept': 'application/json' },
   });
-  const data: GeoResult[] = await res.json();
+  if (!res.ok) {
+    console.error('Nominatim error:', res.status, await res.text());
+    return null;
+  }
+  const text = await res.text();
+  let data: GeoResult[];
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error('Nominatim returned non-JSON:', text.substring(0, 200));
+    return null;
+  }
   if (!data || data.length === 0) return null;
   return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), displayName: data[0].display_name };
 }
@@ -43,6 +53,10 @@ async function calculateRouteDistance(
 ): Promise<{ distanceKm: number; durationMin: number } | null> {
   const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=false`;
   const res = await fetch(url);
+  if (!res.ok) {
+    console.error('OSRM error:', res.status, await res.text());
+    return null;
+  }
   const data: OsrmRoute = await res.json();
   if (!data.routes || data.routes.length === 0) return null;
   return {
