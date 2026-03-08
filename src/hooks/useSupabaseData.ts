@@ -184,7 +184,6 @@ async function fetchExtras(): Promise<{
         price: Number(e.price),
         priceLabel: e.price_label ?? (Number(e.price) === 0 ? "W cenie" : `${e.price} zł/os.`),
         requiresPersonCount: e.requires_person_count ?? false,
-        icon: e.icon ?? "📦",
         contents: (e.contents as string[]) ?? [],
       });
     } else if (e.category === "obsluga") {
