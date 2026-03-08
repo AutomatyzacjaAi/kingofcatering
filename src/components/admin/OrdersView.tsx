@@ -1442,7 +1442,10 @@ const OrdersView = () => {
             <FileText className="w-4 h-4 mr-1" />
             Generuj podsumowanie
           </Button>
-          <Button className="gap-2">+ Dodaj zamówienie</Button>
+          <Button className="gap-2" onClick={() => setShowAddOrder(true)}>
+            <Plus className="w-4 h-4" />
+            Dodaj zamówienie
+          </Button>
         </div>
       </div>
 
