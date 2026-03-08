@@ -1540,6 +1540,17 @@ const OrdersView = () => {
   const openEdit = (order: Order) => { setSelectedOrder(order); setView("edit"); };
   const goBack = () => { setView("list"); setSelectedOrder(null); };
 
+  const handleLinkClient = async (orderDbId: string, clientId: string) => {
+    if (orderDbId) {
+      await supabase.from("orders").update({ client_id: clientId }).eq("id", orderDbId);
+    }
+    setOrders(prev => prev.map(o => o.dbId === orderDbId ? { ...o, clientId } : o));
+    if (selectedOrder?.dbId === orderDbId) {
+      setSelectedOrder(prev => prev ? { ...prev, clientId } : prev);
+    }
+    toast.success("Klient powiązany z zamówieniem");
+  };
+
   const updateOrderField = (orderId: string, field: Partial<Order>) => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...field } : o));
   };
@@ -1560,7 +1571,7 @@ const OrdersView = () => {
   }
 
   if (view === "detail" && selectedOrder) {
-    return <OrderDetailView order={selectedOrder} onBack={goBack} onEdit={() => setView("edit")} onGenerateDoc={handleGenerateDoc} />;
+    return <OrderDetailView order={selectedOrder} onBack={goBack} onEdit={() => setView("edit")} onGenerateDoc={handleGenerateDoc} onLinkClient={handleLinkClient} />;
   }
 
   if (view === "edit" && selectedOrder) {
