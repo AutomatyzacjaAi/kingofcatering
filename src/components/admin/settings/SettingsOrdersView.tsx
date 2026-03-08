@@ -1,16 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const SettingsOrdersView = () => {
+  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [minOrder, setMinOrder] = useState("200");
-  const [autoConfirm, setAutoConfirm] = useState(false);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [smsNotifications, setSmsNotifications] = useState(false);
   const [minLeadDays, setMinLeadDays] = useState("3");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("company_settings")
+        .select("id, min_order_value, min_lead_days")
+        .limit(1)
+        .single();
+      if (data) {
+        setSettingsId(data.id);
+        if (data.min_order_value != null) setMinOrder(String(data.min_order_value));
+        if (data.min_lead_days != null) setMinLeadDays(String(data.min_lead_days));
+      }
+    };
+    fetch();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = {
+      min_order_value: Number(minOrder) || 0,
+      min_lead_days: Number(minLeadDays) || 3,
+    };
+    let error;
+    if (settingsId) {
+      ({ error } = await supabase.from("company_settings").update(payload).eq("id", settingsId));
+    } else {
+      const { data, error: e } = await supabase.from("company_settings").insert(payload).select("id").single();
+      error = e;
+      if (data) setSettingsId(data.id);
+    }
+    setSaving(false);
+    if (error) {
+      toast.error("Błąd zapisu: " + error.message);
+    } else {
+      toast.success("Parametry zamówień zapisane");
+    }
+  };
 
   return (
     <div>
@@ -36,40 +74,12 @@ const SettingsOrdersView = () => {
                 <Input id="minLeadDays" type="number" value={minLeadDays} onChange={(e) => setMinLeadDays(e.target.value)} />
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Automatyczne potwierdzanie</Label>
-                <p className="text-xs text-muted-foreground">Automatycznie potwierdzaj zamówienia</p>
-              </div>
-              <Switch checked={autoConfirm} onCheckedChange={setAutoConfirm} />
-            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Powiadomienia</CardTitle>
-            <CardDescription>Zarządzaj powiadomieniami o zamówieniach</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Powiadomienia email</Label>
-                <p className="text-xs text-muted-foreground">Otrzymuj powiadomienia o nowych zamówieniach na email</p>
-              </div>
-              <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Powiadomienia SMS</Label>
-                <p className="text-xs text-muted-foreground">Otrzymuj powiadomienia SMS o nowych zamówieniach</p>
-              </div>
-              <Switch checked={smsNotifications} onCheckedChange={setSmsNotifications} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Button className="w-full sm:w-auto">Zapisz zmiany</Button>
+        <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+          {saving ? "Zapisywanie..." : "Zapisz zmiany"}
+        </Button>
       </div>
     </div>
   );
