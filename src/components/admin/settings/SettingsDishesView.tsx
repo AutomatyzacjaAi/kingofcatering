@@ -960,6 +960,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
     const setPayload = {
       name: formName.trim(), description: formDesc.trim(), long_description: formLongDesc.trim(),
       image_url: formImage, price_per_person: parseFloat(formPrice) || 0,
+      price_per_person_on_site: formPriceOnSite ? parseFloat(formPriceOnSite) || null : null,
       min_persons: parseInt(formMinPersons) || 10, icon: formIcon, category_slug: formCategorySlug,
     };
 
