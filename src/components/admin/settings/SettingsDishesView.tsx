@@ -333,6 +333,7 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
   const [formVat, setFormVat] = useState(8);
   const [formPriceBrutto, setFormPriceBrutto] = useState("");
   const [formIngredients, setFormIngredients] = useState<DishIngredient[]>([]);
+  const [formDietaryTags, setFormDietaryTags] = useState<string[]>([]);
   const [showIngredientList, setShowIngredientList] = useState(false);
 
   const filtered = dishes.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()));
