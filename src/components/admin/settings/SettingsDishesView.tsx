@@ -486,7 +486,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Jednostka</Label>
                 <Input value={formUnitLabel} onChange={(e) => setFormUnitLabel(e.target.value)} placeholder="szt." />
@@ -494,10 +494,6 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               <div className="space-y-1">
                 <Label className="text-xs">Min. ilość</Label>
                 <Input type="number" value={formMinQty} onChange={(e) => setFormMinQty(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Ikona</Label>
-                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
               </div>
             </div>
 
