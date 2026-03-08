@@ -23,6 +23,8 @@ type ContactFormProps = {
   contactBuildingNumber: string;
   contactApartmentNumber: string;
   notes: string;
+  companyName: string;
+  companyNip: string;
   onNameChange: (name: string) => void;
   onEmailChange: (email: string) => void;
   onPhoneChange: (phone: string) => void;
@@ -31,6 +33,8 @@ type ContactFormProps = {
   onBuildingNumberChange: (num: string) => void;
   onApartmentNumberChange: (num: string) => void;
   onNotesChange: (notes: string) => void;
+  onCompanyNameChange: (name: string) => void;
+  onCompanyNipChange: (nip: string) => void;
   deliveryConfig: DeliveryConfig;
   orderTotal: number;
   onDeliveryCalculated: (price: number, distanceKm: number | null) => void;

@@ -92,7 +92,10 @@ export function CateringWizard() {
         
         const hasExtraSelected = catExtras.some(e => (order.selectedExtras[e.id] || 0) > 0);
         const hasPkgSelected = catPkgs.some(p => order.selectedPackaging === p.id);
-        const hasWaiterSelected = catWaiters.some(w => order.selectedWaiterService === w.id);
+        // "Bez obsługi" (null) counts as a valid selection for waiter categories
+        const hasWaiterSelected = catWaiters.length > 0
+          ? (order.selectedWaiterService === null || catWaiters.some(w => order.selectedWaiterService === w.id))
+          : false;
         
         if (!hasExtraSelected && !hasPkgSelected && !hasWaiterSelected) {
           errors.push(`Uzupełnij kategorię „${cat.name}"`);
