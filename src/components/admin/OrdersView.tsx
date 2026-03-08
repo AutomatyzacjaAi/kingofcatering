@@ -1328,6 +1328,94 @@ const OrdersView = () => {
   const [showAddOrder, setShowAddOrder] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
+  const fetchOrders = useCallback(async () => {
+    try {
+      const { data: dbOrders, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      if (!dbOrders || dbOrders.length === 0) return;
+
+      // Fetch all order items for these orders
+      const orderIds = dbOrders.map(o => o.id);
+      const { data: dbItems, error: itemsError } = await supabase
+        .from("order_items")
+        .select("*")
+        .in("order_id", orderIds)
+        .order("sort_order", { ascending: true });
+
+      if (itemsError) throw itemsError;
+
+      // Fetch sub-items
+      const itemIds = (dbItems || []).map(i => i.id);
+      let dbSubItems: any[] = [];
+      if (itemIds.length > 0) {
+        const { data: subs } = await supabase
+          .from("order_item_sub_items")
+          .select("*")
+          .in("order_item_id", itemIds)
+          .order("sort_order", { ascending: true });
+        dbSubItems = subs || [];
+      }
+
+      const formatDate = (dateStr: string | null) => {
+        if (!dateStr) return "—";
+        const d = new Date(dateStr);
+        const months = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      };
+
+      const mapped: Order[] = dbOrders.map(o => {
+        const items: OrderItem[] = (dbItems || [])
+          .filter(i => i.order_id === o.id)
+          .map(i => ({
+            name: i.name,
+            quantity: i.quantity,
+            unit: i.unit,
+            pricePerUnit: Number(i.price_per_unit),
+            total: Number(i.total),
+            type: (i.item_type as OrderItem["type"]) || "simple",
+            foodCostPerUnit: i.food_cost_per_unit ? Number(i.food_cost_per_unit) : undefined,
+            subItems: dbSubItems
+              .filter(s => s.order_item_id === i.id)
+              .map(s => ({
+                name: s.name,
+                quantity: Number(s.quantity),
+                unit: s.unit,
+                foodCostPerUnit: s.food_cost_per_unit ? Number(s.food_cost_per_unit) : undefined,
+              })),
+          }));
+
+        return {
+          id: o.order_number,
+          client: o.client_name,
+          email: o.client_email || "",
+          phone: o.client_phone || "",
+          event: o.event_type || "",
+          date: formatDate(o.event_date),
+          deliveryAddress: o.delivery_address || "",
+          amount: fmtNum(Number(o.amount)) + " zł",
+          amountNum: Number(o.amount),
+          status: (o.status as OrderStatus) || "Nowe",
+          notes: o.notes || "",
+          items,
+          createdAt: formatDate(o.created_at),
+        };
+      });
+
+      setOrders(mapped);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      // Keep mock data as fallback
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
   const filtered = orders.filter((o) => {
     const matchSearch =
       o.id.toLowerCase().includes(search.toLowerCase()) ||
