@@ -25,7 +25,7 @@ const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: strin
   { id: "settings-form", icon: FileText, label: "Formularz" },
 ];
 
-const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
+const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebarProps) => {
   const isSettingsActive = activeSection.startsWith("settings-");
   const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
 
