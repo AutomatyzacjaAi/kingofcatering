@@ -35,6 +35,7 @@ type OrderSummaryProps = {
 export function OrderSummary({ 
   order, totalPrice, onSubmit, onResetOrder,
   products, categories, eventTypes, extraItems, packagingOptions, waiterServiceOptions,
+  minOrderValue = 0,
 }: OrderSummaryProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);

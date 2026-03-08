@@ -236,6 +236,7 @@ export function EventDetails({
         onConfirm={handleConfirm}
         onClose={() => setIsPickerOpen(false)}
         busyDates={blockedDates}
+        minLeadDays={minLeadDays}
       />
     </div>
   );
