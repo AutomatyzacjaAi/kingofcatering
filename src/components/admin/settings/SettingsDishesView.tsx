@@ -67,7 +67,7 @@ interface ConfigGroup {
 
 interface ConfigSet {
   id: string; name: string; description: string; longDescription: string;
-  image: string | null; pricePerPerson: number; minPersons: number;
+  image: string | null; pricePerPerson: number; pricePerPersonOnSite: number | null; minPersons: number;
   icon: string; categorySlug: string | null; groups: ConfigGroup[];
 }
 
