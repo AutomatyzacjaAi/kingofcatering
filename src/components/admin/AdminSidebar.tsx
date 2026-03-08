@@ -107,7 +107,7 @@ const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebar
 
       {/* Bottom */}
       <div className="p-3 border-t border-border">
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
           <LogOut className="w-4 h-4" />
           Wyloguj
         </button>
