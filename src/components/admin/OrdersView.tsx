@@ -1551,7 +1551,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       event, date: date || dateStr, deliveryAddress: cateringType === "na_sali" ? "Na sali" : (deliveryAddress || `${deliveryStreet} ${deliveryBuilding}, ${deliveryCity}`), notes, items,
       amount: fmtNum(totalAmount + effectiveDeliveryCost) + " zł", amountNum: totalAmount + effectiveDeliveryCost,
       status: "Nowe zamówienie", createdAt: dateStr,
-      deliveryCost: effectiveDeliveryCost, guestCount: 0,
+      deliveryCost: effectiveDeliveryCost, guestCount: 0, discount: 0,
     };
 
     onAdd(newOrder);
