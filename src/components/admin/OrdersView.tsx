@@ -1243,6 +1243,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       event, date: date || dateStr, deliveryAddress, notes, items,
       amount: fmtNum(totalAmount) + " zł", amountNum: totalAmount,
       status: "Nowe zamówienie", createdAt: dateStr,
+      deliveryCost: 0, guestCount: 0,
     };
 
     onAdd(newOrder);
