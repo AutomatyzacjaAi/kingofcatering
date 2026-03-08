@@ -62,7 +62,7 @@ export function OrderSummary({
         productLines.push({
           name: product.name,
           quantity: qty,
-          price: product.pricePerUnit * qty,
+          price: getSimplePrice(product, ct) * qty,
           note: order.productNotes[productId] || undefined,
           time: order.servingTimes[productId] || undefined,
         });
