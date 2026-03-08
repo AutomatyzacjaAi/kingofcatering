@@ -1684,10 +1684,43 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
             </div>
           </div>
 
-          {/* Delivery */}
+          {/* Catering type */}
           <div className="space-y-3">
             <Label className="text-sm font-semibold flex items-center gap-2">
               <Truck className="w-4 h-4 text-primary" />
+              Rodzaj cateringu
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { id: "wyjazdowy" as const, label: "Wyjazdowy", desc: "Dostawa na adres" },
+                { id: "na_sali" as const, label: "Na sali", desc: "Bez dostawy" },
+              ]).map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setCateringType(opt.id);
+                    if (opt.id === "na_sali") {
+                      setDeliveryCost(0); setDeliveryDistanceKm(null); setDeliveryError(null);
+                    }
+                  }}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all text-sm",
+                    "hover:border-primary focus:outline-none",
+                    cateringType === opt.id ? "border-primary bg-primary/5" : "border-border"
+                  )}
+                >
+                  <span className={cn("font-medium", cateringType === opt.id ? "text-primary" : "text-foreground")}>{opt.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{opt.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Delivery - only for wyjazdowy */}
+          {cateringType === "wyjazdowy" && (
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" />
               Adres dostawy
             </Label>
             <div className="grid grid-cols-3 gap-2">
@@ -1716,7 +1749,6 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                 }}
               />
             </div>
-            {/* Delivery result */}
             {deliveryCalculating && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 bg-muted/30 rounded-md">
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -1736,6 +1768,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
               </div>
             )}
           </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-2">
