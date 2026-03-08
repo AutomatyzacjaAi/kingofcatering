@@ -276,11 +276,11 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
           <p className="text-muted-foreground text-sm">{order.client} · {order.date}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => {
-            if (showOffer) generateOfferPdf(order);
-            else if (showShoppingList) generateShoppingListPdf(order);
-            else if (showKitchen) generateKitchenPdf(order);
-            else if (showFoodCost) generateFoodCostPdf(order);
+          <Button variant="outline" size="sm" onClick={async () => {
+            if (showOffer) await generateOfferPdf(order);
+            else if (showShoppingList) await generateShoppingListPdf(order);
+            else if (showKitchen) await generateKitchenPdf(order);
+            else if (showFoodCost) await generateFoodCostPdf(order);
           }}>
             <Download className="w-4 h-4 mr-1" />
             Pobierz PDF
@@ -933,11 +933,11 @@ const SummarySheet = ({ open, onClose, orders }: { open: boolean; onClose: () =>
     return true;
   });
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const dateFromStr = dateFrom ? dateFrom.toLocaleDateString("pl-PL") : "";
     const dateToStr = dateTo ? dateTo.toLocaleDateString("pl-PL") : "";
     const dateRange = dateFromStr || dateToStr ? `${dateFromStr} - ${dateToStr}` : "Wszystkie daty";
-    generateSummaryPdf(filteredOrders, docType, dateRange);
+    await generateSummaryPdf(filteredOrders, docType, dateRange);
     toast.success("PDF pobrany");
   };
 
