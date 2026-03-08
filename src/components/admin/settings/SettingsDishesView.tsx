@@ -224,27 +224,51 @@ const IngredientPicker = ({ ingredients, dishIngredients, onChange }: {
 const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; reload: () => void }) => {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newUnit, setNewUnit] = useState<UnitType>("g");
-  const [newPrice, setNewPrice] = useState("");
-  const [newAllergens, setNewAllergens] = useState<string[]>([]);
+  const [formName, setFormName] = useState("");
+  const [formUnit, setFormUnit] = useState<UnitType>("g");
+  const [formPrice, setFormPrice] = useState("");
+  const [formAllergens, setFormAllergens] = useState<string[]>([]);
 
   const filtered = ingredients.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
-  const toggleAllergen = (a: string) => setNewAllergens((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
+  const toggleAllergen = (a: string) => setFormAllergens((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
 
-  const addIngredient = async () => {
-    if (!newName.trim()) return;
+  const resetForm = () => {
+    setFormName(""); setFormUnit("g"); setFormPrice(""); setFormAllergens([]);
+    setShowForm(false); setEditingId(null);
+  };
+
+  const startEdit = (ing: Ingredient) => {
+    setEditingId(ing.id);
+    setFormName(ing.name);
+    setFormUnit(ing.unit);
+    // Convert back to display price (kg/l)
+    const displayPrice = ing.unit === "szt." ? ing.pricePerUnit : ing.pricePerUnit * 1000;
+    setFormPrice(displayPrice.toFixed(2));
+    setFormAllergens([...ing.allergens]);
+    setShowForm(true);
+  };
+
+  const saveIngredient = async () => {
+    if (!formName.trim()) return;
     setSaving(true);
-    const enteredPrice = parseFloat(newPrice) || 0;
-    const pricePerUnit = newUnit === "szt." ? enteredPrice : enteredPrice / 1000;
-    const { error } = await supabase.from("ingredients").insert({
-      name: newName.trim(), unit: newUnit, allergens: newAllergens, price_per_unit: pricePerUnit,
-    });
+    const enteredPrice = parseFloat(formPrice) || 0;
+    const pricePerUnit = formUnit === "szt." ? enteredPrice : enteredPrice / 1000;
+    const payload = {
+      name: formName.trim(), unit: formUnit, allergens: formAllergens, price_per_unit: pricePerUnit,
+    };
+
+    let error;
+    if (editingId) {
+      ({ error } = await supabase.from("ingredients").update(payload).eq("id", editingId));
+    } else {
+      ({ error } = await supabase.from("ingredients").insert(payload));
+    }
     setSaving(false);
     if (error) { toast.error("Błąd: " + error.message); return; }
-    toast.success("Składnik dodany");
-    setNewName(""); setNewUnit("g"); setNewPrice(""); setNewAllergens([]); setShowForm(false);
+    toast.success(editingId ? "Składnik zaktualizowany" : "Składnik dodany");
+    resetForm();
     reload();
   };
 
@@ -261,7 +285,7 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Szukaj składnika..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
+        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
           <Plus className="w-4 h-4 mr-1" />Dodaj składnik
         </Button>
       </div>
@@ -271,11 +295,11 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Nazwa</Label>
-                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="np. Kurczak" />
+                <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Kurczak" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Jednostka</Label>
-                <Select value={newUnit} onValueChange={(v) => setNewUnit(v as UnitType)}>
+                <Select value={formUnit} onValueChange={(v) => setFormUnit(v as UnitType)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="g">g (gramy)</SelectItem>
@@ -286,9 +310,9 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">
-                  {newUnit === "szt." ? "Cena za 1 szt. (zł)" : newUnit === "g" ? "Cena za 1 kg (zł)" : "Cena za 1 litr (zł)"}
+                  {formUnit === "szt." ? "Cena za 1 szt. (zł)" : formUnit === "g" ? "Cena za 1 kg (zł)" : "Cena za 1 litr (zł)"}
                 </Label>
-                <Input type="number" step="0.01" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="0.00" />
+                <Input type="number" step="0.01" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} placeholder="0.00" />
               </div>
             </div>
             <div className="space-y-1">
@@ -297,16 +321,16 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
                 {ALLERGEN_OPTIONS.map((a) => (
                   <button key={a} type="button" onClick={() => toggleAllergen(a)}
                     className={cn("px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
-                      newAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
+                      formAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border hover:bg-muted"
                     )}>{a}</button>
                 ))}
               </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={addIngredient} disabled={!newName.trim() || saving}>
-                {saving ? "Zapisuję..." : "Dodaj"}
+              <Button size="sm" onClick={saveIngredient} disabled={!formName.trim() || saving}>
+                {saving ? "Zapisuję..." : editingId ? "Zapisz" : "Dodaj"}
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>Anuluj</Button>
+              <Button size="sm" variant="outline" onClick={resetForm}>Anuluj</Button>
             </div>
           </CardContent>
         </Card>
@@ -329,6 +353,7 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
               ))}
             </div>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => startEdit(ingredient)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
               <button onClick={() => removeIngredient(ingredient.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
             </div>
           </div>
