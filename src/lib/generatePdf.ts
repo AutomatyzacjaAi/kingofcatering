@@ -99,11 +99,15 @@ export async function generateOfferPdf(order: PdfOrder, companyName?: string) {
     rows.push(["Dostawa", "1", `${fmtNum(order.deliveryCost)} zł`, `${fmtNum(order.deliveryCost)} zł`]);
   }
 
+  if (order.discount && order.discount > 0) {
+    rows.push(["Rabat", "", "", `-${fmtNum(order.discount)} zł`]);
+  }
+
   autoTable(doc, {
     startY: y,
     head: [["Pozycja", "Ilość", "Cena jedn.", "Razem"]],
     body: rows,
-    foot: [["", "", "SUMA:", order.amount]],
+    foot: [["", "", "DO ZAPŁATY:", order.amount]],
     styles: { fontSize: 9, cellPadding: 3, font: "Roboto" },
     headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: "bold" },
     footStyles: { fillColor: [245, 245, 245], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 11 },
