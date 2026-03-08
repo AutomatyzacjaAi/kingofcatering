@@ -1560,7 +1560,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
     // Reset
     setSelectedClientId(null); setClientName(""); setClientEmail(""); setClientPhone("");
-    setEvent(""); setDate(""); setTime(""); setDeliveryAddress(""); setNotes(""); setItems([]);
+    setEvent(""); setDate(""); setTime(""); setDeliveryCity(""); setDeliveryStreet(""); setDeliveryBuilding(""); setDeliveryAddress(""); setDeliveryCost(0); setDeliveryDistanceKm(null); setDeliveryError(null); setNotes(""); setItems([]);
     setClientSearch("");
     onClose();
   };
