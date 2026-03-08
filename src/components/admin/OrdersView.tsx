@@ -131,7 +131,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC1RA9", dbId: "", clientId: null, client: "Piotr Zieliński", email: "piotr.z@email.pl", phone: "+48 800 777 888",
     event: "", date: "21 sty 2026", deliveryAddress: "ul. Polna 8, Gdańsk",
     amount: "246,00 zł", amountNum: 246, status: "Anulowane", notes: "Klient zrezygnował",
-    createdAt: "8 sty 2026", deliveryCost: 30, guestCount: 12,
+    createdAt: "8 sty 2026", deliveryCost: 30, guestCount: 12, discount: 0,
     items: [
       { name: "Tacos z kurczakiem", quantity: 12, unit: "szt.", pricePerUnit: 18, total: 216, type: "simple", foodCostPerUnit: 6 },
       { name: "Opakowanie jednorazowe", quantity: 1, unit: "szt.", pricePerUnit: 30, total: 30, type: "extra", foodCostPerUnit: 8 },
