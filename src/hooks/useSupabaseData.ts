@@ -291,6 +291,12 @@ export function useSupabaseData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const extrasCategoriesQuery = useQuery({
+    queryKey: ["extrasCategories"],
+    queryFn: fetchExtrasCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const extrasQuery = useQuery({
     queryKey: ["extras"],
     queryFn: fetchExtras,
