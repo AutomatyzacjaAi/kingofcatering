@@ -38,6 +38,16 @@ async function fetchEventTypes(): Promise<EventType[]> {
   }));
 }
 
+export type EventCategoryMapping = { event_type_id: string; category_id: string };
+
+async function fetchEventCategoryMappings(): Promise<EventCategoryMapping[]> {
+  const { data, error } = await supabase
+    .from("event_category_mappings")
+    .select("event_type_id, category_id");
+  if (error) throw error;
+  return data ?? [];
+}
+
 async function fetchProducts(): Promise<Product[]> {
   // Fetch all three types in parallel
   const [dishesRes, bundlesRes, setsRes] = await Promise.all([
