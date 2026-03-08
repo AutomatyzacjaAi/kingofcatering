@@ -555,7 +555,6 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium">{dish.name}</p>
-                      <p className="text-sm font-medium">{dish.name}</p>
                       {dish.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{dish.categorySlug}</Badge>}
                     </div>
                     <div className="flex items-center gap-2">
