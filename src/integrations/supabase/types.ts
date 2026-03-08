@@ -45,6 +45,7 @@ export type Database = {
           id: string
           name: string
           price: number
+          price_on_site: number | null
           sort_order: number
         }
         Insert: {
@@ -56,6 +57,7 @@ export type Database = {
           id?: string
           name: string
           price?: number
+          price_on_site?: number | null
           sort_order?: number
         }
         Update: {
@@ -67,6 +69,7 @@ export type Database = {
           id?: string
           name?: string
           price?: number
+          price_on_site?: number | null
           sort_order?: number
         }
         Relationships: [
@@ -364,6 +367,7 @@ export type Database = {
           min_persons: number
           name: string
           price_per_person: number
+          price_per_person_on_site: number | null
           updated_at: string
         }
         Insert: {
@@ -377,6 +381,7 @@ export type Database = {
           min_persons?: number
           name: string
           price_per_person?: number
+          price_per_person_on_site?: number | null
           updated_at?: string
         }
         Update: {
@@ -390,6 +395,7 @@ export type Database = {
           min_persons?: number
           name?: string
           price_per_person?: number
+          price_per_person_on_site?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -492,6 +498,7 @@ export type Database = {
           price_brutto: number
           price_netto: number
           price_per_unit: number | null
+          price_per_unit_on_site: number | null
           product_type: string
           unit_label: string | null
           updated_at: string
@@ -513,6 +520,7 @@ export type Database = {
           price_brutto?: number
           price_netto?: number
           price_per_unit?: number | null
+          price_per_unit_on_site?: number | null
           product_type?: string
           unit_label?: string | null
           updated_at?: string
@@ -534,6 +542,7 @@ export type Database = {
           price_brutto?: number
           price_netto?: number
           price_per_unit?: number | null
+          price_per_unit_on_site?: number | null
           product_type?: string
           unit_label?: string | null
           updated_at?: string
@@ -619,6 +628,7 @@ export type Database = {
           price_brutto: number | null
           price_label: string | null
           price_netto: number | null
+          price_on_site: number | null
           requires_person_count: boolean | null
           sort_order: number
           unit_label: string | null
@@ -642,6 +652,7 @@ export type Database = {
           price_brutto?: number | null
           price_label?: string | null
           price_netto?: number | null
+          price_on_site?: number | null
           requires_person_count?: boolean | null
           sort_order?: number
           unit_label?: string | null
@@ -665,6 +676,7 @@ export type Database = {
           price_brutto?: number | null
           price_label?: string | null
           price_netto?: number | null
+          price_on_site?: number | null
           requires_person_count?: boolean | null
           sort_order?: number
           unit_label?: string | null
