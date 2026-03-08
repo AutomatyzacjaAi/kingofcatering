@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronRight, Minus, Plus, X, Sparkles, Package, Users } from "lucide-react";
+import { QuantityInput } from "./QuantityInput";
 import {
   Dialog,
   DialogContent,
