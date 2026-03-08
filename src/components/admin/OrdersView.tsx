@@ -275,10 +275,21 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
           </h1>
           <p className="text-muted-foreground text-sm">{order.client} · {order.date}</p>
         </div>
-        <Button variant="outline" size="sm">
-          <Printer className="w-4 h-4 mr-1" />
-          Drukuj
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            if (showOffer) generateOfferPdf(order);
+            else if (showShoppingList) generateShoppingListPdf(order);
+            else if (showKitchen) generateKitchenPdf(order);
+            else if (showFoodCost) generateFoodCostPdf(order);
+          }}>
+            <Download className="w-4 h-4 mr-1" />
+            Pobierz PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="w-4 h-4 mr-1" />
+            Drukuj
+          </Button>
+        </div>
       </div>
 
       {/* OFERTA */}
