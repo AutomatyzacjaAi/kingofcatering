@@ -123,8 +123,8 @@ export function OrderSummary({
   }
 
   const selectedPkg = packagingOptions.find(p => p.id === order.selectedPackaging);
-  if (selectedPkg && selectedPkg.price > 0) {
-    extrasLines.push({ name: selectedPkg.name, quantity: order.packagingPersonCount, price: selectedPkg.price * order.packagingPersonCount });
+  if (selectedPkg && getPackagingPrice(selectedPkg, ct) > 0) {
+    extrasLines.push({ name: selectedPkg.name, quantity: order.packagingPersonCount, price: getPackagingPrice(selectedPkg, ct) * order.packagingPersonCount });
   }
 
   const selectedService = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
