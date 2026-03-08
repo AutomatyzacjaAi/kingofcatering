@@ -59,7 +59,7 @@ export function CartDrawer({
     if (data.quantity > 0) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "configurable") {
-        cartItems.push({ key: productId, name: product.name, price: product.pricePerPerson, quantity: data.quantity, type: "configurable", productId });
+        cartItems.push({ key: productId, name: product.name, price: getConfigurablePrice(product, ct), quantity: data.quantity, type: "configurable", productId });
       }
     }
   }
