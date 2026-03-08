@@ -22,7 +22,6 @@ async function fetchCategories(): Promise<Category[]> {
     dbId: c.id,
     name: c.name,
     description: c.description ?? "",
-    icon: c.icon,
   }));
 }
 
