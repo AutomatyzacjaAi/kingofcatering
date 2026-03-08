@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export type AdminSection = "orders" | "clients" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
 
@@ -29,6 +30,19 @@ const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: strin
 const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebarProps) => {
   const isSettingsActive = activeSection.startsWith("settings-");
   const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
+  const [companyName, setCompanyName] = useState("Panel Admin");
+  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+      const { data } = await supabase.from("company_settings").select("company_name, favicon_url").limit(1).single();
+      if (data) {
+        if (data.company_name) setCompanyName(data.company_name);
+        if ((data as any).favicon_url) setFaviconUrl((data as any).favicon_url);
+      }
+    };
+    fetchCompany();
+  }, []);
 
   const handleSettingsClick = () => {
     setSettingsOpen((prev) => !prev);
@@ -37,16 +51,27 @@ const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebar
     }
   };
 
+  const initials = companyName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <aside className="w-56 min-h-screen bg-card border-r border-border flex flex-col">
       {/* Logo */}
       <div className="p-5 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">KC</span>
-          </div>
+          {faviconUrl ? (
+            <img src={faviconUrl} alt="Favicon" className="w-9 h-9 rounded-lg object-contain" />
+          ) : (
+            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">{initials}</span>
+            </div>
+          )}
           <div>
-            <h2 className="font-semibold text-foreground text-sm leading-tight">King of Catering</h2>
+            <h2 className="font-semibold text-foreground text-sm leading-tight">{companyName}</h2>
             <p className="text-muted-foreground text-xs">Panel administracyjny</p>
           </div>
         </div>
