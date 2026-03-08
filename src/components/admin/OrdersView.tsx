@@ -1123,8 +1123,20 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
                   </TableRow>
                 ))}
                 <TableRow className="hover:bg-transparent border-t-2">
-                  <TableCell colSpan={3} className="text-right font-semibold text-foreground">Suma:</TableCell>
-                  <TableCell className="text-right font-bold text-primary text-lg">{fmtNum(totalAmount)} zł</TableCell>
+                  <TableCell colSpan={3} className="text-right font-semibold text-foreground">Suma pozycji:</TableCell>
+                  <TableCell className="text-right font-semibold text-foreground">{fmtNum(totalAmount)} zł</TableCell>
+                  <TableCell />
+                </TableRow>
+                {discount > 0 && (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="text-right font-semibold text-destructive">Rabat:</TableCell>
+                    <TableCell className="text-right font-semibold text-destructive">-{fmtNum(discount)} zł</TableCell>
+                    <TableCell />
+                  </TableRow>
+                )}
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={3} className="text-right font-bold text-foreground text-base">Do zapłaty:</TableCell>
+                  <TableCell className="text-right font-bold text-primary text-lg">{fmtNum(finalAmount)} zł</TableCell>
                   <TableCell />
                 </TableRow>
               </TableBody>
