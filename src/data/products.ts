@@ -36,6 +36,7 @@ export type ProductVariant = {
   name: string;
   description: string;
   price: number;
+  priceOnSite?: number | null;
   allergens: string[];
   dietaryTags: string[];
 };
