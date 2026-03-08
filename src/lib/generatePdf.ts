@@ -163,8 +163,14 @@ export async function generateShoppingListPdf(order: PdfOrder) {
   doc.save(`lista_zakupow_${order.id}.pdf`);
 }
 
+export interface FoodCostExtra {
+  id: string;
+  name: string;
+  amount: number;
+}
+
 // ===== SINGLE ORDER FOOD COST PDF =====
-export async function generateFoodCostPdf(order: PdfOrder) {
+export async function generateFoodCostPdf(order: PdfOrder, extras?: FoodCostExtra[]) {
   const doc = await setupDoc("Food cost");
   addHeader(doc, `Food cost`, `${order.id} | ${order.client} | ${order.date}`);
 
@@ -179,18 +185,27 @@ export async function generateFoodCostPdf(order: PdfOrder) {
       };
     });
 
-  const totalFC = items.reduce((s, i) => s + i.totalFC, 0);
+  const rows = items.map(i => [
+    i.name, `${i.quantity} ${i.unit}`,
+    `${fmtNum(i.fcPerUnit)} zł`, `${fmtNum(i.totalFC)} zł`,
+    `${fmtNum(i.revenue)} zł`, `${i.margin.toFixed(1)}%`,
+  ]);
+
+  // Add custom extras
+  const safeExtras = extras || [];
+  safeExtras.forEach(e => {
+    rows.push([`⊕ ${e.name}`, "—", "—", `${fmtNum(e.amount)} zł`, "—", "—"]);
+  });
+
+  const extrasTotal = safeExtras.reduce((s, e) => s + e.amount, 0);
+  const totalFC = items.reduce((s, i) => s + i.totalFC, 0) + extrasTotal;
   const totalRev = items.reduce((s, i) => s + i.revenue, 0);
   const totalMargin = totalRev > 0 ? ((totalRev - totalFC) / totalRev) * 100 : 0;
 
   autoTable(doc, {
     startY: 38,
     head: [["Produkt", "Ilość", "FC/jedn.", "FC łącznie", "Przychód", "Marża"]],
-    body: items.map(i => [
-      i.name, `${i.quantity} ${i.unit}`,
-      `${fmtNum(i.fcPerUnit)} zł`, `${fmtNum(i.totalFC)} zł`,
-      `${fmtNum(i.revenue)} zł`, `${i.margin.toFixed(1)}%`,
-    ]),
+    body: rows,
     foot: [["SUMA", "", "", `${fmtNum(totalFC)} zł`, `${fmtNum(totalRev)} zł`, `${totalMargin.toFixed(1)}%`]],
     styles: { fontSize: 8, cellPadding: 2.5, font: "Roboto" },
     headStyles: { fillColor: [40, 40, 40], textColor: 255, fontSize: 8 },
