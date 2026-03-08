@@ -44,6 +44,8 @@ interface Order {
   notes: string;
   items: OrderItem[];
   createdAt: string;
+  deliveryCost: number;
+  guestCount: number;
 }
 
 const statusColors: Record<OrderStatus, string> = {
