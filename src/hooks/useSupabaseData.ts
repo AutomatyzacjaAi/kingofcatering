@@ -343,6 +343,7 @@ export function useSupabaseData() {
     categories: categoriesQuery.data ?? [],
     eventTypes: eventTypesQuery.data ?? [],
     products: productsQuery.data ?? [],
+    extrasCategories: extrasCategoriesQuery.data ?? [],
     extraItems: extrasQuery.data?.extraItems ?? [],
     packagingOptions: extrasQuery.data?.packagingOptions ?? [],
     waiterServiceOptions: extrasQuery.data?.waiterServiceOptions ?? [],
