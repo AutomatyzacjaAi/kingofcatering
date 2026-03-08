@@ -9,6 +9,7 @@ export type ExtraItem = {
   price: number;
   unitLabel: string;
   contents?: string[];
+  extrasCategoryId?: string;
 };
 
 export type PackagingOption = {
