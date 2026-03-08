@@ -227,11 +227,6 @@ function SimpleProductContent({
             <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
             <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
           </div>
-          <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
-          <div>
-            <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
-            <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
-          </div>
           <QuantityInput value={quantity} onChange={onQuantityChange} />
         </div>
 
