@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { AlertTriangle, X, Clock } from "lucide-react";
 import { QuantityInput } from "./QuantityInput";
 import type { Product, SimpleProduct, ExpandableProduct, ConfigurableProduct } from "@/data/products";
+import type { CateringType } from "@/lib/pricing";
+import { getSimplePrice, getVariantPrice, getConfigurablePrice } from "@/lib/pricing";
 
 type ProductModalProps = {
   product: Product | null;
