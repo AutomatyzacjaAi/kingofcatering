@@ -1,4 +1,6 @@
 import { useCateringOrder } from "@/hooks/useCateringOrder";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
+import { submitOrder } from "@/lib/submitOrder";
 import { MobileNav } from "./MobileNav";
 import { EventDetails } from "./EventDetails";
 import { ProductsStep } from "./ProductsStep";
@@ -7,6 +9,18 @@ import { ContactForm } from "./ContactForm";
 import { OrderSummary } from "./OrderSummary";
 
 export function CateringWizard() {
+  const {
+    isLoading,
+    categories,
+    eventTypes,
+    products,
+    extraItems,
+    packagingOptions,
+    waiterServiceOptions,
+    paymentMethods,
+    blockedDates,
+  } = useSupabaseData();
+
   const {
     order,
     steps,
@@ -25,15 +39,25 @@ export function CateringWizard() {
     prevStep,
     updateOrder,
     resetOrder,
-  } = useCateringOrder();
+  } = useCateringOrder(products, extraItems, packagingOptions, waiterServiceOptions);
 
-  // Check if can proceed to next step
+  const handleSubmit = async () => {
+    await submitOrder(
+      order,
+      totalPrice,
+      products,
+      extraItems,
+      packagingOptions,
+      waiterServiceOptions,
+      eventTypes,
+    );
+  };
+
   const canGoNext = (): boolean => {
     if (currentStep === 0) {
       return !!(order.guestCount > 0 && order.eventType && order.eventDate);
     }
     if (currentStep === 2) {
-      // Extras - packaging is required
       return !!order.selectedPackaging;
     }
     if (currentStep === 3) {
@@ -42,7 +66,6 @@ export function CateringWizard() {
     return true;
   };
 
-  // Get next button label
   const getNextLabel = () => {
     if (currentStep === 0) return "Produkty";
     if (currentStep === 1) return "Dodatki";
@@ -50,6 +73,17 @@ export function CateringWizard() {
     if (currentStep === 3) return "Podsumowanie";
     return "Dalej";
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground text-sm">Ładowanie menu...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderStep = () => {
     switch (currentStep) {
@@ -64,6 +98,8 @@ export function CateringWizard() {
             onEventTypeChange={(type) => updateOrder({ eventType: type })}
             onEventDateChange={(date) => updateOrder({ eventDate: date })}
             onEventTimeChange={(time) => updateOrder({ eventTime: time })}
+            eventTypes={eventTypes}
+            blockedDates={blockedDates}
           />
         );
       case 1:
@@ -79,6 +115,8 @@ export function CateringWizard() {
             onConfigurableChange={updateConfigurable}
             onServingTimeChange={updateServingTime}
             onProductNotesChange={updateProductNotes}
+            products={products}
+            categories={categories}
           />
         );
       case 2:
@@ -93,6 +131,9 @@ export function CateringWizard() {
             onPackagingChange={updatePackaging}
             onWaiterServiceChange={updateWaiterService}
             guestCount={order.guestCount}
+            extraItems={extraItems}
+            packagingOptions={packagingOptions}
+            waiterServiceOptions={waiterServiceOptions}
           />
         );
       case 3:
@@ -122,10 +163,18 @@ export function CateringWizard() {
             order={order}
             totalPrice={totalPrice}
             onPaymentMethodChange={(method) => updateOrder({ paymentMethod: method })}
-            onSubmit={resetOrder}
+            onSubmit={handleSubmit}
+            onResetOrder={resetOrder}
             onSimpleQuantityChange={updateSimpleQuantity}
             onExpandableVariantChange={updateExpandableVariant}
             onConfigurableChange={updateConfigurable}
+            products={products}
+            categories={categories}
+            eventTypes={eventTypes}
+            extraItems={extraItems}
+            packagingOptions={packagingOptions}
+            waiterServiceOptions={waiterServiceOptions}
+            paymentMethods={paymentMethods}
           />
         );
       default:
@@ -154,6 +203,10 @@ export function CateringWizard() {
         onExtraChange={updateExtra}
         onPackagingChange={updatePackaging}
         onWaiterServiceChange={updateWaiterService}
+        products={products}
+        extraItems={extraItems}
+        packagingOptions={packagingOptions}
+        waiterServiceOptions={waiterServiceOptions}
       />
       <div className="pb-safe">
         {renderStep()}
