@@ -69,7 +69,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC8L7K", dbId: "", clientId: null, client: "Anna Kowalska", email: "anna.k@email.pl", phone: "+48 500 111 222",
     event: "Urodziny", date: "28 sty 2026", deliveryAddress: "ul. Kwiatowa 5, Warszawa",
     amount: "2 211,00 zł", amountNum: 2211, status: "Nowe zamówienie", notes: "Bez orzechów - alergia",
-    createdAt: "15 sty 2026", deliveryCost: 50, guestCount: 30,
+    createdAt: "15 sty 2026", deliveryCost: 50, guestCount: 30, discount: 0,
     items: [
       { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900, type: "simple", foodCostPerUnit: 135,
         subItems: [
