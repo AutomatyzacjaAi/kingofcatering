@@ -401,7 +401,7 @@ function ConfigurableProductContent({
         <div className="p-4 bg-accent rounded-xl">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <span className="text-2xl font-bold">{product.pricePerPerson.toFixed(2)} zł</span>
+              <span className="text-2xl font-bold">{effectivePrice.toFixed(2)} zł</span>
               <span className="text-muted-foreground ml-1">/ osoba</span>
             </div>
             <Badge variant="outline" className="text-primary border-primary">
