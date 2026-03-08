@@ -15,6 +15,7 @@ export function CateringWizard() {
     categories,
     eventTypes,
     products,
+    extrasCategories,
     extraItems,
     packagingOptions,
     waiterServiceOptions,
@@ -142,6 +143,7 @@ export function CateringWizard() {
       case 2:
         return (
           <ExtrasStep
+            extrasCategories={extrasCategories}
             selectedExtras={order.selectedExtras}
             selectedPackaging={order.selectedPackaging}
             packagingPersonCount={order.packagingPersonCount}

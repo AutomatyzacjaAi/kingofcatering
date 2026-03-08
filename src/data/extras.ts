@@ -9,6 +9,7 @@ export type ExtraItem = {
   price: number;
   unitLabel: string;
   contents?: string[];
+  extrasCategoryId?: string;
 };
 
 export type PackagingOption = {
@@ -21,6 +22,7 @@ export type PackagingOption = {
   priceLabel: string;
   requiresPersonCount?: boolean;
   contents?: string[];
+  extrasCategoryId?: string;
 };
 
 export type WaiterServiceOption = {
@@ -32,37 +34,16 @@ export type WaiterServiceOption = {
   duration: string;
   price: number;
   contents?: string[];
+  extrasCategoryId?: string;
 };
 
 export type ExtrasCategory = {
   id: string;
   name: string;
+  slug: string;
   description: string;
   required?: boolean;
 };
-
-// ============= EXTRAS CATEGORIES =============
-
-export const extrasCategories: ExtrasCategory[] = [
-  {
-    id: "dodatki",
-    name: "Dodatki",
-    description: "Dodatkowe usługi",
-    required: false,
-  },
-  {
-    id: "pakowanie",
-    name: "Pakowanie",
-    description: "Wybierz sposób pakowania",
-    required: true,
-  },
-  {
-    id: "obsluga",
-    name: "Obsługa",
-    description: "Obsługa kelnerska",
-    required: false,
-  },
-];
 
 // ============= EXTRAS - ADDITIONAL SERVICES =============
 
