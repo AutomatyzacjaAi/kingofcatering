@@ -11,7 +11,6 @@ import {
   CalendarDays, 
   ChevronRight, 
   Clock,
-  icons,
 } from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
 
