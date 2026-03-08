@@ -888,6 +888,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   const [formLongDesc, setFormLongDesc] = useState("");
   const [formImage, setFormImage] = useState<string | null>(null);
   const [formPrice, setFormPrice] = useState("");
+  const [formPriceOnSite, setFormPriceOnSite] = useState("");
   const [formMinPersons, setFormMinPersons] = useState("10");
   const [formIcon, setFormIcon] = useState("🍽️");
   const [formCategorySlug, setFormCategorySlug] = useState<string | null>(null);
