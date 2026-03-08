@@ -285,6 +285,11 @@ const SettingsCompanyView = () => {
               <Label htmlFor="bankAccount">Numer konta bankowego</Label>
               <Input id="bankAccount" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="privacyPolicy">Link do regulaminu / polityki prywatności</Label>
+              <Input id="privacyPolicy" placeholder="https://example.com/regulamin" value={privacyPolicyUrl} onChange={(e) => setPrivacyPolicyUrl(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Wyświetlany w formularzu zamówienia do akceptacji</p>
+            </div>
           </CardContent>
         </Card>
 
