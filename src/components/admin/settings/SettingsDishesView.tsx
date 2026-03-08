@@ -508,7 +508,7 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} placeholder="Szczegółowy opis widoczny w modalu..." />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena netto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} />
@@ -523,6 +523,10 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
               <div className="space-y-1">
                 <Label className="text-xs">Cena brutto (zł)</Label>
                 <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena brutto sala (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceBruttoOnSite} onChange={(e) => setFormPriceBruttoOnSite(e.target.value)} placeholder="—" />
               </div>
             </div>
 
