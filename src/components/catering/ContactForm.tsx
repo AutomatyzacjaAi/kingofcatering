@@ -52,10 +52,13 @@ interface DeliveryResult {
 export function ContactForm({
   contactName, contactEmail, contactPhone, contactCity, contactStreet,
   contactBuildingNumber, contactApartmentNumber, notes,
+  companyName, companyNip,
   onNameChange, onEmailChange, onPhoneChange, onCityChange, onStreetChange,
   onBuildingNumberChange, onApartmentNumberChange, onNotesChange,
+  onCompanyNameChange, onCompanyNipChange,
   deliveryConfig, orderTotal, onDeliveryCalculated,
 }: ContactFormProps) {
+  const [isCompany, setIsCompany] = useState(!!(companyName || companyNip));
   const [deliveryResult, setDeliveryResult] = useState<DeliveryResult | null>(null);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
   const [calculating, setCalculating] = useState(false);
