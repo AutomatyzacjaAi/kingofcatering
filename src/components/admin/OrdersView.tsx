@@ -765,9 +765,25 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }:
                 </TableRow>
               ))}
               <TableRow className="hover:bg-transparent border-t-2">
-                <TableCell colSpan={3} className="text-right font-semibold text-foreground">Suma:</TableCell>
-                <TableCell className="text-right font-bold text-primary text-lg">{order.amount}</TableCell>
+                <TableCell colSpan={3} className="text-right font-semibold text-foreground">
+                  {order.discount > 0 ? "Suma pozycji:" : "Suma:"}
+                </TableCell>
+                <TableCell className="text-right font-semibold text-foreground">
+                  {order.discount > 0 ? fmtNum(order.items.reduce((s, i) => s + i.total, 0)) + " zł" : order.amount}
+                </TableCell>
               </TableRow>
+              {order.discount > 0 && (
+                <>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="text-right font-semibold text-destructive">Rabat:</TableCell>
+                    <TableCell className="text-right font-semibold text-destructive">-{fmtNum(order.discount)} zł</TableCell>
+                  </TableRow>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={3} className="text-right font-bold text-foreground text-base">Do zapłaty:</TableCell>
+                    <TableCell className="text-right font-bold text-primary text-lg">{order.amount}</TableCell>
+                  </TableRow>
+                </>
+              )}
             </TableBody>
           </Table>
         </CardContent>
