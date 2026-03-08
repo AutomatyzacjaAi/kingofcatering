@@ -1367,9 +1367,6 @@ const OrdersView = () => {
     return <OrderEditView order={selectedOrder} onBack={() => setView("detail")} onSave={handleSaveOrder} />;
   }
 
-  if (view === "summary") {
-    return <SummaryView orders={orders} onBack={goBack} />;
-  }
 
   return (
     <div>
