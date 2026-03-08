@@ -19,7 +19,7 @@ const ALLERGEN_OPTIONS = [
 ];
 
 const DIETARY_OPTIONS = [
-  "Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto", "Low carb", "Pescetariańskie",
+  "Wegetariańskie", "Wegańskie", "Bezglutenowe", "Bez laktozy", "Keto",
 ];
 
 interface Ingredient {
