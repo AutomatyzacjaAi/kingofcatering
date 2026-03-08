@@ -554,7 +554,6 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
                   {dish.image ? <img src={dish.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <CookingPot className="w-5 h-5 text-primary" />}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{dish.icon}</span>
                       <p className="text-sm font-medium">{dish.name}</p>
                       {dish.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{dish.categorySlug}</Badge>}
                     </div>
@@ -807,7 +806,6 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
                 {b.image ? <img src={b.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Package className="w-5 h-5 text-primary" />}
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{b.icon}</span>
                     <p className="text-sm font-medium">{b.name}</p>
                     {b.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{b.categorySlug}</Badge>}
                   </div>
@@ -1100,7 +1098,6 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
                 {cs.image ? <img src={cs.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Settings2 className="w-5 h-5 text-primary" />}
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{cs.icon}</span>
                     <p className="text-sm font-medium">{cs.name}</p>
                     {cs.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{cs.categorySlug}</Badge>}
                   </div>
