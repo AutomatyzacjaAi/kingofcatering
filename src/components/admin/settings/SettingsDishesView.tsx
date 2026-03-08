@@ -1209,7 +1209,7 @@ const SettingsDishesView = () => {
       basePrice: Number(b.base_price), minQuantity: b.min_quantity, icon: b.icon ?? "🍽️",
       categorySlug: b.category_slug,
       variants: ((b.bundle_variants as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((v: any) => ({
-        id: v.id, name: v.name, description: v.description ?? "", price: Number(v.price),
+        id: v.id, name: v.name, description: v.description ?? "", price: Number(v.price), priceOnSite: v.price_on_site != null ? Number(v.price_on_site) : null,
         allergens: (v.allergens as string[]) ?? [], dietaryTags: (v.dietary_tags as string[]) ?? [],
         sortOrder: v.sort_order, dishId: v.dish_id || null,
       })),
