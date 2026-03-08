@@ -28,6 +28,7 @@ type ProductModalProps = {
   onServingTimeChange?: (productId: string, time: string) => void;
   productNotes?: string;
   onProductNotesChange?: (productId: string, notes: string) => void;
+  cateringType?: CateringType;
 };
 
 export function ProductModal({
