@@ -129,7 +129,7 @@ export function OrderSummary({
 
   const selectedService = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
   if (selectedService) {
-    extrasLines.push({ name: selectedService.name, quantity: order.waiterCount, price: selectedService.price * order.waiterCount });
+    extrasLines.push({ name: selectedService.name, quantity: order.waiterCount, price: getWaiterPrice(selectedService, ct) * order.waiterCount });
   }
 
   const formatDate = (dateStr: string) => {
