@@ -147,6 +147,21 @@ async function fetchProducts(): Promise<Product[]> {
   return products;
 }
 
+async function fetchExtrasCategories(): Promise<ExtrasCategory[]> {
+  const { data, error } = await supabase
+    .from("extras_categories")
+    .select("*")
+    .order("sort_order");
+  if (error) throw error;
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    description: c.description ?? "",
+    required: c.is_required ?? false,
+  }));
+}
+
 async function fetchExtras(): Promise<{
   extraItems: ExtraItem[];
   packagingOptions: PackagingOption[];
@@ -173,6 +188,7 @@ async function fetchExtras(): Promise<{
         price: Number(e.price),
         unitLabel: e.unit_label ?? "szt.",
         contents: (e.contents as string[]) ?? [],
+        extrasCategoryId: e.extras_category_id ?? undefined,
       });
     } else if (e.category === "pakowanie") {
       packagingOptions.push({
@@ -185,6 +201,7 @@ async function fetchExtras(): Promise<{
         priceLabel: e.price_label ?? (Number(e.price) === 0 ? "W cenie" : `${e.price} zł/os.`),
         requiresPersonCount: e.requires_person_count ?? false,
         contents: (e.contents as string[]) ?? [],
+        extrasCategoryId: e.extras_category_id ?? undefined,
       });
     } else if (e.category === "obsluga") {
       waiterServiceOptions.push({
@@ -196,6 +213,7 @@ async function fetchExtras(): Promise<{
         duration: e.duration ?? "4h",
         price: Number(e.price),
         contents: (e.contents as string[]) ?? [],
+        extrasCategoryId: e.extras_category_id ?? undefined,
       });
     }
   }
