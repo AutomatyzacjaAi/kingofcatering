@@ -234,8 +234,10 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
   const addIngredient = async () => {
     if (!newName.trim()) return;
     setSaving(true);
+    const enteredPrice = parseFloat(newPrice) || 0;
+    const pricePerUnit = newUnit === "szt." ? enteredPrice : enteredPrice / 1000;
     const { error } = await supabase.from("ingredients").insert({
-      name: newName.trim(), unit: newUnit, allergens: newAllergens, price_per_unit: parseFloat(newPrice) || 0,
+      name: newName.trim(), unit: newUnit, allergens: newAllergens, price_per_unit: pricePerUnit,
     });
     setSaving(false);
     if (error) { toast.error("Błąd: " + error.message); return; }
