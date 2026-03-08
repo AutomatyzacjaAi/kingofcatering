@@ -716,6 +716,7 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
     if (formVariants.length > 0) {
       const variantsPayload = formVariants.map((v, i) => ({
         bundle_id: bundleId!, name: v.name, description: v.description, price: v.price,
+        price_on_site: v.priceOnSite,
         allergens: v.allergens, dietary_tags: v.dietaryTags, sort_order: i,
         dish_id: v.dishId || null,
       }));
