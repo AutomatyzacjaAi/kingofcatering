@@ -162,6 +162,7 @@ export function CateringWizard() {
             onEventTimeChange={(time) => updateOrder({ eventTime: time })}
             eventTypes={eventTypes}
             blockedDates={blockedDates}
+            minLeadDays={orderConfig.minLeadDays}
           />
         );
       case 1:
