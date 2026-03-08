@@ -7,6 +7,7 @@ export type AdminSection = "orders" | "clients" | "reports" | "settings-company"
 interface AdminSidebarProps {
   activeSection: AdminSection;
   onSectionChange: (section: AdminSection) => void;
+  onLogout?: () => void;
 }
 
 const mainNavItems: { id: "orders" | "clients" | "reports"; icon: typeof ClipboardList; label: string }[] = [
