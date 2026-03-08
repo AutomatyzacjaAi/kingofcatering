@@ -1531,6 +1531,12 @@ const OrdersView = () => {
           </TableBody>
         </Table>
       </div>
+
+      <AddOrderSheet
+        open={showAddOrder}
+        onClose={() => setShowAddOrder(false)}
+        onAdd={(order) => setOrders(prev => [order, ...prev])}
+      />
     </div>
   );
 };
