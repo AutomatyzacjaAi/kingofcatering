@@ -1369,6 +1369,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [cateringType, setCateringType] = useState<"wyjazdowy" | "na_sali">("wyjazdowy");
   const [event, setEvent] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
