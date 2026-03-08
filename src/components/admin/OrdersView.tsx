@@ -1458,7 +1458,6 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
     deliveryDebounceRef.current = window.setTimeout(() => calculateDelivery(city, street, building), 800);
   }, [calculateDelivery]);
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<OrderItem[]>([]);
   const [showProducts, setShowProducts] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [configuringProduct, setConfiguringProduct] = useState<CatalogProduct | null>(null);
