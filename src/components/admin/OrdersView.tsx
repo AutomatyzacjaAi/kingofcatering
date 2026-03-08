@@ -1684,12 +1684,56 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
           </div>
 
           {/* Delivery */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label className="text-sm font-semibold flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
+              <Truck className="w-4 h-4 text-primary" />
               Adres dostawy
             </Label>
-            <Input placeholder="ul. Przykładowa 10, Warszawa" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+            <div className="grid grid-cols-3 gap-2">
+              <Input
+                placeholder="Miasto"
+                value={deliveryCity}
+                onChange={(e) => {
+                  setDeliveryCity(e.target.value);
+                  debouncedDeliveryCalc(e.target.value, deliveryStreet, deliveryBuilding);
+                }}
+              />
+              <Input
+                placeholder="Ulica"
+                value={deliveryStreet}
+                onChange={(e) => {
+                  setDeliveryStreet(e.target.value);
+                  debouncedDeliveryCalc(deliveryCity, e.target.value, deliveryBuilding);
+                }}
+              />
+              <Input
+                placeholder="Nr budynku"
+                value={deliveryBuilding}
+                onChange={(e) => {
+                  setDeliveryBuilding(e.target.value);
+                  debouncedDeliveryCalc(deliveryCity, deliveryStreet, e.target.value);
+                }}
+              />
+            </div>
+            {/* Delivery result */}
+            {deliveryCalculating && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 bg-muted/30 rounded-md">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Obliczanie dostawy...
+              </div>
+            )}
+            {deliveryError && !deliveryCalculating && (
+              <div className="flex items-center gap-2 text-xs text-destructive p-2 bg-destructive/10 rounded-md">
+                <AlertCircle className="w-3 h-3" />
+                {deliveryError}
+              </div>
+            )}
+            {deliveryDistanceKm && !deliveryError && !deliveryCalculating && (
+              <div className="flex items-center gap-2 text-xs text-green-700 p-2 bg-green-50 rounded-md">
+                <CheckCircle2 className="w-3 h-3" />
+                {deliveryDistanceKm.toFixed(1)} km — dostawa: {deliveryCost > 0 ? `${fmtNum(deliveryCost)} zł` : "bezpłatna"}
+              </div>
+            )}
           </div>
 
           {/* Notes */}
