@@ -1391,6 +1391,72 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       if (data) setBlockedDates(data.map(d => new Date(d.blocked_date)));
     });
   }, [open]);
+
+  // Fetch company settings for delivery calculation
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("company_settings").select("company_lat, company_lng, delivery_price_per_km, max_delivery_km, free_delivery_above_km").limit(1).single().then(({ data }) => {
+      if (data) {
+        setCompanySettings({
+          companyLat: data.company_lat,
+          companyLng: data.company_lng,
+          pricePerKm: Number(data.delivery_price_per_km) || 3,
+          maxDeliveryKm: data.max_delivery_km ? Number(data.max_delivery_km) : null,
+          freeDeliveryAbove: data.free_delivery_above_km ? Number(data.free_delivery_above_km) : null,
+        });
+      }
+    });
+  }, [open]);
+
+  const calculateDelivery = useCallback(async (city: string, street: string, building: string) => {
+    if (!city.trim() || !street.trim() || !building.trim()) {
+      setDeliveryCost(0); setDeliveryDistanceKm(null); setDeliveryError(null);
+      return;
+    }
+    if (!companySettings?.companyLat || !companySettings?.companyLng) return;
+
+    const cleanStreet = street.replace(/\bul\.\s*/gi, '').replace(/\baleja\s*/gi, '').replace(/\bal\.\s*/gi, '').trim();
+    const fullAddress = `${cleanStreet} ${building}, ${city}, Polska`;
+    setDeliveryAddress(fullAddress);
+    setDeliveryCalculating(true);
+    setDeliveryError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("calculate-delivery", {
+        body: { address: fullAddress, companyLat: companySettings.companyLat, companyLng: companySettings.companyLng },
+      });
+      if (error) throw error;
+
+      if (data.error === "address_not_found") {
+        setDeliveryError("Nie znaleziono adresu");
+        setDeliveryCost(0); setDeliveryDistanceKm(null);
+      } else if (data.error === "route_not_found") {
+        setDeliveryError("Nie udało się obliczyć trasy");
+        setDeliveryCost(0); setDeliveryDistanceKm(null);
+      } else if (data.distanceKm != null) {
+        const tooFar = companySettings.maxDeliveryKm != null && data.distanceKm > companySettings.maxDeliveryKm;
+        const rawPrice = Math.round(companySettings.pricePerKm * data.distanceKm);
+        const isFree = companySettings.freeDeliveryAbove != null && totalAmount >= companySettings.freeDeliveryAbove;
+        setDeliveryDistanceKm(data.distanceKm);
+        if (tooFar) {
+          setDeliveryError(`Za daleko (${data.distanceKm.toFixed(1)} km, max ${companySettings.maxDeliveryKm} km)`);
+          setDeliveryCost(0);
+        } else {
+          setDeliveryCost(isFree ? 0 : rawPrice);
+        }
+      }
+    } catch (err) {
+      console.error("Delivery error:", err);
+      setDeliveryError("Błąd obliczania dostawy");
+      setDeliveryCost(0);
+    }
+    setDeliveryCalculating(false);
+  }, [companySettings, totalAmount]);
+
+  const debouncedDeliveryCalc = useCallback((city: string, street: string, building: string) => {
+    if (deliveryDebounceRef.current) clearTimeout(deliveryDebounceRef.current);
+    deliveryDebounceRef.current = window.setTimeout(() => calculateDelivery(city, street, building), 800);
+  }, [calculateDelivery]);
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<OrderItem[]>([]);
   const [showProducts, setShowProducts] = useState(false);
