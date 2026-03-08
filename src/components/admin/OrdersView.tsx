@@ -1139,10 +1139,11 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
     const newOrder: Order = {
       id: `ZAM-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+      dbId: "", clientId: selectedClientId,
       client: clientName, email: clientEmail, phone: clientPhone,
       event, date: date || dateStr, deliveryAddress, notes, items,
       amount: fmtNum(totalAmount) + " zł", amountNum: totalAmount,
-      status: "Nowe", createdAt: dateStr,
+      status: "Nowe zamówienie", createdAt: dateStr,
     };
 
     onAdd(newOrder);
