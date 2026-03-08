@@ -2,6 +2,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Product, Category } from "@/data/products";
+import type { CateringType } from "@/lib/pricing";
 import { ProductCard } from "./ProductCard";
 import { ProductModal } from "./ProductModal";
 
@@ -18,6 +19,7 @@ type ProductsStepProps = {
   onProductNotesChange: (productId: string, notes: string) => void;
   products: Product[];
   categories: Category[];
+  cateringType: CateringType;
 };
 
 export function ProductsStep({
