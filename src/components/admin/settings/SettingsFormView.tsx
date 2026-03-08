@@ -1,21 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, GripVertical, Pencil, icons } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, GripVertical, icons } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 type LucideIconName = keyof typeof icons;
 
-// ===== TYPES =====
 interface ProductCategory {
   id: string;
   name: string;
   description: string;
   icon: LucideIconName;
+  slug: string;
 }
 
 interface EventType {
@@ -25,23 +25,6 @@ interface EventType {
   allowedCategoryIds: string[];
 }
 
-// ===== MOCK DATA =====
-const defaultCategories: ProductCategory[] = [
-  { id: "patery", name: "Patery", description: "Gotowe kompozycje na każdą okazję", icon: "Salad" },
-  { id: "mini", name: "Mini", description: "Małe przekąski z wieloma wariantami", icon: "Cookie" },
-  { id: "zestawy", name: "Zestawy", description: "Pełne menu do konfiguracji", icon: "UtensilsCrossed" },
-];
-
-const defaultEvents: EventType[] = [
-  { id: "1", name: "Wesele", icon: "Heart", allowedCategoryIds: ["patery", "mini", "zestawy"] },
-  { id: "2", name: "Konferencja", icon: "Presentation", allowedCategoryIds: ["patery", "mini", "zestawy"] },
-  { id: "3", name: "Urodziny", icon: "Gift", allowedCategoryIds: ["patery", "mini"] },
-  { id: "4", name: "Spotkanie firmowe", icon: "Briefcase", allowedCategoryIds: ["patery", "zestawy"] },
-  { id: "5", name: "Impreza", icon: "Music", allowedCategoryIds: ["patery", "mini"] },
-  { id: "6", name: "Inne", icon: "CalendarDays", allowedCategoryIds: ["patery", "mini", "zestawy"] },
-];
-
-// ===== ICON PICKER (reused) =====
 const popularIcons: LucideIconName[] = [
   "Salad", "Cookie", "UtensilsCrossed", "Pizza", "Sandwich", "Soup",
   "Beef", "Fish", "Egg", "Apple", "CakeSlice", "Candy",
@@ -89,37 +72,128 @@ const IconPickerSmall = ({ value, onChange }: { value: LucideIconName; onChange:
   );
 };
 
-// ===== MAIN =====
 const SettingsFormView = () => {
-  const [categories, setCategories] = useState<ProductCategory[]>(defaultCategories);
-  const [events, setEvents] = useState<EventType[]>(defaultEvents);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [events, setEvents] = useState<EventType[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // New category form
   const [showCatForm, setShowCatForm] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [newCatDesc, setNewCatDesc] = useState("");
   const [newCatIcon, setNewCatIcon] = useState<LucideIconName>("Salad");
 
-  const addCategory = () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      // Fetch categories
+      const { data: cats } = await supabase
+        .from("product_categories")
+        .select("*")
+        .order("sort_order", { ascending: true });
+
+      // Fetch event types
+      const { data: evts } = await supabase
+        .from("event_types")
+        .select("*")
+        .order("sort_order", { ascending: true });
+
+      // Fetch mappings
+      const { data: mappings } = await supabase
+        .from("event_category_mappings")
+        .select("*");
+
+      if (cats) {
+        setCategories(cats.map((c) => ({
+          id: c.id,
+          name: c.name,
+          description: c.description || "",
+          icon: (c.icon as LucideIconName) || "Salad",
+          slug: c.slug,
+        })));
+      }
+
+      if (evts) {
+        const mappingsByEvent: Record<string, string[]> = {};
+        (mappings || []).forEach((m) => {
+          if (!mappingsByEvent[m.event_type_id]) mappingsByEvent[m.event_type_id] = [];
+          mappingsByEvent[m.event_type_id].push(m.category_id);
+        });
+
+        setEvents(evts.map((e) => ({
+          id: e.id,
+          name: e.name,
+          icon: (e.icon as LucideIconName) || "CalendarDays",
+          allowedCategoryIds: mappingsByEvent[e.id] || [],
+        })));
+      }
+
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  const addCategory = async () => {
     if (!newCatName.trim()) return;
-    const id = newCatName.trim().toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
-    setCategories([...categories, { id, name: newCatName.trim(), description: newCatDesc.trim(), icon: newCatIcon }]);
+    const slug = newCatName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const nextOrder = categories.length;
+
+    const { data, error } = await supabase
+      .from("product_categories")
+      .insert({ name: newCatName.trim(), description: newCatDesc.trim(), icon: newCatIcon, slug, sort_order: nextOrder })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Błąd: " + error.message);
+      return;
+    }
+
+    setCategories([...categories, {
+      id: data.id,
+      name: data.name,
+      description: data.description || "",
+      icon: (data.icon as LucideIconName) || "Salad",
+      slug: data.slug,
+    }]);
     setNewCatName("");
     setNewCatDesc("");
     setNewCatIcon("Salad");
     setShowCatForm(false);
+    toast.success("Dodano kategorię");
   };
 
-  const removeCategory = (id: string) => {
+  const removeCategory = async (id: string) => {
+    const { error } = await supabase.from("product_categories").delete().eq("id", id);
+    if (error) {
+      toast.error("Błąd: " + error.message);
+      return;
+    }
+    // Also remove mappings
+    await supabase.from("event_category_mappings").delete().eq("category_id", id);
     setCategories(categories.filter((c) => c.id !== id));
-    // Also remove from events
     setEvents(events.map((e) => ({ ...e, allowedCategoryIds: e.allowedCategoryIds.filter((cid) => cid !== id) })));
+    toast.success("Usunięto kategorię");
   };
 
-  const toggleCategoryForEvent = (eventId: string, categoryId: string) => {
+  const toggleCategoryForEvent = async (eventId: string, categoryId: string) => {
+    const event = events.find((e) => e.id === eventId);
+    if (!event) return;
+
+    const has = event.allowedCategoryIds.includes(categoryId);
+
+    if (has) {
+      await supabase
+        .from("event_category_mappings")
+        .delete()
+        .eq("event_type_id", eventId)
+        .eq("category_id", categoryId);
+    } else {
+      await supabase
+        .from("event_category_mappings")
+        .insert({ event_type_id: eventId, category_id: categoryId });
+    }
+
     setEvents(events.map((e) => {
       if (e.id !== eventId) return e;
-      const has = e.allowedCategoryIds.includes(categoryId);
       return {
         ...e,
         allowedCategoryIds: has
@@ -129,6 +203,14 @@ const SettingsFormView = () => {
     }));
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -137,7 +219,6 @@ const SettingsFormView = () => {
       </div>
 
       <div className="space-y-6">
-        {/* Categories */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -192,7 +273,6 @@ const SettingsFormView = () => {
           </CardContent>
         </Card>
 
-        {/* Event → Category mapping */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Kategorie dla rodzajów wydarzeń</CardTitle>
@@ -237,8 +317,6 @@ const SettingsFormView = () => {
             </div>
           </CardContent>
         </Card>
-
-        <Button className="w-full sm:w-auto">Zapisz zmiany</Button>
       </div>
     </div>
   );

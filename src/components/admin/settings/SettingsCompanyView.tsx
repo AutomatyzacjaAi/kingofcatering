@@ -1,17 +1,77 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 const SettingsCompanyView = () => {
-  const [companyName, setCompanyName] = useState("King of Catering");
-  const [nip, setNip] = useState("1234567890");
-  const [email, setEmail] = useState("kontakt@kingofcatering.pl");
-  const [phone, setPhone] = useState("+48 500 000 000");
-  const [address, setAddress] = useState("ul. Przykładowa 12, 00-001 Warszawa");
-  const [bankAccount, setBankAccount] = useState("PL 00 1234 5678 9012 3456 7890 1234");
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState("");
+  const [nip, setNip] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data, error } = await supabase.from("company_settings").select("*").limit(1).single();
+      if (data) {
+        setSettingsId(data.id);
+        setCompanyName(data.company_name || "");
+        setNip(data.nip || "");
+        setEmail(data.email || "");
+        setPhone(data.phone || "");
+        setAddress(data.address || "");
+        setBankAccount(data.bank_account || "");
+      } else if (error && error.code === "PGRST116") {
+        // No row yet — will insert on save
+      }
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = {
+      company_name: companyName,
+      nip,
+      email,
+      phone,
+      address,
+      bank_account: bankAccount,
+    };
+
+    let error;
+    if (settingsId) {
+      ({ error } = await supabase.from("company_settings").update(payload).eq("id", settingsId));
+    } else {
+      const { data, error: e } = await supabase.from("company_settings").insert(payload).select("id").single();
+      error = e;
+      if (data) setSettingsId(data.id);
+    }
+
+    setSaving(false);
+    if (error) {
+      toast.error("Błąd zapisu: " + error.message);
+    } else {
+      toast.success("Dane firmy zapisane");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -58,7 +118,9 @@ const SettingsCompanyView = () => {
           </CardContent>
         </Card>
 
-        <Button className="w-full sm:w-auto">Zapisz zmiany</Button>
+        <Button className="w-full sm:w-auto" onClick={handleSave} disabled={saving}>
+          {saving ? "Zapisywanie..." : "Zapisz zmiany"}
+        </Button>
       </div>
     </div>
   );
