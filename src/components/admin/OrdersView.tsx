@@ -1391,6 +1391,8 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       if (data) setBlockedDates(data.map(d => new Date(d.blocked_date)));
     });
   }, [open]);
+  const [items, setItems] = useState<OrderItem[]>([]);
+  const totalAmount = items.reduce((s, i) => s + i.total, 0);
 
   // Fetch company settings for delivery calculation
   useEffect(() => {
