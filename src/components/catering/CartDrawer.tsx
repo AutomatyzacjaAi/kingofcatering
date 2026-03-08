@@ -48,7 +48,7 @@ export function CartDrawer({
         if (qty > 0) {
           const variant = product.variants.find(v => v.id === variantId);
           if (variant) {
-            cartItems.push({ key: `${productId}-${variantId}`, name: variant.name, price: variant.price, quantity: qty, type: "expandable", productId, variantId });
+            cartItems.push({ key: `${productId}-${variantId}`, name: variant.name, price: getVariantPrice(variant, ct), quantity: qty, type: "expandable", productId, variantId });
           }
         }
       }
