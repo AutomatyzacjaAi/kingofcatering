@@ -313,6 +313,128 @@ const ClientsView = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add Client Sheet */}
+      <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
+            <SheetTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              Nowy klient
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="flex-1 px-6 py-4">
+            <div className="space-y-6">
+              {/* Dane osobowe */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  Dane osobowe
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Imię *</Label>
+                    <Input value={addForm.firstName} onChange={(e) => setAddField("firstName", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Nazwisko *</Label>
+                    <Input value={addForm.lastName} onChange={(e) => setAddField("lastName", e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Email *</Label>
+                  <Input type="email" value={addForm.email} onChange={(e) => setAddField("email", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Telefon *</Label>
+                    <Input value={addForm.phone} onChange={(e) => setAddField("phone", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Telefon dodatkowy</Label>
+                    <Input value={addForm.phoneAlt} onChange={(e) => setAddField("phoneAlt", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dane firmowe */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  Dane firmowe
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Nazwa firmy</Label>
+                    <Input value={addForm.companyName} onChange={(e) => setAddField("companyName", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">NIP</Label>
+                    <Input value={addForm.nip} onChange={(e) => setAddField("nip", e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Adres firmy</Label>
+                  <Input value={addForm.companyAddress} onChange={(e) => setAddField("companyAddress", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Miasto</Label>
+                    <Input value={addForm.companyCity} onChange={(e) => setAddField("companyCity", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Kod pocztowy</Label>
+                    <Input value={addForm.companyPostalCode} onChange={(e) => setAddField("companyPostalCode", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Adres */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  Adres zamieszkania
+                </h3>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Adres</Label>
+                  <Input value={addForm.address} onChange={(e) => setAddField("address", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Miasto</Label>
+                    <Input value={addForm.city} onChange={(e) => setAddField("city", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Kod pocztowy</Label>
+                    <Input value={addForm.postalCode} onChange={(e) => setAddField("postalCode", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notatki */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  Notatki
+                </h3>
+                <Textarea
+                  value={addForm.notes}
+                  onChange={(e) => setAddField("notes", e.target.value)}
+                  placeholder="Dodatkowe informacje o kliencie..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          </ScrollArea>
+          <div className="px-6 py-4 border-t border-border flex gap-3">
+            <Button className="flex-1 gap-2" onClick={handleAddSave}>
+              <Save className="w-4 h-4" />
+              Dodaj klienta
+            </Button>
+            <Button variant="outline" onClick={() => setIsAddSheetOpen(false)}>Anuluj</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
