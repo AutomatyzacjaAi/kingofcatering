@@ -223,36 +223,30 @@ async function fetchBlockedDates(): Promise<Date[]> {
   return (data ?? []).map((d) => new Date(d.blocked_date));
 }
 
-export interface DeliveryZone {
-  id: string;
-  name: string;
-  description: string;
-  cities: string[];
-  postal_codes: string[];
-  price: number;
-  free_delivery_above: number | null;
-  min_order_value: number | null;
-  is_active: boolean;
+export interface DeliveryConfig {
+  companyLat: number | null;
+  companyLng: number | null;
+  pricePerKm: number;
+  maxDeliveryKm: number | null;
+  freeDeliveryAbove: number | null;
 }
 
-async function fetchDeliveryZones(): Promise<DeliveryZone[]> {
+async function fetchDeliveryConfig(): Promise<DeliveryConfig> {
   const { data, error } = await supabase
-    .from("delivery_zones")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order");
-  if (error) throw error;
-  return (data ?? []).map((z) => ({
-    id: z.id,
-    name: z.name,
-    description: z.description ?? "",
-    cities: (z.cities as string[]) ?? [],
-    postal_codes: (z.postal_codes as string[]) ?? [],
-    price: Number(z.price),
-    free_delivery_above: z.free_delivery_above != null ? Number(z.free_delivery_above) : null,
-    min_order_value: z.min_order_value != null ? Number(z.min_order_value) : null,
-    is_active: z.is_active,
-  }));
+    .from("company_settings")
+    .select("company_lat, company_lng, delivery_price_per_km, max_delivery_km, free_delivery_above_km")
+    .limit(1)
+    .single();
+  if (error || !data) {
+    return { companyLat: null, companyLng: null, pricePerKm: 3, maxDeliveryKm: null, freeDeliveryAbove: null };
+  }
+  return {
+    companyLat: (data as any).company_lat != null ? Number((data as any).company_lat) : null,
+    companyLng: (data as any).company_lng != null ? Number((data as any).company_lng) : null,
+    pricePerKm: Number((data as any).delivery_price_per_km) || 3,
+    maxDeliveryKm: (data as any).max_delivery_km != null ? Number((data as any).max_delivery_km) : null,
+    freeDeliveryAbove: (data as any).free_delivery_above_km != null ? Number((data as any).free_delivery_above_km) : null,
+  };
 }
 
 // ─── Hook ────────────────────────────────────────────────────────
