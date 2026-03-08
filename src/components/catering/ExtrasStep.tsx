@@ -154,20 +154,103 @@ export function ExtrasStep({
       </div>
 
       <div className="px-4 py-4 md:px-6 lg:px-8">
-        {/* Regular extras (quantity-based) */}
-        {currentExtras.length > 0 && (
-          <ExtrasListSection extras={currentExtras} selectedExtras={selectedExtras} onExtraClick={(extra) => setSelectedExtraItem(extra)} />
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          {/* Waiter "no service" option if this category has waiter items */}
+          {currentWaiter.length > 0 && (
+            <Card onClick={() => onWaiterServiceChange(null, 0)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", !selectedWaiterService && "ring-2 ring-primary")}>
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0", !selectedWaiterService ? "bg-primary/10" : "bg-muted")}>
+                    <X className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm">Bez obsługi</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-sm font-bold text-primary">W cenie</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Packaging options (single select) */}
-        {currentPackaging.length > 0 && (
-          <PackagingSection options={currentPackaging} selectedId={selectedPackaging} onOptionClick={(option) => setSelectedPackagingOption(option)} />
-        )}
+          {/* Regular extras */}
+          {currentExtras.map((extra) => {
+            const quantity = selectedExtras[extra.id] || 0;
+            const isSelected = quantity > 0;
+            const hasImage = extra.image;
+            return (
+              <Card key={extra.id} onClick={() => setSelectedExtraItem(extra)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
+                      {hasImage ? <img src={extra.image} alt={extra.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-sm">{extra.name}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-sm font-bold text-primary">{extra.price.toFixed(0)} zł / {extra.unitLabel}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {quantity > 0 && <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">{quantity}</Badge>}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
 
-        {/* Waiter service options (single select + count) */}
-        {currentWaiter.length > 0 && (
-          <WaiterServiceSection options={currentWaiter} selectedId={selectedWaiterService} onOptionClick={(option) => setSelectedWaiterOption(option)} onNoServiceClick={() => onWaiterServiceChange(null, 0)} />
-        )}
+          {/* Packaging options */}
+          {currentPackaging.map((option) => {
+            const isSelected = selectedPackaging === option.id;
+            const hasImage = option.image;
+            return (
+              <Card key={option.id} onClick={() => setSelectedPackagingOption(option)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
+                      {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-sm font-bold text-primary">{option.priceLabel}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {/* Waiter service options */}
+          {currentWaiter.map((option) => {
+            const isSelected = selectedWaiterService === option.id;
+            const hasImage = option.image;
+            return (
+              <Card key={option.id} onClick={() => setSelectedWaiterOption(option)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
+                      {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-sm font-bold text-primary">{option.price.toFixed(0)} zł / {option.duration}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
         {currentExtras.length === 0 && currentPackaging.length === 0 && currentWaiter.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-6">Brak pozycji w tej kategorii</p>
@@ -197,49 +280,6 @@ export function ExtrasStep({
         waiterCount={selectedWaiterService === selectedWaiterOption?.id ? waiterCount : 1}
         onSelect={(count) => { if (selectedWaiterOption) onWaiterServiceChange(selectedWaiterOption.id, count); }}
       />
-    </div>
-  );
-}
-
-// ============= EXTRAS LIST SECTION =============
-
-function ExtrasListSection({
-  extras,
-  selectedExtras,
-  onExtraClick,
-}: {
-  extras: ExtraItem[];
-  selectedExtras: Record<string, number>;
-  onExtraClick: (extra: ExtraItem) => void;
-}) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-      {extras.map((extra) => {
-        const quantity = selectedExtras[extra.id] || 0;
-        const isSelected = quantity > 0;
-        const hasImage = extra.image;
-        return (
-          <Card key={extra.id} onClick={() => onExtraClick(extra)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                  {hasImage ? <img src={extra.image} alt={extra.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground text-sm">{extra.name}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-sm font-bold text-primary">{extra.price.toFixed(0)} zł / {extra.unitLabel}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {quantity > 0 && <Badge className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5">{quantity}</Badge>}
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
     </div>
   );
 }
@@ -289,37 +329,6 @@ function ExtraItemModal({ item, isOpen, onClose, quantity, onQuantityChange }: {
   );
 }
 
-// ============= PACKAGING SECTION =============
-
-function PackagingSection({ options, selectedId, onOptionClick }: { options: PackagingOption[]; selectedId: string | null; onOptionClick: (option: PackagingOption) => void; }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-      {options.map((option) => {
-        const isSelected = selectedId === option.id;
-        const hasImage = option.image;
-        return (
-          <Card key={option.id} onClick={() => onOptionClick(option)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                  {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-sm font-bold text-primary">{option.priceLabel}</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
-}
-
 // ============= PACKAGING MODAL =============
 
 function PackagingModal({ option, isOpen, onClose, isSelected, personCount, onSelect }: { option: PackagingOption | null; isOpen: boolean; onClose: () => void; isSelected: boolean; personCount: number; onSelect: (count: number) => void; }) {
@@ -363,55 +372,6 @@ function PackagingModal({ option, isOpen, onClose, isSelected, personCount, onSe
         <div className="p-4 border-t border-border bg-background shrink-0"><Button onClick={handleSelect} className="w-full" size="lg">{isSelected ? "Wybrano ✓" : "Wybierz"}</Button></div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-// ============= WAITER SERVICE SECTION =============
-
-function WaiterServiceSection({ options, selectedId, onOptionClick, onNoServiceClick }: { options: WaiterServiceOption[]; selectedId: string | null; onOptionClick: (option: WaiterServiceOption) => void; onNoServiceClick: () => void; }) {
-  return (
-    <div className="space-y-3">
-      <Card onClick={onNoServiceClick} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md", !selectedId && "ring-2 ring-primary")}>
-        <CardContent className="p-3">
-          <div className="flex items-center gap-3">
-            <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0", !selectedId ? "bg-primary/10" : "bg-muted")}>
-              <X className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground text-sm">Bez obsługi</h3>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-sm font-bold text-primary">W cenie</span>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-          </div>
-        </CardContent>
-      </Card>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-        {options.map((option) => {
-          const isSelected = selectedId === option.id;
-          const hasImage = option.image;
-          return (
-            <Card key={option.id} onClick={() => onOptionClick(option)} className={cn("cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.99] overflow-hidden", isSelected && "ring-2 ring-primary")}>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
-                  <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden", !hasImage && (isSelected ? "bg-primary/10" : "bg-muted"))}>
-                    {hasImage ? <img src={option.image} alt={option.name} className="w-full h-full object-cover" /> : <UtensilsCrossed className="w-6 h-6 text-muted-foreground" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm">{option.name}</h3>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-sm font-bold text-primary">{option.price.toFixed(0)} zł / {option.duration}</span>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
