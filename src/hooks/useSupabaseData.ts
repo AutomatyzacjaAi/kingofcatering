@@ -107,7 +107,6 @@ async function fetchProducts(): Promise<Product[]> {
       image: b.image_url ?? undefined,
       basePrice: Number(b.base_price),
       minQuantity: b.min_quantity,
-      icon: b.icon ?? "🍽️",
       category: b.category_slug ?? "mini",
       variants,
     } satisfies ExpandableProduct);
