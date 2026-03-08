@@ -1045,10 +1045,14 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
             <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Cena za osobę (zł)</Label>
                 <Input type="number" step="0.01" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena za osobę sala (zł)</Label>
+                <Input type="number" step="0.01" value={formPriceOnSite} onChange={(e) => setFormPriceOnSite(e.target.value)} placeholder="—" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Min. osób</Label>
