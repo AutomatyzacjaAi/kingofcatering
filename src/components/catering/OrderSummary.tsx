@@ -80,7 +80,7 @@ export function OrderSummary({
             productLines.push({
               name: variant.name,
               quantity: qty,
-              price: variant.price * qty,
+              price: getVariantPrice(variant, ct) * qty,
               note: order.productNotes[productId] || undefined,
               time: order.servingTimes[productId] || undefined,
             });
