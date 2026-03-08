@@ -214,11 +214,62 @@ const docLabels: Record<DocType, { label: string; Icon: LucideIcon }> = {
 const fmtNum = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ===== ORDER DOCUMENT VIEW =====
+interface FoodCostExtra {
+  id: string;
+  name: string;
+  amount: number;
+  isNew?: boolean;
+}
+
 const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: DocType; onBack: () => void }) => {
   const showOffer = docType === "offer" || docType === "full";
   const showShoppingList = docType === "shopping-list" || docType === "full";
   const showKitchen = docType === "kitchen" || docType === "full";
   const showFoodCost = docType === "food-cost" || docType === "full";
+
+  // Food cost extras state
+  const [fcExtras, setFcExtras] = useState<FoodCostExtra[]>([]);
+  const [newExtraName, setNewExtraName] = useState("");
+  const [newExtraAmount, setNewExtraAmount] = useState("");
+
+  // Load saved extras from DB
+  useEffect(() => {
+    if (!order.dbId || !showFoodCost) return;
+    supabase
+      .from("order_food_cost_extras")
+      .select("*")
+      .eq("order_id", order.dbId)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data) setFcExtras(data.map(d => ({ id: d.id, name: d.name, amount: Number(d.amount) })));
+      });
+  }, [order.dbId, showFoodCost]);
+
+  const handleAddExtra = () => {
+    const amount = parseFloat(newExtraAmount.replace(",", "."));
+    if (!newExtraName.trim() || isNaN(amount)) return;
+    const entry: FoodCostExtra = { id: crypto.randomUUID(), name: newExtraName.trim(), amount, isNew: true };
+    setFcExtras(prev => [...prev, entry]);
+    setNewExtraName("");
+    setNewExtraAmount("");
+  };
+
+  const handleRemoveExtra = (id: string) => {
+    setFcExtras(prev => prev.filter(e => e.id !== id));
+  };
+
+  const handleSaveExtras = async () => {
+    if (!order.dbId) return;
+    // Delete all existing, then insert current list
+    await supabase.from("order_food_cost_extras").delete().eq("order_id", order.dbId);
+    if (fcExtras.length > 0) {
+      await supabase.from("order_food_cost_extras").insert(
+        fcExtras.map(e => ({ order_id: order.dbId, name: e.name, amount: e.amount }))
+      );
+    }
+    setFcExtras(prev => prev.map(e => ({ ...e, isNew: false })));
+    toast.success("Pozycje kosztowe zapisane");
+  };
 
   // Aggregate ingredients
   const ingredientMap: Record<string, { name: string; totalQty: number; unit: string }> = {};
@@ -258,9 +309,16 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
     foodCostPerUnit: item.foodCostPerUnit!, totalFoodCost: item.foodCostPerUnit! * item.quantity,
     revenue: item.total, margin: item.total > 0 ? ((item.total - item.foodCostPerUnit! * item.quantity) / item.total) * 100 : 0,
   }));
-  const totalFC = foodCostItems.reduce((s, i) => s + i.totalFoodCost, 0);
+  const extrasTotal = fcExtras.reduce((s, e) => s + e.amount, 0);
+  const totalFC = foodCostItems.reduce((s, i) => s + i.totalFoodCost, 0) + extrasTotal;
   const totalRev = foodCostItems.reduce((s, i) => s + i.revenue, 0);
   const totalMargin = totalRev > 0 ? ((totalRev - totalFC) / totalRev) * 100 : 0;
+
+  // Build order with extras for PDF
+  const orderWithExtras = {
+    ...order,
+    _foodCostExtras: fcExtras,
+  };
 
   return (
     <div>
@@ -280,7 +338,7 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
             if (showOffer) await generateOfferPdf(order);
             else if (showShoppingList) await generateShoppingListPdf(order);
             else if (showKitchen) await generateKitchenPdf(order);
-            else if (showFoodCost) await generateFoodCostPdf(order);
+            else if (showFoodCost) await generateFoodCostPdf(order, fcExtras);
           }}>
             <Download className="w-4 h-4 mr-1" />
             Pobierz PDF
@@ -438,6 +496,52 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
                     </TableCell>
                   </TableRow>
                 ))}
+
+                {/* Custom extras */}
+                {fcExtras.map((extra) => (
+                  <TableRow key={extra.id} className="bg-muted/30">
+                    <TableCell className="font-medium flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">⊕</span>
+                      {extra.name}
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">—</TableCell>
+                    <TableCell className="text-right text-muted-foreground">—</TableCell>
+                    <TableCell className="text-right font-semibold">{fmtNum(extra.amount)} zł</TableCell>
+                    <TableCell className="text-right text-muted-foreground">—</TableCell>
+                    <TableCell className="text-right">
+                      <button onClick={() => handleRemoveExtra(extra.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive/60 hover:text-destructive transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {/* Add extra row */}
+                <TableRow className="hover:bg-transparent border-t border-dashed">
+                  <TableCell colSpan={6}>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Nazwa pozycji (np. Obsługa kierowcy)"
+                        value={newExtraName}
+                        onChange={(e) => setNewExtraName(e.target.value)}
+                        className="h-8 text-sm flex-1"
+                        onKeyDown={(e) => e.key === "Enter" && handleAddExtra()}
+                      />
+                      <Input
+                        placeholder="Kwota"
+                        value={newExtraAmount}
+                        onChange={(e) => setNewExtraAmount(e.target.value)}
+                        className="h-8 text-sm w-28"
+                        onKeyDown={(e) => e.key === "Enter" && handleAddExtra()}
+                      />
+                      <Button size="sm" variant="outline" className="h-8 px-3" onClick={handleAddExtra}>
+                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        Dodaj
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+
                 <TableRow className="hover:bg-transparent border-t-2">
                   <TableCell colSpan={3} className="text-right font-semibold">Suma:</TableCell>
                   <TableCell className="text-right font-bold">{fmtNum(totalFC)} zł</TableCell>
@@ -452,6 +556,15 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
                 </TableRow>
               </TableBody>
             </Table>
+
+            {fcExtras.length > 0 && (
+              <div className="flex justify-end mt-4">
+                <Button size="sm" onClick={handleSaveExtras}>
+                  <Check className="w-4 h-4 mr-1" />
+                  Zapisz pozycje kosztowe
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
