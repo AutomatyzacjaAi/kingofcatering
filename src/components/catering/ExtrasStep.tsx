@@ -54,7 +54,7 @@ export function ExtrasStep({
   const [selectedWaiterOption, setSelectedWaiterOption] = useState<WaiterServiceOption | null>(null);
 
   // Set first category as active when categories load
-  const effectiveActiveCategory = activeCategory ?? extrasCategories[0]?.id ?? null;
+  const effectiveActiveCategory = activeCategory ?? (extrasCategories?.length > 0 ? extrasCategories[0].id : null);
 
   // Group extras/packaging/waiter by their extras_category_id
   const extrasByCategory = useMemo(() => {
