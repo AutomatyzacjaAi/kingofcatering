@@ -405,12 +405,20 @@ export function OrderSummary({
         </label>
       </div>
 
+      {/* Min order value warning */}
+      {minOrderValue > 0 && totalPrice < minOrderValue && (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+          Minimalna wartość zamówienia to <strong>{minOrderValue} zł</strong>. Brakuje jeszcze{" "}
+          <strong>{(minOrderValue - totalPrice).toFixed(2)} zł</strong>.
+        </div>
+      )}
+
       {/* Action buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Button
           size="lg"
           onClick={handleSubmitOnline}
-          disabled={isSubmitting || !termsAccepted}
+          disabled={isSubmitting || !termsAccepted || (minOrderValue > 0 && totalPrice < minOrderValue)}
           className="h-14 text-base"
         >
           <CreditCard className="w-5 h-5 mr-2" />
@@ -420,7 +428,7 @@ export function OrderSummary({
           size="lg"
           variant="outline"
           onClick={handleSubmitOffer}
-          disabled={isSubmitting || !termsAccepted}
+          disabled={isSubmitting || !termsAccepted || (minOrderValue > 0 && totalPrice < minOrderValue)}
           className="h-14 text-base"
         >
           <Send className="w-5 h-5 mr-2" />
