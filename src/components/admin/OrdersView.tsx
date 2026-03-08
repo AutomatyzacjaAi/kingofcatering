@@ -1475,6 +1475,12 @@ const OrdersView = () => {
         onClose={() => setShowAddOrder(false)}
         onAdd={(order) => setOrders(prev => [order, ...prev])}
       />
+
+      <SummarySheet
+        open={showSummary}
+        onClose={() => setShowSummary(false)}
+        orders={orders}
+      />
     </div>
   );
 };
