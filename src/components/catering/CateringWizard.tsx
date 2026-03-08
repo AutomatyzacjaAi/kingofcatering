@@ -156,9 +156,9 @@ export function CateringWizard() {
             onBuildingNumberChange={(num) => updateOrder({ contactBuildingNumber: num })}
             onApartmentNumberChange={(num) => updateOrder({ contactApartmentNumber: num })}
             onNotesChange={(notes) => updateOrder({ notes })}
-            deliveryZones={deliveryZones}
+            deliveryConfig={deliveryConfig}
             orderTotal={totalPrice}
-            onDeliveryZoneMatch={(zoneId, price) => updateOrder({ deliveryZoneId: zoneId, deliveryPrice: price })}
+            onDeliveryCalculated={(price, distanceKm) => updateOrder({ deliveryPrice: price })}
           />
         );
       case 4:
