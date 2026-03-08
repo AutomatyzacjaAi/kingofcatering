@@ -149,6 +149,13 @@ export function CartDrawer({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm text-foreground line-clamp-2">{item.name}</h4>
+                    {item.details && item.details.length > 0 && (
+                      <div className="mt-0.5 space-y-0.5">
+                        {item.details.map((d, idx) => (
+                          <p key={idx} className="text-[11px] text-muted-foreground leading-tight">{d}</p>
+                        ))}
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground">{item.price.toFixed(2)} zł × {item.quantity}</p>
                     <div className="flex items-center justify-between mt-2">
                       {item.isReadOnly ? (
