@@ -201,6 +201,7 @@ function SimpleProductContent({
   onServingTimeChange,
   notes,
   onNotesChange,
+  cateringType = "wyjazdowy",
 }: {
   product: SimpleProduct;
   quantity: number;
@@ -209,7 +210,9 @@ function SimpleProductContent({
   onServingTimeChange: (time: string) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  cateringType?: CateringType;
 }) {
+  const effectivePrice = getSimplePrice(product, cateringType);
   return (
     <div>
       {product.image && (
