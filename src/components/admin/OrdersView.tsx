@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/sonner";
 
-type OrderStatus = "Nowe" | "Potwierdzone" | "W realizacji" | "Zrealizowane" | "Anulowane";
+type OrderStatus = "Nowe" | "Nowe zamówienie" | "Nowa oferta" | "Potwierdzone" | "W realizacji" | "Zrealizowane" | "Anulowane";
 
 interface OrderItem {
   name: string;
