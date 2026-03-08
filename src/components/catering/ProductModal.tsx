@@ -46,6 +46,7 @@ export function ProductModal({
   onServingTimeChange,
   productNotes = "",
   onProductNotesChange,
+  cateringType = "wyjazdowy",
 }: ProductModalProps) {
   if (!product) return null;
 
