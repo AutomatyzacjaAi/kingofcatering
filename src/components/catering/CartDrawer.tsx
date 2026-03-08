@@ -36,7 +36,7 @@ export function CartDrawer({
     if (qty > 0) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "simple") {
-        cartItems.push({ key: productId, name: product.name, price: product.pricePerUnit, quantity: qty, type: "simple", productId });
+        cartItems.push({ key: productId, name: product.name, price: getSimplePrice(product, ct), quantity: qty, type: "simple", productId });
       }
     }
   }
