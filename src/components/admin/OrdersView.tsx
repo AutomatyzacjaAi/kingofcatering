@@ -2064,10 +2064,52 @@ const OrdersView = () => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...field } : o));
   };
 
-  const handleSaveOrder = (updated: Order) => {
+  const handleSaveOrder = async (updated: Order) => {
     setOrders(orders.map((o) => o.id === updated.id ? updated : o));
     setSelectedOrder(updated);
     setView("detail");
+
+    // Persist to DB
+    if (updated.dbId) {
+      await supabase.from("orders").update({
+        status: updated.status,
+        notes: updated.notes,
+        delivery_address: updated.deliveryAddress,
+        amount: updated.amountNum,
+        discount: updated.discount,
+      } as any).eq("id", updated.dbId);
+
+      // Rebuild order_items
+      await supabase.from("order_items").delete().eq("order_id", updated.dbId);
+      for (let idx = 0; idx < updated.items.length; idx++) {
+        const item = updated.items[idx];
+        const { data: insertedItem } = await supabase.from("order_items").insert({
+          order_id: updated.dbId,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          price_per_unit: item.pricePerUnit,
+          total: item.total,
+          item_type: item.type || "simple",
+          food_cost_per_unit: item.foodCostPerUnit || 0,
+          sort_order: idx,
+        }).select("id").single();
+
+        if (insertedItem && item.subItems && item.subItems.length > 0) {
+          await supabase.from("order_item_sub_items").insert(
+            item.subItems.map((sub, si) => ({
+              order_item_id: insertedItem.id,
+              name: sub.name,
+              quantity: sub.quantity,
+              unit: sub.unit,
+              food_cost_per_unit: sub.foodCostPerUnit || 0,
+              sort_order: si,
+            }))
+          );
+        }
+      }
+      toast.success("Zamówienie zapisane");
+    }
   };
 
   const handleGenerateDoc = (type: DocType) => {
