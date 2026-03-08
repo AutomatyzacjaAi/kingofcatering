@@ -437,6 +437,9 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
   );
 };
 
+// ===== SHARED TYPES =====
+interface DbClient { id: string; first_name: string; last_name: string; email: string; phone: string; address: string | null; city: string | null; company_name: string | null; }
+
 // ===== ORDER DETAIL VIEW =====
 const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }: { order: Order; onBack: () => void; onEdit: () => void; onGenerateDoc: (type: DocType) => void; onLinkClient: (orderId: string, clientId: string) => void }) => {
   const [showClientSearch, setShowClientSearch] = useState(false);
