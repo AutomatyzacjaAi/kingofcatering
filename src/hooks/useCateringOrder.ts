@@ -62,6 +62,8 @@ const initialOrder: CateringOrder = {
   contactApartmentNumber: "",
   notes: "",
   paymentMethod: "",
+  deliveryZoneId: null,
+  deliveryPrice: 0,
 };
 
 export function useCateringOrder(
