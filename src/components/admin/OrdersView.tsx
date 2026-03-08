@@ -1813,8 +1813,21 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                     </button>
                   </div>
                 ))}
-                <div className="flex justify-end pt-2 border-t border-border">
-                  <span className="text-sm font-bold text-primary">{fmtNum(totalAmount)} zł</span>
+                <div className="pt-2 border-t border-border space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Produkty</span>
+                    <span>{fmtNum(totalAmount)} zł</span>
+                  </div>
+                  {deliveryCost > 0 && (
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Dostawa</span>
+                      <span>{fmtNum(deliveryCost)} zł</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-sm font-bold">Razem</span>
+                    <span className="text-sm font-bold text-primary">{fmtNum(totalAmount + deliveryCost)} zł</span>
+                  </div>
                 </div>
               </div>
             )}
