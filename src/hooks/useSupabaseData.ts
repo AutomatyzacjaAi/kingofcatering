@@ -95,6 +95,7 @@ async function fetchProducts(): Promise<Product[]> {
         name: v.name,
         description: v.description ?? "",
         price: Number(v.price),
+        priceOnSite: (v as any).price_on_site != null ? Number((v as any).price_on_site) : null,
         allergens: (v.allergens as string[]) ?? [],
         dietaryTags: (v.dietary_tags as string[]) ?? [],
       }));
