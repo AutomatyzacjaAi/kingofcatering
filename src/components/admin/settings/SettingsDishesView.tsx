@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { ExtrasTab as ExtrasTabComponent } from "./ExtrasTab";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1157,6 +1158,8 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 const SettingsDishesView = () => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [extras, setExtras] = useState<any[]>([]);
+  const [extrasCategories, setExtrasCategories] = useState<{id:string;name:string;slug:string}[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [bundles, setBundles] = useState<Bundle[]>([]);
@@ -1167,6 +1170,9 @@ const SettingsDishesView = () => {
 
     const { data: catData } = await supabase.from("product_categories").select("slug, name").order("sort_order");
     setCategories((catData ?? []).map(c => ({ slug: c.slug, name: c.name })));
+
+    const { data: ecData } = await supabase.from("extras_categories").select("id, name, slug").order("sort_order");
+    setExtrasCategories((ecData ?? []).map(c => ({ id: c.id, name: c.name, slug: c.slug })));
 
     const { data: ingData } = await supabase.from("ingredients").select("*").order("name");
     const ingredientsList: Ingredient[] = (ingData ?? []).map(i => ({
@@ -1222,6 +1228,17 @@ const SettingsDishesView = () => {
       })),
     })));
 
+    const { data: extrasData } = await supabase.from("extras").select("*").order("sort_order");
+    setExtras((extrasData ?? []).map(e => ({
+      id: e.id, name: e.name, description: e.description ?? "", longDescription: e.long_description ?? "",
+      image: e.image_url, category: e.category, extrasCategoryId: (e as any).extras_category_id || null,
+      price: Number(e.price), priceNetto: Number(e.price_netto ?? 0), vatRate: e.vat_rate ?? 23,
+      priceBrutto: Number(e.price_brutto ?? e.price), unitLabel: e.unit_label ?? "szt.",
+      priceLabel: e.price_label ?? "", requiresPersonCount: e.requires_person_count ?? false,
+      duration: e.duration, contents: (e.contents as string[]) ?? [],
+      foodCost: Number(e.food_cost ?? 0),
+    })));
+
     setLoading(false);
   }, []);
 
@@ -1239,7 +1256,7 @@ const SettingsDishesView = () => {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Katalog produktów</h1>
-        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami i zestawami — wszystko opiera się na daniach</p>
+        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami, zestawami i dodatkami</p>
       </div>
 
       <Tabs defaultValue="dishes">
@@ -1256,6 +1273,9 @@ const SettingsDishesView = () => {
           <TabsTrigger value="configsets" className="gap-1.5">
             <Settings2 className="w-3.5 h-3.5" />Zestawy
           </TabsTrigger>
+          <TabsTrigger value="extras" className="gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />Dodatki
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
@@ -1269,6 +1289,9 @@ const SettingsDishesView = () => {
         </TabsContent>
         <TabsContent value="configsets">
           <ConfigSetsTab configSets={configSets} dishes={dishes} categories={categories} reload={loadAll} />
+        </TabsContent>
+        <TabsContent value="extras">
+          <ExtrasTabComponent extras={extras} extrasCategories={extrasCategories} reload={loadAll} />
         </TabsContent>
       </Tabs>
     </div>
