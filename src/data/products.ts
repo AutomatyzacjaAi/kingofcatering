@@ -11,6 +11,7 @@ export type SimpleProduct = {
   contents: string[];
   allergens: string[];
   pricePerUnit: number;
+  pricePerUnitOnSite?: number | null;
   unitLabel: string;
   minQuantity: number;
   category: string;
