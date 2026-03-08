@@ -917,6 +917,7 @@ const OrderEditView = ({ order, onBack, onSave }: { order: Order; onBack: () => 
   const [notes, setNotes] = useState(order.notes);
   const [deliveryAddress, setDeliveryAddress] = useState(order.deliveryAddress);
   const [items, setItems] = useState<OrderItem[]>(order.items.map(i => ({ ...i })));
+  const [discount, setDiscount] = useState(order.discount || 0);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [addSearch, setAddSearch] = useState("");
   const [configuringProduct, setConfiguringProduct] = useState<CatalogProduct | null>(null);
