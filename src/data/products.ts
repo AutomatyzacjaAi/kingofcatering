@@ -6,14 +6,13 @@ export type SimpleProduct = {
   id: string;
   name: string;
   description: string;
-  longDescription?: string; // detailed description for modal
-  image?: string; // image path
-  contents: string[]; // what's included
+  longDescription?: string;
+  image?: string;
+  contents: string[];
   allergens: string[];
   pricePerUnit: number;
-  unitLabel: string; // "szt.", "kg", "patera"
+  unitLabel: string;
   minQuantity: number;
-  icon: string;
   category: string;
 };
 
@@ -27,7 +26,6 @@ export type ExpandableProduct = {
   image?: string;
   basePrice: number;
   minQuantity: number;
-  icon: string;
   category: string;
   variants: ProductVariant[];
 };
@@ -51,7 +49,6 @@ export type ConfigurableProduct = {
   image?: string;
   pricePerPerson: number;
   minPersons: number;
-  icon: string;
   category: string;
   optionGroups: OptionGroup[];
 };
@@ -75,15 +72,13 @@ export type Product = SimpleProduct | ExpandableProduct | ConfigurableProduct;
 export type EventType = {
   id: string;
   name: string;
-  icon: string;
 };
 
 export type Category = {
   id: string;
-  dbId?: string; // UUID from database, used for event_category_mappings
+  dbId?: string;
   name: string;
   description: string;
-  icon: string;
 };
 
 // ============= EVENT TYPES =============
