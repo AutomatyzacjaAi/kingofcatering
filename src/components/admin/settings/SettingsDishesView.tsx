@@ -723,15 +723,9 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
 
             <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Długi opis</Label>
-                <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Ikona</Label>
-                <Input value={formIcon} onChange={(e) => setFormIcon(e.target.value)} placeholder="🍽️" />
-              </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Długi opis</Label>
+              <Input value={formLongDesc} onChange={(e) => setFormLongDesc(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-4 gap-3">
