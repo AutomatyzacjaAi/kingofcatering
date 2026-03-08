@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
-import { products, type Product, type SimpleProduct, type ExpandableProduct, type ConfigurableProduct } from "@/data/products";
-import { packagingOptions, waiterServiceOptions, extraItems } from "@/data/extras";
+import type { Product } from "@/data/products";
+import type { ExtraItem, PackagingOption, WaiterServiceOption } from "@/data/extras";
 
 export type OrderItem = {
   productId: string;
@@ -13,22 +13,17 @@ export type CateringOrder = {
   eventType: string;
   eventDate: string;
   eventTime: string;
-  // Products
   simpleQuantities: Record<string, number>;
   expandableQuantities: Record<string, Record<string, number>>;
   configurableData: Record<string, { quantity: number; options: Record<string, string[]> }>;
-  // Serving times per product
   servingTimes: Record<string, string>;
   productNotes: Record<string, string>;
-  // Extras
   selectedExtras: Record<string, number>;
   selectedPackaging: string | null;
   packagingPersonCount: number;
   selectedWaiterService: string | null;
   waiterCount: number;
-  // Legacy items for backward compatibility
   items: Record<string, OrderItem>;
-  // Contact
   contactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -37,7 +32,6 @@ export type CateringOrder = {
   contactBuildingNumber: string;
   contactApartmentNumber: string;
   notes: string;
-  // Payment
   paymentMethod: string;
 };
 
@@ -68,7 +62,12 @@ const initialOrder: CateringOrder = {
   paymentMethod: "",
 };
 
-export function useCateringOrder() {
+export function useCateringOrder(
+  products: Product[] = [],
+  extraItems: ExtraItem[] = [],
+  packagingOptionsList: PackagingOption[] = [],
+  waiterServiceOptionsList: WaiterServiceOption[] = [],
+) {
   const [order, setOrder] = useState<CateringOrder>(initialOrder);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -83,11 +82,9 @@ export function useCateringOrder() {
     []
   );
 
-  // Calculate total price
   const totalPrice = useMemo(() => {
     let total = 0;
     
-    // Simple products
     for (const [productId, qty] of Object.entries(order.simpleQuantities)) {
       if (qty > 0) {
         const product = products.find(p => p.id === productId);
@@ -97,7 +94,6 @@ export function useCateringOrder() {
       }
     }
     
-    // Expandable products
     for (const [productId, variants] of Object.entries(order.expandableQuantities)) {
       const product = products.find(p => p.id === productId);
       if (product && product.type === "expandable") {
@@ -112,7 +108,6 @@ export function useCateringOrder() {
       }
     }
     
-    // Configurable products
     for (const [productId, data] of Object.entries(order.configurableData)) {
       if (data.quantity > 0) {
         const product = products.find(p => p.id === productId);
@@ -122,7 +117,6 @@ export function useCateringOrder() {
       }
     }
 
-    // Extras
     for (const [extraId, qty] of Object.entries(order.selectedExtras)) {
       if (qty > 0) {
         const extra = extraItems.find((e) => e.id === extraId);
@@ -132,133 +126,77 @@ export function useCateringOrder() {
       }
     }
 
-    // Packaging
     if (order.selectedPackaging) {
-      const packaging = packagingOptions.find(p => p.id === order.selectedPackaging);
+      const packaging = packagingOptionsList.find(p => p.id === order.selectedPackaging);
       if (packaging && packaging.price > 0) {
         total += packaging.price * order.packagingPersonCount;
       }
     }
 
-    // Waiter service
     if (order.selectedWaiterService) {
-      const service = waiterServiceOptions.find(s => s.id === order.selectedWaiterService);
+      const service = waiterServiceOptionsList.find(s => s.id === order.selectedWaiterService);
       if (service) {
         total += service.price * order.waiterCount;
       }
     }
     
     return total;
-  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData, order.selectedExtras, order.selectedPackaging, order.packagingPersonCount, order.selectedWaiterService, order.waiterCount]);
+  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData, order.selectedExtras, order.selectedPackaging, order.packagingPersonCount, order.selectedWaiterService, order.waiterCount, products, extraItems, packagingOptionsList, waiterServiceOptionsList]);
 
-  // Simple product quantity change
   const updateSimpleQuantity = useCallback((productId: string, quantity: number) => {
     setOrder((prev) => ({
       ...prev,
-      simpleQuantities: {
-        ...prev.simpleQuantities,
-        [productId]: quantity,
-      },
+      simpleQuantities: { ...prev.simpleQuantities, [productId]: quantity },
     }));
   }, []);
 
-  // Expandable product variant quantity change
   const updateExpandableVariant = useCallback((productId: string, variantId: string, quantity: number) => {
     setOrder((prev) => ({
       ...prev,
       expandableQuantities: {
         ...prev.expandableQuantities,
-        [productId]: {
-          ...(prev.expandableQuantities[productId] || {}),
-          [variantId]: quantity,
-        },
+        [productId]: { ...(prev.expandableQuantities[productId] || {}), [variantId]: quantity },
       },
     }));
   }, []);
 
-  // Configurable product change
-  const updateConfigurable = useCallback((
-    productId: string, 
-    quantity: number, 
-    groupId?: string, 
-    optionIds?: string[]
-  ) => {
+  const updateConfigurable = useCallback((productId: string, quantity: number, groupId?: string, optionIds?: string[]) => {
     setOrder((prev) => {
       const currentData = prev.configurableData[productId] || { quantity: 0, options: {} };
-      
       const newData = {
         quantity,
-        options: groupId && optionIds 
-          ? { ...currentData.options, [groupId]: optionIds }
-          : currentData.options,
+        options: groupId && optionIds ? { ...currentData.options, [groupId]: optionIds } : currentData.options,
       };
-      
-      return {
-        ...prev,
-        configurableData: {
-          ...prev.configurableData,
-          [productId]: newData,
-        },
-      };
+      return { ...prev, configurableData: { ...prev.configurableData, [productId]: newData } };
     });
   }, []);
 
-  // Serving time per product
   const updateServingTime = useCallback((productId: string, time: string) => {
-    setOrder((prev) => ({
-      ...prev,
-      servingTimes: {
-        ...prev.servingTimes,
-        [productId]: time,
-      },
-    }));
+    setOrder((prev) => ({ ...prev, servingTimes: { ...prev.servingTimes, [productId]: time } }));
   }, []);
 
-  // Product notes
   const updateProductNotes = useCallback((productId: string, notes: string) => {
-    setOrder((prev) => ({
-      ...prev,
-      productNotes: {
-        ...prev.productNotes,
-        [productId]: notes,
-      },
-    }));
+    setOrder((prev) => ({ ...prev, productNotes: { ...prev.productNotes, [productId]: notes } }));
   }, []);
 
-  // Extras handlers
   const updateExtra = useCallback((extraId: string, quantity: number) => {
-    setOrder((prev) => ({
-      ...prev,
-      selectedExtras: {
-        ...prev.selectedExtras,
-        [extraId]: quantity,
-      },
-    }));
+    setOrder((prev) => ({ ...prev, selectedExtras: { ...prev.selectedExtras, [extraId]: quantity } }));
   }, []);
 
   const updatePackaging = useCallback((packagingId: string | null, personCount: number) => {
-    setOrder((prev) => ({
-      ...prev,
-      selectedPackaging: packagingId,
-      packagingPersonCount: packagingId ? personCount : 0,
-    }));
+    setOrder((prev) => ({ ...prev, selectedPackaging: packagingId, packagingPersonCount: packagingId ? personCount : 0 }));
   }, []);
 
   const updateWaiterService = useCallback((serviceId: string | null, count: number) => {
-    setOrder((prev) => ({
-      ...prev,
-      selectedWaiterService: serviceId,
-      waiterCount: count,
-    }));
+    setOrder((prev) => ({ ...prev, selectedWaiterService: serviceId, waiterCount: count }));
   }, []);
 
-  // Legacy: update item quantity (for cart drawer compatibility)
   const updateItemQuantity = useCallback((productId: string, quantity: number) => {
     const product = products.find(p => p.id === productId);
     if (product?.type === "simple") {
-      updateSimpleQuantity(productId, quantity);
+      setOrder((prev) => ({ ...prev, simpleQuantities: { ...prev.simpleQuantities, [productId]: quantity } }));
     }
-  }, [updateSimpleQuantity]);
+  }, [products]);
 
   const setGuestCount = useCallback((count: number) => {
     setOrder((prev) => ({ ...prev, guestCount: count }));
@@ -285,15 +223,9 @@ export function useCateringOrder() {
 
   const getSuggestedQuantity = useCallback(
     (product: Product): number => {
-      if (product.type === "simple") {
-        return Math.max(1, Math.ceil(order.guestCount / 8));
-      }
-      if (product.type === "expandable") {
-        return product.minQuantity;
-      }
-      if (product.type === "configurable") {
-        return Math.max(product.minPersons, order.guestCount);
-      }
+      if (product.type === "simple") return Math.max(1, Math.ceil(order.guestCount / 8));
+      if (product.type === "expandable") return product.minQuantity;
+      if (product.type === "configurable") return Math.max(product.minPersons, order.guestCount);
       return 1;
     },
     [order.guestCount]
