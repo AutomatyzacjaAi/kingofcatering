@@ -50,7 +50,8 @@ const SettingsDeliveryView = () => {
     }
     setGeocoding(true);
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(companyAddressFull)}&countrycodes=pl&limit=1`;
+      const cleaned = companyAddressFull.replace(/\bul\.\s*/gi, '').replace(/\baleja\s*/gi, '').replace(/\bal\.\s*/gi, '').trim();
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleaned)}&countrycodes=pl&limit=1`;
       const res = await fetch(url, { headers: { "User-Agent": "KingOfCatering/1.0" } });
       const data = await res.json();
       if (data && data.length > 0) {

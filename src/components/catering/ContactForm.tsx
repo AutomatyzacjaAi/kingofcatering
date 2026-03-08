@@ -68,7 +68,9 @@ export function ContactForm({
       return;
     }
 
-    const fullAddress = `${street} ${building}, ${city}, Polska`;
+    // Clean Polish street prefixes for better geocoding
+    const cleanStreet = street.replace(/\bul\.\s*/gi, '').replace(/\baleja\s*/gi, '').replace(/\bal\.\s*/gi, '').trim();
+    const fullAddress = `${cleanStreet} ${building}, ${city}, Polska`;
 
     setCalculating(true);
     setDeliveryError(null);

@@ -13,8 +13,22 @@ interface OsrmRoute {
   routes: { distance: number; duration: number }[];
 }
 
+function cleanPolishAddress(address: string): string {
+  // Remove Polish street prefixes that confuse Nominatim
+  return address
+    .replace(/\bul\.\s*/gi, '')
+    .replace(/\baleja\s*/gi, '')
+    .replace(/\bal\.\s*/gi, '')
+    .replace(/\bos\.\s*/gi, '')
+    .replace(/\bpl\.\s*/gi, '')
+    .replace(/\bplac\s+/gi, '')
+    .trim();
+}
+
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number; displayName: string } | null> {
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=pl&limit=1`;
+  const cleaned = cleanPolishAddress(address);
+  // Try structured query first for better results
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleaned)}&countrycodes=pl&limit=1`;
   const res = await fetch(url, {
     headers: { 'User-Agent': 'KingOfCatering/1.0' },
   });
