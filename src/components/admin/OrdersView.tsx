@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download, Clock, ChevronRight } from "lucide-react";
+import { Search, Eye, Pencil, Copy, Printer, Trash2, ChevronDown, ArrowLeft, FileText, ShoppingCart, X, Check, UtensilsCrossed, Calculator, FileDown, CookingPot, ClipboardList, Plus, User, CalendarDays, MapPin, MessageSquare, Download, Clock, ChevronRight, Loader2, CheckCircle2, AlertCircle, Truck } from "lucide-react";
 import { generateOfferPdf, generateShoppingListPdf, generateFoodCostPdf, generateKitchenPdf, generateSummaryPdf, type SummaryDocType, type FoodCostExtra as FoodCostExtraPdf } from "@/lib/generatePdf";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { LucideIcon } from "lucide-react";
@@ -1374,7 +1374,16 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
   const [time, setTime] = useState("");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+  const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryStreet, setDeliveryStreet] = useState("");
+  const [deliveryBuilding, setDeliveryBuilding] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
+  const [deliveryCalculating, setDeliveryCalculating] = useState(false);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
+  const [companySettings, setCompanySettings] = useState<{ companyLat: number | null; companyLng: number | null; pricePerKm: number; maxDeliveryKm: number | null; freeDeliveryAbove: number | null } | null>(null);
+  const deliveryDebounceRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -1382,8 +1391,75 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       if (data) setBlockedDates(data.map(d => new Date(d.blocked_date)));
     });
   }, [open]);
-  const [notes, setNotes] = useState("");
   const [items, setItems] = useState<OrderItem[]>([]);
+  const totalAmount = items.reduce((s, i) => s + i.total, 0);
+
+  // Fetch company settings for delivery calculation
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("company_settings").select("company_lat, company_lng, delivery_price_per_km, max_delivery_km, free_delivery_above_km").limit(1).single().then(({ data }) => {
+      if (data) {
+        setCompanySettings({
+          companyLat: data.company_lat,
+          companyLng: data.company_lng,
+          pricePerKm: Number(data.delivery_price_per_km) || 3,
+          maxDeliveryKm: data.max_delivery_km ? Number(data.max_delivery_km) : null,
+          freeDeliveryAbove: data.free_delivery_above_km ? Number(data.free_delivery_above_km) : null,
+        });
+      }
+    });
+  }, [open]);
+
+  const calculateDelivery = useCallback(async (city: string, street: string, building: string) => {
+    if (!city.trim() || !street.trim() || !building.trim()) {
+      setDeliveryCost(0); setDeliveryDistanceKm(null); setDeliveryError(null);
+      return;
+    }
+    if (!companySettings?.companyLat || !companySettings?.companyLng) return;
+
+    const cleanStreet = street.replace(/\bul\.\s*/gi, '').replace(/\baleja\s*/gi, '').replace(/\bal\.\s*/gi, '').trim();
+    const fullAddress = `${cleanStreet} ${building}, ${city}, Polska`;
+    setDeliveryAddress(fullAddress);
+    setDeliveryCalculating(true);
+    setDeliveryError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("calculate-delivery", {
+        body: { address: fullAddress, companyLat: companySettings.companyLat, companyLng: companySettings.companyLng },
+      });
+      if (error) throw error;
+
+      if (data.error === "address_not_found") {
+        setDeliveryError("Nie znaleziono adresu");
+        setDeliveryCost(0); setDeliveryDistanceKm(null);
+      } else if (data.error === "route_not_found") {
+        setDeliveryError("Nie udało się obliczyć trasy");
+        setDeliveryCost(0); setDeliveryDistanceKm(null);
+      } else if (data.distanceKm != null) {
+        const tooFar = companySettings.maxDeliveryKm != null && data.distanceKm > companySettings.maxDeliveryKm;
+        const rawPrice = Math.round(companySettings.pricePerKm * data.distanceKm);
+        const isFree = companySettings.freeDeliveryAbove != null && totalAmount >= companySettings.freeDeliveryAbove;
+        setDeliveryDistanceKm(data.distanceKm);
+        if (tooFar) {
+          setDeliveryError(`Za daleko (${data.distanceKm.toFixed(1)} km, max ${companySettings.maxDeliveryKm} km)`);
+          setDeliveryCost(0);
+        } else {
+          setDeliveryCost(isFree ? 0 : rawPrice);
+        }
+      }
+    } catch (err) {
+      console.error("Delivery error:", err);
+      setDeliveryError("Błąd obliczania dostawy");
+      setDeliveryCost(0);
+    }
+    setDeliveryCalculating(false);
+  }, [companySettings, totalAmount]);
+
+  const debouncedDeliveryCalc = useCallback((city: string, street: string, building: string) => {
+    if (deliveryDebounceRef.current) clearTimeout(deliveryDebounceRef.current);
+    deliveryDebounceRef.current = window.setTimeout(() => calculateDelivery(city, street, building), 800);
+  }, [calculateDelivery]);
+  const [notes, setNotes] = useState("");
   const [showProducts, setShowProducts] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [configuringProduct, setConfiguringProduct] = useState<CatalogProduct | null>(null);
@@ -1455,7 +1531,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
   const removeItem = (index: number) => setItems(prev => prev.filter((_, i) => i !== index));
 
-  const totalAmount = items.reduce((s, i) => s + i.total, 0);
+  // totalAmount is declared above near items state
 
   const filteredCatalogAdd = catalogProducts.filter(p =>
     p.name.toLowerCase().includes(productSearch.toLowerCase())
@@ -1473,10 +1549,10 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
       id: `ZAM-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
       dbId: "", clientId: selectedClientId,
       client: clientName, email: clientEmail, phone: clientPhone,
-      event, date: date || dateStr, deliveryAddress, notes, items,
-      amount: fmtNum(totalAmount) + " zł", amountNum: totalAmount,
+      event, date: date || dateStr, deliveryAddress: deliveryAddress || `${deliveryStreet} ${deliveryBuilding}, ${deliveryCity}`, notes, items,
+      amount: fmtNum(totalAmount + deliveryCost) + " zł", amountNum: totalAmount + deliveryCost,
       status: "Nowe zamówienie", createdAt: dateStr,
-      deliveryCost: 0, guestCount: 0,
+      deliveryCost, guestCount: 0,
     };
 
     onAdd(newOrder);
@@ -1484,7 +1560,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
     // Reset
     setSelectedClientId(null); setClientName(""); setClientEmail(""); setClientPhone("");
-    setEvent(""); setDate(""); setTime(""); setDeliveryAddress(""); setNotes(""); setItems([]);
+    setEvent(""); setDate(""); setTime(""); setDeliveryCity(""); setDeliveryStreet(""); setDeliveryBuilding(""); setDeliveryAddress(""); setDeliveryCost(0); setDeliveryDistanceKm(null); setDeliveryError(null); setNotes(""); setItems([]);
     setClientSearch("");
     onClose();
   };
@@ -1608,12 +1684,56 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
           </div>
 
           {/* Delivery */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label className="text-sm font-semibold flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
+              <Truck className="w-4 h-4 text-primary" />
               Adres dostawy
             </Label>
-            <Input placeholder="ul. Przykładowa 10, Warszawa" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+            <div className="grid grid-cols-3 gap-2">
+              <Input
+                placeholder="Miasto"
+                value={deliveryCity}
+                onChange={(e) => {
+                  setDeliveryCity(e.target.value);
+                  debouncedDeliveryCalc(e.target.value, deliveryStreet, deliveryBuilding);
+                }}
+              />
+              <Input
+                placeholder="Ulica"
+                value={deliveryStreet}
+                onChange={(e) => {
+                  setDeliveryStreet(e.target.value);
+                  debouncedDeliveryCalc(deliveryCity, e.target.value, deliveryBuilding);
+                }}
+              />
+              <Input
+                placeholder="Nr budynku"
+                value={deliveryBuilding}
+                onChange={(e) => {
+                  setDeliveryBuilding(e.target.value);
+                  debouncedDeliveryCalc(deliveryCity, deliveryStreet, e.target.value);
+                }}
+              />
+            </div>
+            {/* Delivery result */}
+            {deliveryCalculating && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 bg-muted/30 rounded-md">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Obliczanie dostawy...
+              </div>
+            )}
+            {deliveryError && !deliveryCalculating && (
+              <div className="flex items-center gap-2 text-xs text-destructive p-2 bg-destructive/10 rounded-md">
+                <AlertCircle className="w-3 h-3" />
+                {deliveryError}
+              </div>
+            )}
+            {deliveryDistanceKm && !deliveryError && !deliveryCalculating && (
+              <div className="flex items-center gap-2 text-xs text-green-700 p-2 bg-green-50 rounded-md">
+                <CheckCircle2 className="w-3 h-3" />
+                {deliveryDistanceKm.toFixed(1)} km — dostawa: {deliveryCost > 0 ? `${fmtNum(deliveryCost)} zł` : "bezpłatna"}
+              </div>
+            )}
           </div>
 
           {/* Notes */}
@@ -1693,8 +1813,21 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
                     </button>
                   </div>
                 ))}
-                <div className="flex justify-end pt-2 border-t border-border">
-                  <span className="text-sm font-bold text-primary">{fmtNum(totalAmount)} zł</span>
+                <div className="pt-2 border-t border-border space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Produkty</span>
+                    <span>{fmtNum(totalAmount)} zł</span>
+                  </div>
+                  {deliveryCost > 0 && (
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Dostawa</span>
+                      <span>{fmtNum(deliveryCost)} zł</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-sm font-bold">Razem</span>
+                    <span className="text-sm font-bold text-primary">{fmtNum(totalAmount + deliveryCost)} zł</span>
+                  </div>
                 </div>
               </div>
             )}
