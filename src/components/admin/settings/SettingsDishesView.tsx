@@ -1218,7 +1218,8 @@ const SettingsDishesView = () => {
     const { data: setData } = await supabase.from("configurable_sets").select("*, config_groups(*, config_group_options(*))").order("created_at");
     setConfigSets((setData ?? []).map(s => ({
       id: s.id, name: s.name, description: s.description ?? "", longDescription: s.long_description ?? "",
-      image: s.image_url, pricePerPerson: Number(s.price_per_person), minPersons: s.min_persons,
+      image: s.image_url, pricePerPerson: Number(s.price_per_person), pricePerPersonOnSite: s.price_per_person_on_site != null ? Number(s.price_per_person_on_site) : null,
+      minPersons: s.min_persons,
       icon: s.icon ?? "🍽️", categorySlug: s.category_slug,
       groups: ((s.config_groups as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((g: any) => ({
         id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, sortOrder: g.sort_order,
