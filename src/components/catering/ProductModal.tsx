@@ -274,6 +274,7 @@ function ExpandableProductContent({
   onServingTimeChange,
   notes,
   onNotesChange,
+  cateringType = "wyjazdowy",
 }: {
   product: ExpandableProduct;
   quantities: Record<string, number>;
@@ -282,6 +283,7 @@ function ExpandableProductContent({
   onServingTimeChange: (time: string) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  cateringType?: CateringType;
 }) {
   return (
     <div>
