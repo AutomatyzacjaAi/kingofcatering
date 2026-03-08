@@ -22,92 +22,52 @@ const VAT_RATES = [0, 5, 8, 23];
 // ===== TYPES =====
 type UnitType = "g" | "ml" | "szt.";
 
-interface CategoryOption {
-  slug: string;
-  name: string;
-}
+interface CategoryOption { slug: string; name: string; }
 
 interface Ingredient {
-  id: string;
-  name: string;
-  unit: UnitType;
-  allergens: string[];
-  pricePerUnit: number;
+  id: string; name: string; unit: UnitType; allergens: string[]; pricePerUnit: number;
+}
+
+interface DishIngredient {
+  ingredientId: string; quantity: number;
 }
 
 interface Dish {
-  id: string;
-  name: string;
-  description: string;
-  longDescription: string;
-  image: string | null;
-  priceNetto: number;
-  vatRate: number;
-  priceBrutto: number;
-  pricePerUnit: number;
-  unitLabel: string;
-  minQuantity: number;
-  icon: string;
-  categorySlug: string | null;
-  contents: string[];
-  allergens: string[];
-  dietaryTags: string[];
-  productType: string;
+  id: string; name: string; description: string; longDescription: string;
+  image: string | null; priceNetto: number; vatRate: number; priceBrutto: number;
+  pricePerUnit: number; unitLabel: string; minQuantity: number; icon: string;
+  categorySlug: string | null; contents: string[]; allergens: string[];
+  dietaryTags: string[]; productType: string;
+  dishIngredients: DishIngredient[];
 }
 
 interface BundleVariant {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  allergens: string[];
-  dietaryTags: string[];
-  sortOrder: number;
+  id: string; name: string; description: string; price: number;
+  allergens: string[]; dietaryTags: string[]; sortOrder: number;
+  dishId: string | null;
 }
 
 interface Bundle {
-  id: string;
-  name: string;
-  description: string;
-  longDescription: string;
-  image: string | null;
-  priceNetto: number;
-  vatRate: number;
-  priceBrutto: number;
-  basePrice: number;
-  minQuantity: number;
-  icon: string;
-  categorySlug: string | null;
+  id: string; name: string; description: string; longDescription: string;
+  image: string | null; priceNetto: number; vatRate: number; priceBrutto: number;
+  basePrice: number; minQuantity: number; icon: string; categorySlug: string | null;
   variants: BundleVariant[];
 }
 
 interface ConfigGroupOption {
-  id: string;
-  name: string;
-  allergens: string[];
-  sortOrder: number;
+  id: string; name: string; allergens: string[]; sortOrder: number;
+  dishId: string | null;
 }
 
 interface ConfigGroup {
-  id: string;
-  name: string;
-  minSelections: number;
-  maxSelections: number;
-  options: ConfigGroupOption[];
-  sortOrder: number;
+  id: string; name: string; minSelections: number; maxSelections: number;
+  options: ConfigGroupOption[]; sortOrder: number;
 }
 
 interface ConfigSet {
-  id: string;
-  name: string;
-  description: string;
-  longDescription: string;
-  image: string | null;
-  pricePerPerson: number;
-  minPersons: number;
-  icon: string;
-  categorySlug: string | null;
-  groups: ConfigGroup[];
+  id: string; name: string; description: string; longDescription: string;
+  image: string | null; pricePerPerson: number; minPersons: number;
+  icon: string; categorySlug: string | null; groups: ConfigGroup[];
 }
 
 // ===== IMAGE UPLOAD =====
@@ -145,6 +105,119 @@ const CategorySelect = ({ value, onChange, categories }: { value: string | null;
   </div>
 );
 
+// ===== DISH PICKER (reusable) =====
+const DishPicker = ({ dishes, selectedDishId, onSelect }: { dishes: Dish[]; selectedDishId: string | null; onSelect: (dish: Dish) => void }) => {
+  const [search, setSearch] = useState("");
+  const filtered = dishes.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj dania..." className="h-8 text-xs pl-8" />
+      </div>
+      <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-md p-1">
+        {filtered.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">Brak dań — dodaj je najpierw w zakładce "Dania"</p>}
+        {filtered.map(d => (
+          <button key={d.id} type="button" onClick={() => onSelect(d)}
+            className={cn("w-full text-left px-2.5 py-1.5 rounded text-xs flex items-center justify-between transition-colors",
+              selectedDishId === d.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+            )}>
+            <span className="flex items-center gap-2">
+              <span>{d.icon}</span>
+              <span className="font-medium">{d.name}</span>
+            </span>
+            <span className="text-[10px] opacity-70">{d.priceBrutto.toFixed(2)} zł</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ===== INGREDIENT PICKER for Dishes =====
+const IngredientPicker = ({ ingredients, dishIngredients, onChange }: {
+  ingredients: Ingredient[];
+  dishIngredients: DishIngredient[];
+  onChange: (di: DishIngredient[]) => void;
+}) => {
+  const [search, setSearch] = useState("");
+  const filtered = ingredients.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
+  const selectedIds = dishIngredients.map(di => di.ingredientId);
+
+  const toggleIngredient = (id: string) => {
+    if (selectedIds.includes(id)) {
+      onChange(dishIngredients.filter(di => di.ingredientId !== id));
+    } else {
+      onChange([...dishIngredients, { ingredientId: id, quantity: 1 }]);
+    }
+  };
+
+  const updateQuantity = (id: string, qty: number) => {
+    onChange(dishIngredients.map(di => di.ingredientId === id ? { ...di, quantity: qty } : di));
+  };
+
+  const totalFoodCost = dishIngredients.reduce((sum, di) => {
+    const ing = ingredients.find(i => i.id === di.ingredientId);
+    return sum + (ing ? ing.pricePerUnit * di.quantity : 0);
+  }, 0);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Składniki ({dishIngredients.length})</Label>
+        {dishIngredients.length > 0 && (
+          <span className="text-xs font-medium text-primary">Food cost: {totalFoodCost.toFixed(2)} zł</span>
+        )}
+      </div>
+
+      {/* Selected ingredients with quantities */}
+      {dishIngredients.length > 0 && (
+        <div className="space-y-1">
+          {dishIngredients.map(di => {
+            const ing = ingredients.find(i => i.id === di.ingredientId);
+            if (!ing) return null;
+            return (
+              <div key={di.ingredientId} className="flex items-center gap-2 px-2.5 py-1.5 rounded bg-primary/5 border border-primary/10">
+                <span className="text-xs font-medium flex-1">{ing.name}</span>
+                <Input type="number" step="0.1" min="0" value={di.quantity}
+                  onChange={e => updateQuantity(di.ingredientId, parseFloat(e.target.value) || 0)}
+                  className="h-7 w-20 text-xs text-right" />
+                <span className="text-[10px] text-muted-foreground w-8">{ing.unit}</span>
+                <span className="text-[10px] text-muted-foreground w-16 text-right">
+                  {(ing.pricePerUnit * di.quantity).toFixed(2)} zł
+                </span>
+                <button onClick={() => toggleIngredient(di.ingredientId)} className="p-0.5 text-muted-foreground hover:text-destructive">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Search and add */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Dodaj składnik..." className="h-8 text-xs pl-8" />
+      </div>
+      {search && (
+        <div className="max-h-32 overflow-y-auto space-y-0.5 border border-border rounded-md p-1">
+          {filtered.filter(i => !selectedIds.includes(i.id)).map(i => (
+            <button key={i.id} type="button" onClick={() => toggleIngredient(i.id)}
+              className="w-full text-left px-2.5 py-1.5 rounded text-xs hover:bg-muted flex items-center justify-between">
+              <span>{i.name}</span>
+              <span className="text-[10px] text-muted-foreground">{i.pricePerUnit.toFixed(3)} zł/{i.unit}</span>
+            </button>
+          ))}
+          {filtered.filter(i => !selectedIds.includes(i.id)).length === 0 && (
+            <p className="text-[10px] text-muted-foreground text-center py-1">Brak wyników</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ===== INGREDIENTS TAB =====
 const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; reload: () => void }) => {
   const [search, setSearch] = useState("");
@@ -156,7 +229,6 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
   const [newAllergens, setNewAllergens] = useState<string[]>([]);
 
   const filtered = ingredients.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
-
   const toggleAllergen = (a: string) => setNewAllergens((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
 
   const addIngredient = async () => {
@@ -257,7 +329,7 @@ const IngredientsTab = ({ ingredients, reload }: { ingredients: Ingredient[]; re
 };
 
 // ===== DISHES TAB =====
-const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories: CategoryOption[]; reload: () => void }) => {
+const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]; ingredients: Ingredient[]; categories: CategoryOption[]; reload: () => void }) => {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -277,6 +349,7 @@ const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories:
   const [formAllergens, setFormAllergens] = useState<string[]>([]);
   const [formDietaryTags, setFormDietaryTags] = useState<string[]>([]);
   const [formContents, setFormContents] = useState("");
+  const [formIngredients, setFormIngredients] = useState<DishIngredient[]>([]);
 
   const filtered = dishes.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -287,11 +360,16 @@ const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories:
   const handleBruttoChange = (val: string) => { setFormPriceBrutto(val); const b = parseFloat(val); if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString()); };
   const handleVatChange = (val: string) => { const vat = parseInt(val); setFormVat(vat); const n = parseFloat(formPriceNetto); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString()); };
 
+  const foodCost = formIngredients.reduce((sum, di) => {
+    const ing = ingredients.find(i => i.id === di.ingredientId);
+    return sum + (ing ? ing.pricePerUnit * di.quantity : 0);
+  }, 0);
+
   const resetForm = () => {
     setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPriceNetto(""); setFormVat(8);
     setFormPriceBrutto(""); setFormUnitLabel("szt."); setFormMinQty("1"); setFormIcon("🍽️");
     setFormCategorySlug(null); setFormAllergens([]); setFormDietaryTags([]); setFormContents("");
-    setShowForm(false); setEditingId(null);
+    setFormIngredients([]); setShowForm(false); setEditingId(null);
   };
 
   const startEdit = (d: Dish) => {
@@ -300,6 +378,7 @@ const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories:
     setFormPriceBrutto(d.priceBrutto.toString()); setFormUnitLabel(d.unitLabel); setFormMinQty(d.minQuantity.toString());
     setFormIcon(d.icon); setFormCategorySlug(d.categorySlug); setFormAllergens([...d.allergens]);
     setFormDietaryTags([...d.dietaryTags]); setFormContents(d.contents.join("\n"));
+    setFormIngredients([...d.dishIngredients]);
     setShowForm(true);
   };
 
@@ -308,38 +387,43 @@ const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories:
     setSaving(true);
     const priceBrutto = parseFloat(formPriceBrutto) || 0;
     const payload = {
-      name: formName.trim(),
-      description: formDesc.trim(),
-      long_description: formLongDesc.trim(),
-      image_url: formImage,
-      price_netto: parseFloat(formPriceNetto) || 0,
-      vat_rate: formVat,
-      price_brutto: priceBrutto,
-      price_per_unit: priceBrutto,
-      unit_label: formUnitLabel,
-      min_quantity: parseInt(formMinQty) || 1,
-      icon: formIcon,
-      category_slug: formCategorySlug,
-      allergens: formAllergens,
-      dietary_tags: formDietaryTags,
+      name: formName.trim(), description: formDesc.trim(), long_description: formLongDesc.trim(),
+      image_url: formImage, price_netto: parseFloat(formPriceNetto) || 0, vat_rate: formVat,
+      price_brutto: priceBrutto, price_per_unit: priceBrutto, unit_label: formUnitLabel,
+      min_quantity: parseInt(formMinQty) || 1, icon: formIcon, category_slug: formCategorySlug,
+      allergens: formAllergens, dietary_tags: formDietaryTags,
       contents: formContents.split("\n").map(s => s.trim()).filter(Boolean),
       product_type: "simple",
     };
 
+    let dishId = editingId;
     let error;
     if (editingId) {
       ({ error } = await supabase.from("dishes").update(payload).eq("id", editingId));
     } else {
-      ({ error } = await supabase.from("dishes").insert(payload));
+      const { data, error: e } = await supabase.from("dishes").insert(payload).select("id").single();
+      error = e;
+      if (data) dishId = data.id;
     }
+    if (error) { toast.error("Błąd: " + error.message); setSaving(false); return; }
+
+    // Save dish ingredients
+    if (dishId) {
+      await supabase.from("dish_ingredients").delete().eq("dish_id", dishId);
+      if (formIngredients.length > 0) {
+        await supabase.from("dish_ingredients").insert(
+          formIngredients.map(di => ({ dish_id: dishId!, ingredient_id: di.ingredientId, quantity: di.quantity }))
+        );
+      }
+    }
+
     setSaving(false);
-    if (error) { toast.error("Błąd: " + error.message); return; }
     toast.success(editingId ? "Danie zaktualizowane" : "Danie dodane");
-    resetForm();
-    reload();
+    resetForm(); reload();
   };
 
   const removeDish = async (id: string) => {
+    await supabase.from("dish_ingredients").delete().eq("dish_id", id);
     const { error } = await supabase.from("dishes").delete().eq("id", id);
     if (error) toast.error("Błąd: " + error.message);
     else { toast.success("Usunięto"); reload(); }
@@ -417,6 +501,9 @@ const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories:
               </div>
             </div>
 
+            {/* INGREDIENTS */}
+            <IngredientPicker ingredients={ingredients} dishIngredients={formIngredients} onChange={setFormIngredients} />
+
             <div className="space-y-1">
               <Label className="text-xs">Zawartość (każdy element w nowej linii)</Label>
               <textarea value={formContents} onChange={(e) => setFormContents(e.target.value)}
@@ -459,32 +546,45 @@ const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories:
       )}
 
       <div className="space-y-2">
-        {filtered.map((dish) => (
-          <Card key={dish.id} className="group hover:shadow-sm transition-shadow">
-            <CardContent className="py-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {dish.image ? <img src={dish.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <CookingPot className="w-5 h-5 text-primary" />}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{dish.icon}</span>
-                    <p className="text-sm font-medium">{dish.name}</p>
-                    {dish.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{dish.categorySlug}</Badge>}
+        {filtered.map((dish) => {
+          const dishFoodCost = dish.dishIngredients.reduce((sum, di) => {
+            const ing = ingredients.find(i => i.id === di.ingredientId);
+            return sum + (ing ? ing.pricePerUnit * di.quantity : 0);
+          }, 0);
+          return (
+            <Card key={dish.id} className="group hover:shadow-sm transition-shadow">
+              <CardContent className="py-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {dish.image ? <img src={dish.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <CookingPot className="w-5 h-5 text-primary" />}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{dish.icon}</span>
+                      <p className="text-sm font-medium">{dish.name}</p>
+                      {dish.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{dish.categorySlug}</Badge>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">{dish.description}</p>
+                      {dish.dishIngredients.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {dish.dishIngredients.length} skł. · FC: {dishFoodCost.toFixed(2)} zł
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">{dish.description}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{dish.priceNetto.toFixed(2)} netto</span>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">VAT {dish.vatRate}%</Badge>
+                    <span className="text-sm font-semibold text-primary">{dish.priceBrutto.toFixed(2)} zł</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{dish.priceNetto.toFixed(2)} netto</span>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">VAT {dish.vatRate}%</Badge>
-                  <span className="text-sm font-semibold text-primary">{dish.priceBrutto.toFixed(2)} zł</span>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => startEdit(dish)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => removeDish(dish.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
-              </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => startEdit(dish)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
-                <button onClick={() => removeDish(dish.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
         {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Brak dań</p>}
       </div>
     </div>
@@ -492,7 +592,7 @@ const DishesTab = ({ dishes, categories, reload }: { dishes: Dish[]; categories:
 };
 
 // ===== BUNDLES TAB =====
-const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; categories: CategoryOption[]; reload: () => void }) => {
+const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]; dishes: Dish[]; categories: CategoryOption[]; reload: () => void }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -510,14 +610,8 @@ const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; catego
   const [formCategorySlug, setFormCategorySlug] = useState<string | null>(null);
   const [formVariants, setFormVariants] = useState<BundleVariant[]>([]);
 
-  // Variant form
-  const [showVariantForm, setShowVariantForm] = useState(false);
-  const [varName, setVarName] = useState("");
-  const [varDesc, setVarDesc] = useState("");
-  const [varPrice, setVarPrice] = useState("");
-  const [varAllergens, setVarAllergens] = useState<string[]>([]);
-  const [varDietaryTags, setVarDietaryTags] = useState<string[]>([]);
-  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  // Variant: pick from dishes
+  const [showVariantPicker, setShowVariantPicker] = useState(false);
 
   const calcBrutto = (n: number, v: number) => +(n * (1 + v / 100)).toFixed(2);
   const calcNetto = (b: number, v: number) => +(b / (1 + v / 100)).toFixed(2);
@@ -526,31 +620,27 @@ const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; catego
   const handleBruttoChange = (val: string) => { setFormPriceBrutto(val); const b = parseFloat(val); if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString()); };
   const handleVatChange = (val: string) => { const vat = parseInt(val); setFormVat(vat); const n = parseFloat(formPriceNetto); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString()); };
 
-  const resetVariantForm = () => {
-    setVarName(""); setVarDesc(""); setVarPrice(""); setVarAllergens([]); setVarDietaryTags([]);
-    setShowVariantForm(false); setEditingVariantId(null);
-  };
-
   const resetForm = () => {
     setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPriceNetto("");
     setFormVat(8); setFormPriceBrutto(""); setFormBasePrice(""); setFormMinQty("1"); setFormIcon("🍽️");
     setFormCategorySlug(null); setFormVariants([]); setShowForm(false); setEditingId(null);
-    resetVariantForm();
+    setShowVariantPicker(false);
   };
 
-  const saveVariant = () => {
-    if (!varName.trim()) return;
-    const v: BundleVariant = {
-      id: editingVariantId || crypto.randomUUID(),
-      name: varName.trim(), description: varDesc.trim(), price: parseFloat(varPrice) || 0,
-      allergens: varAllergens, dietaryTags: varDietaryTags, sortOrder: formVariants.length,
-    };
-    if (editingVariantId) {
-      setFormVariants(formVariants.map(fv => fv.id === editingVariantId ? v : fv));
-    } else {
-      setFormVariants([...formVariants, v]);
+  const addDishAsVariant = (dish: Dish) => {
+    // Don't add duplicate
+    if (formVariants.some(v => v.dishId === dish.id)) {
+      toast.info("To danie jest już dodane jako wariant");
+      return;
     }
-    resetVariantForm();
+    const v: BundleVariant = {
+      id: crypto.randomUUID(), name: dish.name, description: dish.description,
+      price: dish.priceBrutto, allergens: [...dish.allergens],
+      dietaryTags: [...dish.dietaryTags], sortOrder: formVariants.length,
+      dishId: dish.id,
+    };
+    setFormVariants([...formVariants, v]);
+    setShowVariantPicker(false);
   };
 
   const startEdit = (b: Bundle) => {
@@ -588,6 +678,7 @@ const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; catego
       const variantsPayload = formVariants.map((v, i) => ({
         bundle_id: bundleId!, name: v.name, description: v.description, price: v.price,
         allergens: v.allergens, dietary_tags: v.dietaryTags, sort_order: i,
+        dish_id: v.dishId || null,
       }));
       const { error } = await supabase.from("bundle_variants").insert(variantsPayload);
       if (error) { toast.error("Błąd wariantów: " + error.message); }
@@ -608,7 +699,7 @@ const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; catego
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">Pakiety z wariantami (np. Tacos z różnymi nadzieniami)</p>
+        <p className="text-sm text-muted-foreground">Pakiety z wariantami — warianty tworzone z istniejących dań</p>
         <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
           <Plus className="w-4 h-4 mr-1" />Dodaj pakiet
         </Button>
@@ -669,64 +760,41 @@ const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; catego
               </div>
             </div>
 
-            {/* Variants */}
+            {/* Variants from dishes */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Warianty ({formVariants.length})</Label>
-                <Button type="button" size="sm" variant="outline" onClick={() => { resetVariantForm(); setShowVariantForm(true); }} className="text-xs">
-                  <Plus className="w-3.5 h-3.5 mr-1" />Dodaj wariant
+                <Label className="text-xs">Warianty z dań ({formVariants.length})</Label>
+                <Button type="button" size="sm" variant="outline" onClick={() => setShowVariantPicker(!showVariantPicker)} className="text-xs">
+                  <Plus className="w-3.5 h-3.5 mr-1" />Dodaj danie jako wariant
                 </Button>
               </div>
 
-              {formVariants.map((v) => (
-                <div key={v.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
-                  <div>
-                    <span className="text-sm font-medium">{v.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">{v.price.toFixed(2)} zł</span>
-                    {v.description && <p className="text-xs text-muted-foreground">{v.description}</p>}
-                  </div>
-                  <div className="flex gap-1">
-                    <button onClick={() => { setEditingVariantId(v.id); setVarName(v.name); setVarDesc(v.description); setVarPrice(v.price.toString()); setVarAllergens([...v.allergens]); setVarDietaryTags([...v.dietaryTags]); setShowVariantForm(true); }}
-                      className="p-1 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+              {formVariants.map((v) => {
+                const linkedDish = v.dishId ? dishes.find(d => d.id === v.dishId) : null;
+                return (
+                  <div key={v.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{v.name}</span>
+                        <span className="text-xs text-muted-foreground">{v.price.toFixed(2)} zł</span>
+                        {linkedDish && <Badge variant="outline" className="text-[10px] px-1.5 py-0">🔗 danie</Badge>}
+                      </div>
+                      {v.allergens.length > 0 && (
+                        <div className="flex gap-1 mt-0.5">
+                          {v.allergens.map(a => <Badge key={a} variant="secondary" className="text-[9px] px-1 py-0">{a}</Badge>)}
+                        </div>
+                      )}
+                    </div>
                     <button onClick={() => setFormVariants(formVariants.filter(fv => fv.id !== v.id))}
                       className="p-1 text-muted-foreground hover:text-destructive"><X className="w-3.5 h-3.5" /></button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
-              {showVariantForm && (
-                <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Nazwa wariantu</Label>
-                      <Input value={varName} onChange={(e) => setVarName(e.target.value)} placeholder="np. Tacos z kurczakiem" className="h-8 text-xs" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Cena (zł)</Label>
-                      <Input type="number" step="0.01" value={varPrice} onChange={(e) => setVarPrice(e.target.value)} className="h-8 text-xs" />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Opis wariantu</Label>
-                    <Input value={varDesc} onChange={(e) => setVarDesc(e.target.value)} placeholder="np. grillowany ananas / salsa" className="h-8 text-xs" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Alergeny</Label>
-                    <div className="flex flex-wrap gap-1">
-                      {ALLERGEN_OPTIONS.map((a) => (
-                        <button key={a} type="button" onClick={() => setVarAllergens(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}
-                          className={cn("px-2 py-0.5 rounded-full text-[10px] border transition-colors",
-                            varAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border"
-                          )}>{a}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={saveVariant} disabled={!varName.trim()} className="text-xs">
-                      {editingVariantId ? "Zapisz wariant" : "Dodaj wariant"}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={resetVariantForm} className="text-xs">Anuluj</Button>
-                  </div>
+              {showVariantPicker && (
+                <div className="p-3 rounded-lg border-2 border-dashed border-primary/30">
+                  <Label className="text-xs mb-2 block">Wybierz danie jako wariant:</Label>
+                  <DishPicker dishes={dishes} selectedDishId={null} onSelect={addDishAsVariant} />
                 </div>
               )}
             </div>
@@ -753,7 +821,7 @@ const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; catego
                     <p className="text-sm font-medium">{b.name}</p>
                     {b.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{b.categorySlug}</Badge>}
                   </div>
-                  <p className="text-xs text-muted-foreground">{b.variants.length} wariantów · min. {b.minQuantity} szt.</p>
+                  <p className="text-xs text-muted-foreground">{b.variants.length} wariantów</p>
                 </div>
                 <span className="text-sm font-semibold text-primary">{b.priceBrutto.toFixed(2)} zł</span>
               </div>
@@ -771,7 +839,7 @@ const BundlesTab = ({ bundles, categories, reload }: { bundles: Bundle[]; catego
 };
 
 // ===== CONFIG SETS TAB =====
-const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigSet[]; categories: CategoryOption[]; reload: () => void }) => {
+const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets: ConfigSet[]; dishes: Dish[]; categories: CategoryOption[]; reload: () => void }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -788,21 +856,18 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
 
   // Group form
   const [showGroupForm, setShowGroupForm] = useState(false);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [groupName, setGroupName] = useState("");
   const [groupMin, setGroupMin] = useState("1");
   const [groupMax, setGroupMax] = useState("3");
   const [groupOptions, setGroupOptions] = useState<ConfigGroupOption[]>([]);
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
-  // Option form
-  const [showOptionForm, setShowOptionForm] = useState(false);
-  const [optName, setOptName] = useState("");
-  const [optAllergens, setOptAllergens] = useState<string[]>([]);
+  // Option: pick from dishes
+  const [showDishPickerForGroup, setShowDishPickerForGroup] = useState(false);
 
-  const resetOptionForm = () => { setOptName(""); setOptAllergens([]); setShowOptionForm(false); };
   const resetGroupForm = () => {
     setGroupName(""); setGroupMin("1"); setGroupMax("3"); setGroupOptions([]);
-    setShowGroupForm(false); setEditingGroupId(null); resetOptionForm();
+    setShowGroupForm(false); setEditingGroupId(null); setShowDishPickerForGroup(false);
   };
   const resetForm = () => {
     setFormName(""); setFormDesc(""); setFormLongDesc(""); setFormImage(null); setFormPrice("");
@@ -810,10 +875,17 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
     setShowForm(false); setEditingId(null); resetGroupForm();
   };
 
-  const addOption = () => {
-    if (!optName.trim()) return;
-    setGroupOptions([...groupOptions, { id: crypto.randomUUID(), name: optName.trim(), allergens: optAllergens, sortOrder: groupOptions.length }]);
-    resetOptionForm();
+  const addDishAsOption = (dish: Dish) => {
+    if (groupOptions.some(o => o.dishId === dish.id)) {
+      toast.info("To danie jest już dodane");
+      return;
+    }
+    setGroupOptions([...groupOptions, {
+      id: crypto.randomUUID(), name: dish.name,
+      allergens: [...dish.allergens], sortOrder: groupOptions.length,
+      dishId: dish.id,
+    }]);
+    setShowDishPickerForGroup(false);
   };
 
   const saveGroup = () => {
@@ -852,7 +924,6 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
     if (editingId) {
       const { error } = await supabase.from("configurable_sets").update(setPayload).eq("id", editingId);
       if (error) { toast.error("Błąd: " + error.message); setSaving(false); return; }
-      // Delete old groups & options
       const { data: oldGroups } = await supabase.from("config_groups").select("id").eq("set_id", editingId);
       if (oldGroups && oldGroups.length > 0) {
         const groupIds = oldGroups.map(g => g.id);
@@ -865,7 +936,6 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
       setId = data.id;
     }
 
-    // Insert groups and options
     for (let gi = 0; gi < formGroups.length; gi++) {
       const g = formGroups[gi];
       const { data: groupData, error: groupErr } = await supabase.from("config_groups").insert({
@@ -878,6 +948,7 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
         await supabase.from("config_group_options").insert(
           g.options.map((o, oi) => ({
             group_id: groupData.id, name: o.name, allergens: o.allergens, sort_order: oi,
+            dish_id: o.dishId || null,
           }))
         );
       }
@@ -902,7 +973,7 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">Zestawy konfigurowalne — klient wybiera opcje z grup</p>
+        <p className="text-sm text-muted-foreground">Zestawy konfigurowalne — opcje tworzone z istniejących dań</p>
         <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
           <Plus className="w-4 h-4 mr-1" />Dodaj zestaw
         </Button>
@@ -969,7 +1040,7 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
                   <div className="flex flex-wrap gap-1.5">
                     {g.options.map((o) => (
                       <Badge key={o.id} variant="secondary" className="text-[10px]">
-                        {o.name}
+                        {o.dishId && "🔗 "}{o.name}
                         {o.allergens.length > 0 && <span className="ml-1 opacity-60">({o.allergens.join(", ")})</span>}
                       </Badge>
                     ))}
@@ -994,36 +1065,24 @@ const ConfigSetsTab = ({ configSets, categories, reload }: { configSets: ConfigS
                     </div>
                   </div>
 
-                  {/* Options in group */}
+                  {/* Options from dishes */}
                   <div className="space-y-2">
-                    <Label className="text-xs">Opcje ({groupOptions.length})</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Opcje z dań ({groupOptions.length})</Label>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setShowDishPickerForGroup(!showDishPickerForGroup)} className="text-xs h-7">
+                        <Plus className="w-3 h-3 mr-1" />Dodaj danie
+                      </Button>
+                    </div>
+
                     {groupOptions.map((o) => (
                       <div key={o.id} className="flex items-center justify-between px-2 py-1.5 rounded bg-muted/30 text-xs">
-                        <span>{o.name} {o.allergens.length > 0 && <span className="text-muted-foreground">({o.allergens.join(", ")})</span>}</span>
+                        <span>{o.dishId && "🔗 "}{o.name} {o.allergens.length > 0 && <span className="text-muted-foreground">({o.allergens.join(", ")})</span>}</span>
                         <button onClick={() => setGroupOptions(groupOptions.filter(go => go.id !== o.id))} className="text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
                       </div>
                     ))}
 
-                    {showOptionForm ? (
-                      <div className="space-y-2 p-2 rounded border border-border">
-                        <Input value={optName} onChange={(e) => setOptName(e.target.value)} placeholder="Nazwa opcji" className="h-7 text-xs" />
-                        <div className="flex flex-wrap gap-1">
-                          {ALLERGEN_OPTIONS.map((a) => (
-                            <button key={a} type="button" onClick={() => setOptAllergens(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}
-                              className={cn("px-1.5 py-0.5 rounded-full text-[9px] border",
-                                optAllergens.includes(a) ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
-                              )}>{a}</button>
-                          ))}
-                        </div>
-                        <div className="flex gap-1">
-                          <Button size="sm" onClick={addOption} disabled={!optName.trim()} className="h-6 text-xs px-2">Dodaj opcję</Button>
-                          <Button size="sm" variant="outline" onClick={resetOptionForm} className="h-6 text-xs px-2">Anuluj</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <Button type="button" size="sm" variant="ghost" onClick={() => setShowOptionForm(true)} className="text-xs h-7">
-                        <Plus className="w-3 h-3 mr-1" />Dodaj opcję
-                      </Button>
+                    {showDishPickerForGroup && (
+                      <DishPicker dishes={dishes} selectedDishId={null} onSelect={addDishAsOption} />
                     )}
                   </div>
 
@@ -1088,29 +1147,36 @@ const SettingsDishesView = () => {
   const loadAll = useCallback(async () => {
     setLoading(true);
 
-    // Load categories
     const { data: catData } = await supabase.from("product_categories").select("slug, name").order("sort_order");
     setCategories((catData ?? []).map(c => ({ slug: c.slug, name: c.name })));
 
-    // Load ingredients
     const { data: ingData } = await supabase.from("ingredients").select("*").order("name");
-    setIngredients((ingData ?? []).map(i => ({
+    const ingredientsList: Ingredient[] = (ingData ?? []).map(i => ({
       id: i.id, name: i.name, unit: i.unit as UnitType,
       allergens: (i.allergens as string[]) ?? [], pricePerUnit: Number(i.price_per_unit),
-    })));
+    }));
+    setIngredients(ingredientsList);
 
-    // Load dishes
+    // Load dish_ingredients
+    const { data: diData } = await supabase.from("dish_ingredients").select("*");
+    const dishIngredientsMap: Record<string, DishIngredient[]> = {};
+    (diData ?? []).forEach(di => {
+      if (!dishIngredientsMap[di.dish_id]) dishIngredientsMap[di.dish_id] = [];
+      dishIngredientsMap[di.dish_id].push({ ingredientId: di.ingredient_id, quantity: Number(di.quantity) });
+    });
+
     const { data: dishData } = await supabase.from("dishes").select("*").order("created_at");
-    setDishes((dishData ?? []).map(d => ({
+    const dishesList: Dish[] = (dishData ?? []).map(d => ({
       id: d.id, name: d.name, description: d.description ?? "", longDescription: d.long_description ?? "",
       image: d.image_url, priceNetto: Number(d.price_netto), vatRate: d.vat_rate, priceBrutto: Number(d.price_brutto),
       pricePerUnit: Number(d.price_per_unit ?? d.price_brutto), unitLabel: d.unit_label ?? "szt.",
       minQuantity: d.min_quantity ?? 1, icon: d.icon ?? "🍽️", categorySlug: d.category_slug,
       contents: (d.contents as string[]) ?? [], allergens: (d.allergens as string[]) ?? [],
       dietaryTags: (d.dietary_tags as string[]) ?? [], productType: d.product_type,
-    })));
+      dishIngredients: dishIngredientsMap[d.id] ?? [],
+    }));
+    setDishes(dishesList);
 
-    // Load bundles with variants
     const { data: bundleData } = await supabase.from("bundles").select("*, bundle_variants(*)").order("created_at");
     setBundles((bundleData ?? []).map(b => ({
       id: b.id, name: b.name, description: b.description ?? "", longDescription: b.long_description ?? "",
@@ -1120,11 +1186,10 @@ const SettingsDishesView = () => {
       variants: ((b.bundle_variants as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((v: any) => ({
         id: v.id, name: v.name, description: v.description ?? "", price: Number(v.price),
         allergens: (v.allergens as string[]) ?? [], dietaryTags: (v.dietary_tags as string[]) ?? [],
-        sortOrder: v.sort_order,
+        sortOrder: v.sort_order, dishId: v.dish_id || null,
       })),
     })));
 
-    // Load configurable sets with groups and options
     const { data: setData } = await supabase.from("configurable_sets").select("*, config_groups(*, config_group_options(*))").order("created_at");
     setConfigSets((setData ?? []).map(s => ({
       id: s.id, name: s.name, description: s.description ?? "", longDescription: s.long_description ?? "",
@@ -1134,6 +1199,7 @@ const SettingsDishesView = () => {
         id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, sortOrder: g.sort_order,
         options: ((g.config_group_options as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((o: any) => ({
           id: o.id, name: o.name, allergens: (o.allergens as string[]) ?? [], sortOrder: o.sort_order,
+          dishId: o.dish_id || null,
         })),
       })),
     })));
@@ -1155,7 +1221,7 @@ const SettingsDishesView = () => {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Katalog produktów</h1>
-        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami i zestawami — wszystko tutaj automatycznie pojawia się w formularzu klienta</p>
+        <p className="text-muted-foreground text-sm">Zarządzaj składnikami, daniami, pakietami i zestawami — wszystko opiera się na daniach</p>
       </div>
 
       <Tabs defaultValue="dishes">
@@ -1178,13 +1244,13 @@ const SettingsDishesView = () => {
           <IngredientsTab ingredients={ingredients} reload={loadAll} />
         </TabsContent>
         <TabsContent value="dishes">
-          <DishesTab dishes={dishes} categories={categories} reload={loadAll} />
+          <DishesTab dishes={dishes} ingredients={ingredients} categories={categories} reload={loadAll} />
         </TabsContent>
         <TabsContent value="bundles">
-          <BundlesTab bundles={bundles} categories={categories} reload={loadAll} />
+          <BundlesTab bundles={bundles} dishes={dishes} categories={categories} reload={loadAll} />
         </TabsContent>
         <TabsContent value="configsets">
-          <ConfigSetsTab configSets={configSets} categories={categories} reload={loadAll} />
+          <ConfigSetsTab configSets={configSets} dishes={dishes} categories={categories} reload={loadAll} />
         </TabsContent>
       </Tabs>
     </div>
