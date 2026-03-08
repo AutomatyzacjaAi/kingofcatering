@@ -586,44 +586,26 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
       )}
 
       <div className="space-y-2">
-        {filtered.map((dish) => {
-          const dishFoodCost = dish.dishIngredients.reduce((sum, di) => {
-            const ing = ingredients.find(i => i.id === di.ingredientId);
-            return sum + (ing ? ing.pricePerUnit * di.quantity : 0);
-          }, 0);
-          return (
-            <Card key={dish.id} className="group hover:shadow-sm transition-shadow">
-              <CardContent className="py-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {dish.image ? <img src={dish.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <CookingPot className="w-5 h-5 text-primary" />}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium">{dish.name}</p>
-                      {dish.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{dish.categorySlug}</Badge>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-muted-foreground">{dish.description}</p>
-                      {dish.dishIngredients.length > 0 && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                          {dish.dishIngredients.length} skł. · FC: {dishFoodCost.toFixed(2)} zł
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{dish.priceNetto.toFixed(2)} netto</span>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">VAT {dish.vatRate}%</Badge>
-                    <span className="text-sm font-semibold text-primary">{dish.priceBrutto.toFixed(2)} zł</span>
-                  </div>
+        {filtered.map((dish) => (
+          <Card key={dish.id} className="group hover:shadow-sm transition-shadow">
+            <CardContent className="py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {dish.image ? <img src={dish.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <CookingPot className="w-5 h-5 text-primary" />}
+                <div>
+                  <p className="text-sm font-medium">{dish.name}</p>
+                  {dish.categorySlug && <p className="text-xs text-muted-foreground">{dish.categorySlug}</p>}
                 </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-primary">{dish.priceBrutto.toFixed(2)} zł</span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => startEdit(dish)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
                   <button onClick={() => removeDish(dish.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
         {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-6">Brak dań</p>}
       </div>
     </div>
