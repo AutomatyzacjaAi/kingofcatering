@@ -438,7 +438,44 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
 };
 
 // ===== ORDER DETAIL VIEW =====
-const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc }: { order: Order; onBack: () => void; onEdit: () => void; onGenerateDoc: (type: DocType) => void }) => {
+const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }: { order: Order; onBack: () => void; onEdit: () => void; onGenerateDoc: (type: DocType) => void; onLinkClient: (orderId: string, clientId: string) => void }) => {
+  const [showClientSearch, setShowClientSearch] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [dbClients, setDbClients] = useState<DbClient[]>([]);
+  const [showCreateClient, setShowCreateClient] = useState(false);
+  const [newFirstName, setNewFirstName] = useState(order.client.split(" ")[0] || "");
+  const [newLastName, setNewLastName] = useState(order.client.split(" ").slice(1).join(" ") || "");
+  const [newEmail, setNewEmail] = useState(order.email);
+  const [newPhone, setNewPhone] = useState(order.phone);
+
+  useEffect(() => {
+    supabase.from("clients").select("id, first_name, last_name, email, phone, address, city, company_name").then(({ data }) => {
+      if (data) setDbClients(data);
+    });
+  }, []);
+
+  const filteredClients = dbClients.filter(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    c.email.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+
+  const handleCreateClient = async () => {
+    const { data, error } = await supabase.from("clients").insert({
+      first_name: newFirstName,
+      last_name: newLastName,
+      email: newEmail,
+      phone: newPhone,
+    }).select("id").single();
+    if (error) { toast.error("Błąd tworzenia klienta"); return; }
+    if (data) {
+      onLinkClient(order.dbId, data.id);
+      setShowCreateClient(false);
+      toast.success("Klient utworzony i powiązany");
+    }
+  };
+
+  const linkedClient = order.clientId ? dbClients.find(c => c.id === order.clientId) : null;
+
   return (
     <div>
       <div className="flex items-center gap-4 mb-6">
@@ -479,11 +516,69 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc }: { order: Orde
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-base">Klient</CardTitle></CardHeader>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Klient</CardTitle>
+              {order.clientId ? (
+                <Badge variant="outline" className="text-xs border-emerald-300 text-emerald-700 bg-emerald-50">Powiązany</Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-50">Niepowiązany</Badge>
+              )}
+            </div>
+          </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div><span className="text-muted-foreground">Imię i nazwisko:</span> <span className="font-medium">{order.client}</span></div>
-            <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{order.email}</span></div>
-            <div><span className="text-muted-foreground">Telefon:</span> <span className="font-medium">{order.phone}</span></div>
+            <div><span className="text-muted-foreground">Imię i nazwisko:</span> <span className="font-medium">{linkedClient ? `${linkedClient.first_name} ${linkedClient.last_name}` : order.client}</span></div>
+            <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{linkedClient?.email || order.email}</span></div>
+            <div><span className="text-muted-foreground">Telefon:</span> <span className="font-medium">{linkedClient?.phone || order.phone}</span></div>
+            {!order.clientId && (
+              <div className="pt-2 border-t border-border space-y-2">
+                {!showClientSearch && !showCreateClient && (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowClientSearch(true)}>
+                      <Search className="w-3 h-3 mr-1" />
+                      Przypisz klienta
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowCreateClient(true)}>
+                      <Plus className="w-3 h-3 mr-1" />
+                      Nowy klient
+                    </Button>
+                  </div>
+                )}
+                {showClientSearch && (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                      <Input placeholder="Szukaj klienta..." value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} className="pl-8 h-8 text-xs" autoFocus />
+                    </div>
+                    <div className="max-h-28 overflow-y-auto border border-border rounded-md">
+                      {filteredClients.map(c => (
+                        <button key={c.id} onClick={() => { onLinkClient(order.dbId, c.id); setShowClientSearch(false); }}
+                          className="w-full text-left px-2.5 py-1.5 text-xs hover:bg-accent transition-colors border-b border-border last:border-b-0">
+                          <span className="font-medium">{c.first_name} {c.last_name}</span>
+                          <span className="text-muted-foreground ml-1.5">{c.email}</span>
+                        </button>
+                      ))}
+                      {filteredClients.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">Nie znaleziono</p>}
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowClientSearch(false)}>Anuluj</Button>
+                  </div>
+                )}
+                {showCreateClient && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <Input placeholder="Imię" value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} className="h-8 text-xs" />
+                      <Input placeholder="Nazwisko" value={newLastName} onChange={(e) => setNewLastName(e.target.value)} className="h-8 text-xs" />
+                    </div>
+                    <Input placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="h-8 text-xs" />
+                    <Input placeholder="Telefon" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="h-8 text-xs" />
+                    <div className="flex gap-2">
+                      <Button size="sm" className="text-xs" onClick={handleCreateClient}>Utwórz i przypisz</Button>
+                      <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowCreateClient(false)}>Anuluj</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card>
