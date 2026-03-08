@@ -1484,7 +1484,7 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
 
     // Reset
     setSelectedClientId(null); setClientName(""); setClientEmail(""); setClientPhone("");
-    setEvent(""); setDate(""); setDeliveryAddress(""); setNotes(""); setItems([]);
+    setEvent(""); setDate(""); setTime(""); setDeliveryAddress(""); setNotes(""); setItems([]);
     setClientSearch("");
     onClose();
   };
