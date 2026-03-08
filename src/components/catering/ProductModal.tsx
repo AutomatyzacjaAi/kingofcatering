@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { Plus, Minus, AlertTriangle, X, Clock } from "lucide-react";
+import { AlertTriangle, X, Clock } from "lucide-react";
+import { QuantityInput } from "./QuantityInput";
 import type { Product, SimpleProduct, ExpandableProduct, ConfigurableProduct } from "@/data/products";
 
 type ProductModalProps = {
@@ -226,15 +227,7 @@ function SimpleProductContent({
             <span className="text-2xl font-bold">{product.pricePerUnit.toFixed(2)} zł</span>
             <span className="text-muted-foreground ml-1">/ {product.unitLabel}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => onQuantityChange(Math.max(0, quantity - 1))} disabled={quantity === 0}>
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-            <Button variant="outline" size="icon" onClick={() => onQuantityChange(quantity + 1)}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
+          <QuantityInput value={quantity} onChange={onQuantityChange} />
         </div>
 
         <div>
@@ -320,15 +313,7 @@ function ExpandableProductContent({
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onVariantQuantityChange(variant.id, Math.max(0, qty - 1))} disabled={qty === 0}>
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="w-8 text-center font-bold">{qty}</span>
-                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => onVariantQuantityChange(variant.id, qty + 1)}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              <QuantityInput value={qty} onChange={(newQty) => onVariantQuantityChange(variant.id, newQty)} size="sm" />
             </div>
           );
         })}
@@ -412,38 +397,17 @@ function ConfigurableProductContent({
           
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Liczba osób:</span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => {
-                  if (quantity <= product.minPersons) {
-                    onQuantityChange(0);
-                  } else {
-                    onQuantityChange(quantity - 1);
-                  }
-                }}
-                disabled={quantity === 0}
-              >
-                <Minus className="w-4 h-4" />
-              </Button>
-              <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => {
-                  if (quantity === 0) {
-                    onQuantityChange(product.minPersons);
-                  } else {
-                    onQuantityChange(quantity + 1);
-                  }
-                }}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+            <QuantityInput
+              value={quantity}
+              min={product.minPersons}
+              onChange={(newQty) => {
+                if (newQty > 0 && newQty < product.minPersons) {
+                  onQuantityChange(product.minPersons);
+                } else {
+                  onQuantityChange(newQty);
+                }
+              }}
+            />
           </div>
           
           {quantity > 0 && (

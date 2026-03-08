@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronRight, Minus, Plus, X, Sparkles, Package, Users } from "lucide-react";
+import { QuantityInput } from "./QuantityInput";
 import {
   Dialog,
   DialogContent,
@@ -206,11 +207,7 @@ function ExtraItemModal({ item, isOpen, onClose, quantity, onQuantityChange }: {
             </div>
             <div className="flex items-center justify-between p-4 bg-accent rounded-xl">
               <div><span className="text-2xl font-bold">{item.price.toFixed(0)} zł</span><span className="text-muted-foreground ml-1">/ {item.unitLabel}</span></div>
-              <div className="flex items-center gap-3">
-                <Button variant="outline" size="icon" onClick={() => onQuantityChange(Math.max(0, quantity - 1))} disabled={quantity === 0}><Minus className="w-4 h-4" /></Button>
-                <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-                <Button variant="outline" size="icon" onClick={() => onQuantityChange(quantity + 1)}><Plus className="w-4 h-4" /></Button>
-              </div>
+              <QuantityInput value={quantity} onChange={onQuantityChange} />
             </div>
             {item.contents && item.contents.length > 0 && (
               <div>
@@ -380,11 +377,7 @@ function WaiterServiceModal({ option, isOpen, onClose, isSelected, waiterCount, 
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Liczba kelnerów:</span>
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" size="icon" onClick={() => setCount(Math.max(1, count - 1))} disabled={count <= 1}><Minus className="w-4 h-4" /></Button>
-                  <span className="w-8 text-center text-xl font-bold">{count}</span>
-                  <Button variant="outline" size="icon" onClick={() => setCount(count + 1)}><Plus className="w-4 h-4" /></Button>
-                </div>
+                <QuantityInput value={count} onChange={(v) => setCount(Math.max(1, v))} min={1} size="sm" />
               </div>
               <div className="pt-2 border-t border-border flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Suma:</span>
