@@ -30,7 +30,9 @@ interface OrderItem {
 
 interface Order {
   id: string;
+  dbId: string;
   client: string;
+  clientId: string | null;
   email: string;
   phone: string;
   event: string;
