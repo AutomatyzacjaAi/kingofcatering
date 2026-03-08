@@ -34,6 +34,7 @@ const Admin = () => {
         {activeSection === "settings-calendar" && <SettingsCalendarView />}
         {activeSection === "settings-dishes" && <SettingsDishesView />}
         {activeSection === "settings-form" && <SettingsFormView />}
+        {activeSection === "settings-delivery" && <SettingsDeliveryView />}
       </main>
     </div>
   );

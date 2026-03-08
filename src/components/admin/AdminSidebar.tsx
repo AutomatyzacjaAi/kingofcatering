@@ -23,6 +23,7 @@ const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: strin
   { id: "settings-calendar", icon: CalendarDays, label: "Kalendarz" },
   { id: "settings-dishes", icon: UtensilsCrossed, label: "Dania" },
   { id: "settings-form", icon: FileText, label: "Formularz" },
+  { id: "settings-delivery", icon: Truck, label: "Strefy dostaw" },
 ];
 
 const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebarProps) => {

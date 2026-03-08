@@ -294,13 +294,20 @@ export function useSupabaseData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const deliveryZonesQuery = useQuery({
+    queryKey: ["deliveryZones"],
+    queryFn: fetchDeliveryZones,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isLoading =
     categoriesQuery.isLoading ||
     eventTypesQuery.isLoading ||
     productsQuery.isLoading ||
     extrasQuery.isLoading ||
     paymentMethodsQuery.isLoading ||
-    blockedDatesQuery.isLoading;
+    blockedDatesQuery.isLoading ||
+    deliveryZonesQuery.isLoading;
 
   return {
     isLoading,
@@ -312,5 +319,6 @@ export function useSupabaseData() {
     waiterServiceOptions: extrasQuery.data?.waiterServiceOptions ?? [],
     paymentMethods: paymentMethodsQuery.data ?? [],
     blockedDates: blockedDatesQuery.data ?? [],
+    deliveryZones: deliveryZonesQuery.data ?? [],
   };
 }
