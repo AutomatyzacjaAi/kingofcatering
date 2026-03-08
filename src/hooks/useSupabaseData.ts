@@ -81,7 +81,6 @@ async function fetchProducts(): Promise<Product[]> {
       pricePerUnit: Number(d.price_per_unit ?? d.price_brutto),
       unitLabel: d.unit_label ?? "szt.",
       minQuantity: d.min_quantity ?? 1,
-      icon: d.icon ?? "🍽️",
       category: d.category_slug ?? "patery",
     } satisfies SimpleProduct);
   }
