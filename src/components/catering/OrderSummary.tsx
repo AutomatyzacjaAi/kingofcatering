@@ -48,6 +48,7 @@ export function OrderSummary({
       });
   }, []);
 
+  const ct = order.cateringType;
   const eventType = eventTypes.find((e) => e.id === order.eventType);
 
   // Build ordered items list
