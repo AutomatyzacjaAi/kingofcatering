@@ -20,20 +20,21 @@ export function ProductCard({
   isSelected,
   selectedCount = 0,
   subtitle,
+  cateringType,
   onClick,
 }: ProductCardProps) {
   const getPrice = () => {
     if (product.type === "simple") {
-      return `${product.pricePerUnit.toFixed(2)} zł`;
+      return `${getSimplePrice(product, cateringType).toFixed(2)} zł`;
     }
     if (product.type === "expandable") {
-      const prices = product.variants.map(v => v.price);
+      const prices = product.variants.map(v => getVariantPrice(v, cateringType));
       const min = Math.min(...prices);
       const max = Math.max(...prices);
       return min === max ? `${min.toFixed(2)} zł` : `od ${min.toFixed(2)} zł`;
     }
     if (product.type === "configurable") {
-      return `${product.pricePerPerson.toFixed(2)} zł/os.`;
+      return `${getConfigurablePrice(product, cateringType).toFixed(2)} zł/os.`;
     }
     return "";
   };
