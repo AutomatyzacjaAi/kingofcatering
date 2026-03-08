@@ -11,22 +11,9 @@ import {
   CalendarDays, 
   ChevronRight, 
   Clock,
-  Heart,
-  Presentation,
-  Gift,
-  Briefcase,
-  Music,
+  icons,
 } from "lucide-react";
 import { FullscreenDateTimePicker } from "./FullscreenDateTimePicker";
-
-const iconMap: Record<string, any> = {
-  Heart,
-  Presentation,
-  Gift,
-  Briefcase,
-  Music,
-  CalendarDays,
-};
 
 type EventDetailsProps = {
   guestCount: number;
@@ -116,7 +103,7 @@ export function EventDetails({
         <CardContent>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {eventTypes.map((type) => {
-              const IconComponent = iconMap[type.icon] || CalendarDays;
+              const IconComponent = (icons as any)[type.icon] || CalendarDays;
               const isSelected = eventType === type.id;
               
               return (
