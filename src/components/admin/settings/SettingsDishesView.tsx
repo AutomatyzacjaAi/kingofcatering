@@ -381,8 +381,12 @@ const DishesTab = ({ dishes, setDishes, ingredients }: { dishes: Dish[]; setDish
 
   const resetForm = () => {
     setFormName(""); setFormImage(null); setFormPriceNetto(""); setFormVat(8);
-    setFormPriceBrutto(""); setFormIngredients([]); setShowForm(false);
+    setFormPriceBrutto(""); setFormIngredients([]); setFormDietaryTags([]); setShowForm(false);
     setEditingId(null); setShowIngredientList(false);
+  };
+
+  const toggleDietaryTag = (tag: string) => {
+    setFormDietaryTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]);
   };
 
   const saveDish = () => {
