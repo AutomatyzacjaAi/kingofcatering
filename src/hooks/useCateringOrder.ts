@@ -143,9 +143,11 @@ export function useCateringOrder(
         total += service.price * order.waiterCount;
       }
     }
+    // Delivery cost
+    total += order.deliveryPrice;
     
     return total;
-  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData, order.selectedExtras, order.selectedPackaging, order.packagingPersonCount, order.selectedWaiterService, order.waiterCount, products, extraItems, packagingOptionsList, waiterServiceOptionsList]);
+  }, [order.simpleQuantities, order.expandableQuantities, order.configurableData, order.selectedExtras, order.selectedPackaging, order.packagingPersonCount, order.selectedWaiterService, order.waiterCount, order.deliveryPrice, products, extraItems, packagingOptionsList, waiterServiceOptionsList]);
 
   const updateSimpleQuantity = useCallback((productId: string, quantity: number) => {
     setOrder((prev) => ({
