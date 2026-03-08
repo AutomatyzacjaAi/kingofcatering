@@ -1,96 +1,77 @@
-# 🚀 Instrukcja migracji z Lovable Cloud na własną infrastrukturę
+# 🚀 Migracja na własną infrastrukturę (DigitalOcean)
 
-## Spis treści
-1. [Przegląd architektury](#1-przegląd-architektury)
-2. [Co musisz przygotować](#2-co-musisz-przygotować)
-3. [Krok 1: Eksport kodu źródłowego](#krok-1-eksport-kodu-źródłowego)
-4. [Krok 2: Własna baza danych PostgreSQL](#krok-2-własna-baza-danych-postgresql)
-5. [Krok 3: Konfiguracja Supabase (self-hosted lub cloud)](#krok-3-konfiguracja-supabase)
-6. [Krok 4: Edge Functions → własny backend](#krok-4-edge-functions--własny-backend)
-7. [Krok 5: Zmienne środowiskowe](#krok-5-zmienne-środowiskowe)
-8. [Krok 6: Build i deploy frontendu](#krok-6-build-i-deploy-frontendu)
-9. [Mapa plików — co jest gdzie](#mapa-plików)
-10. [Schemat bazy danych](#schemat-bazy-danych)
-11. [FAQ i rozwiązywanie problemów](#faq)
+## Stan projektu
 
----
-
-## 1. Przegląd architektury
-
-Aplikacja składa się z:
+Cała aplikacja frontendowa jest **gotowa** — kreator zamówień, panel admina, logowanie, zarządzanie produktami, klientami, zamówieniami. Jedyne co trzeba zrobić to **podpiąć własną bazę danych PostgreSQL** i (opcjonalnie) przenieść edge function.
 
 ```
 ┌─────────────────────────────────────────────┐
-│  FRONTEND (React + Vite + TypeScript)       │
-│  - Strona klienta (kreator zamówień)        │
+│  FRONTEND (React + Vite + TypeScript)  ✅   │
+│  - Kreator zamówień klienta                 │
 │  - Panel admina (/admin)                    │
 │  - Logowanie (/login)                       │
+│  - Cała logika biznesowa                    │
 ├─────────────────────────────────────────────┤
-│  BACKEND (Supabase / Lovable Cloud)         │
-│  - Baza danych PostgreSQL                   │
-│  - Autentykacja (Supabase Auth)             │
-│  - Edge Functions (Deno) — obliczanie       │
-│    dostawy                                  │
-│  - Row-Level Security (RLS)                 │
+│  BACKEND — do podpięcia                     │
+│  - PostgreSQL (DigitalOcean Managed DB)     │
+│  - Auth (Supabase Cloud / self-hosted)      │
+│  - 1 edge function (calculate-delivery)     │
 └─────────────────────────────────────────────┘
 ```
 
-**Komunikacja frontend ↔ backend:**
-- Frontend używa biblioteki `@supabase/supabase-js` do komunikacji z bazą
-- Klient Supabase jest skonfigurowany w `src/integrations/supabase/client.ts`
-- Typy TypeScript bazy są w `src/integrations/supabase/types.ts`
+---
+
+## Spis treści
+
+1. [Co jest gotowe, a co trzeba podpiąć](#1-co-jest-gotowe)
+2. [Krok 1: Baza danych na DigitalOcean](#krok-1-baza-danych)
+3. [Krok 2: Podpięcie Supabase do własnej bazy](#krok-2-podpięcie-supabase)
+4. [Krok 3: Przeniesienie edge function](#krok-3-edge-function)
+5. [Krok 4: Zmienne środowiskowe](#krok-4-zmienne)
+6. [Krok 5: Deploy frontendu](#krok-5-deploy)
+7. [Schemat bazy danych (pełny SQL)](#schemat-bazy-danych)
+8. [Mapa plików](#mapa-plików)
+9. [Checklist](#checklist)
 
 ---
 
-## 2. Co musisz przygotować
+## 1. Co jest gotowe
 
-### Minimalne wymagania:
-- [ ] Serwer PostgreSQL (wersja 15+)
-- [ ] Node.js 18+ (do budowania frontendu)
-- [ ] Hosting dla frontendu (Vercel, Netlify, VPS z nginx, itp.)
-- [ ] (Opcjonalnie) Własna instancja Supabase LUB zamiennik backendu
+### ✅ Gotowe (nie wymaga zmian):
+- Cały frontend React (kreator, admin, logowanie)
+- Wszystkie hooki do pobierania danych (`useSupabaseData.ts`)
+- Logika zamówień (`useCateringOrder.ts`, `submitOrder.ts`)
+- Komponenty UI (shadcn/ui)
+- Panel admina z CRUD-em dla produktów, klientów, zamówień, ustawień
+- Zarządzanie kategoriami, typami wydarzeń, mapowaniami
+- Obliczanie dostawy (geocoding + routing)
 
-### Dwie ścieżki migracji:
-
-| Ścieżka | Opis | Trudność |
-|---------|------|----------|
-| **A) Supabase Cloud/Self-hosted** | Zakładasz konto na supabase.com lub stawiasz self-hosted. Minimalne zmiany w kodzie. | ⭐ Łatwa |
-| **B) Własny backend (Express/Fastify)** | Piszesz własne API. Musisz zastąpić klienta Supabase. | ⭐⭐⭐ Trudna |
-
-**Rekomendacja:** Ścieżka A — załóż darmowe konto na [supabase.com](https://supabase.com) i użyj ich hostowanego PostgreSQL + Auth.
-
----
-
-## Krok 1: Eksport kodu źródłowego
-
-### Z Lovable:
-1. W Lovable kliknij **GitHub** → połącz repozytorium
-2. Lub pobierz ZIP z kodu (przycisk "Download" w ustawieniach projektu)
-
-### Po pobraniu:
-```bash
-# Zainstaluj zależności
-npm install
-
-# Uruchom lokalnie (dev)
-npm run dev
-
-# Zbuduj produkcyjnie
-npm run build
-# Wynik budowania: folder dist/
-```
+### 🔧 Do podpięcia (minimalna praca):
+| Element | Co zrobić | Trudność |
+|---------|-----------|----------|
+| **Baza PostgreSQL** | Stworzyć tabele na DigitalOcean (SQL gotowy poniżej) | ⭐ Łatwa |
+| **Supabase Client** | Zmienić URL + klucz w jednym pliku | ⭐ Łatwa |
+| **Typy TypeScript** | Wygenerować automatycznie z nowej bazy | ⭐ Łatwa |
+| **Edge Function** | Przenieść na własny backend LUB zostawić na Supabase | ⭐⭐ Średnia |
+| **Auth** | Skonfigurować użytkownika admina w nowym Supabase | ⭐ Łatwa |
 
 ---
 
-## Krok 2: Własna baza danych PostgreSQL
+## Krok 1: Baza danych
 
-### Tabele do utworzenia:
+### DigitalOcean Managed Database (PostgreSQL 15+)
 
-Poniżej **pełny SQL** do stworzenia wszystkich tabel. Wykonaj go na swojej bazie:
+1. W panelu DigitalOcean → **Databases** → **Create Database Cluster**
+2. Wybierz PostgreSQL 15+, region najbliżej klientów (np. Frankfurt)
+3. Po utworzeniu — skopiuj connection string
+
+### Tworzenie tabel
+
+Wykonaj poniższy SQL na nowej bazie. **Cały schemat jest identyczny z tym co działa teraz** — wystarczy skopiować i wykonać:
 
 ```sql
 -- ================================================
--- TABELA: company_settings (ustawienia firmy)
+-- TABELA: company_settings
 -- ================================================
 CREATE TABLE public.company_settings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -100,24 +81,25 @@ CREATE TABLE public.company_settings (
   phone text DEFAULT '',
   address text DEFAULT '',
   bank_account text DEFAULT '',
+  logo_url text,
+  favicon_url text,
   min_order_value numeric DEFAULT 200,
   min_lead_days integer DEFAULT 3,
   auto_confirm boolean DEFAULT false,
   email_notifications boolean DEFAULT true,
   sms_notifications boolean DEFAULT false,
-  -- Ustawienia dostawy (obliczanie km)
   company_address_full text DEFAULT '',
-  company_lat numeric DEFAULT NULL,
-  company_lng numeric DEFAULT NULL,
+  company_lat numeric,
+  company_lng numeric,
   delivery_price_per_km numeric NOT NULL DEFAULT 3,
-  max_delivery_km numeric DEFAULT NULL,
-  free_delivery_above_km numeric DEFAULT NULL,
+  max_delivery_km numeric,
+  free_delivery_above_km numeric,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- ================================================
--- TABELA: event_types (typy wydarzeń)
+-- TABELA: event_types
 -- ================================================
 CREATE TABLE public.event_types (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -129,7 +111,7 @@ CREATE TABLE public.event_types (
 );
 
 -- ================================================
--- TABELA: product_categories (kategorie produktów)
+-- TABELA: product_categories
 -- ================================================
 CREATE TABLE public.product_categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -152,7 +134,22 @@ CREATE TABLE public.event_category_mappings (
 );
 
 -- ================================================
--- TABELA: dishes (pojedyncze dania / patery)
+-- TABELA: extras_categories
+-- ================================================
+CREATE TABLE public.extras_categories (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  slug text NOT NULL,
+  description text DEFAULT '',
+  icon text NOT NULL DEFAULT 'Sparkles',
+  is_required boolean NOT NULL DEFAULT false,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- ================================================
+-- TABELA: dishes
 -- ================================================
 CREATE TABLE public.dishes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -177,7 +174,7 @@ CREATE TABLE public.dishes (
 );
 
 -- ================================================
--- TABELA: bundles (zestawy z wariantami, np. tacos)
+-- TABELA: bundles + bundle_variants
 -- ================================================
 CREATE TABLE public.bundles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -209,7 +206,7 @@ CREATE TABLE public.bundle_variants (
 );
 
 -- ================================================
--- TABELA: configurable_sets (zestawy konfigurowalne)
+-- TABELA: configurable_sets + config_groups + options
 -- ================================================
 CREATE TABLE public.configurable_sets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -244,11 +241,12 @@ CREATE TABLE public.config_group_options (
 );
 
 -- ================================================
--- TABELA: extras (dodatki: obsługa, pakowanie, etc.)
+-- TABELA: extras
 -- ================================================
 CREATE TABLE public.extras (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   category text NOT NULL DEFAULT 'dodatki',
+  extras_category_id uuid REFERENCES public.extras_categories(id),
   name text NOT NULL,
   description text DEFAULT '',
   long_description text DEFAULT '',
@@ -257,11 +255,11 @@ CREATE TABLE public.extras (
   price_netto numeric DEFAULT 0,
   vat_rate integer DEFAULT 23,
   price_brutto numeric DEFAULT 0,
+  food_cost numeric DEFAULT 0,
   unit_label text DEFAULT 'szt.',
   price_label text DEFAULT '',
   icon text DEFAULT '✨',
   contents text[] DEFAULT '{}',
-  food_cost numeric DEFAULT 0,
   duration text,
   requires_person_count boolean DEFAULT false,
   sort_order integer NOT NULL DEFAULT 0,
@@ -270,7 +268,7 @@ CREATE TABLE public.extras (
 );
 
 -- ================================================
--- TABELA: ingredients (składniki)
+-- TABELA: ingredients + dish_ingredients
 -- ================================================
 CREATE TABLE public.ingredients (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -290,7 +288,25 @@ CREATE TABLE public.dish_ingredients (
 );
 
 -- ================================================
--- TABELA: clients (klienci)
+-- TABELA: delivery_zones
+-- ================================================
+CREATE TABLE public.delivery_zones (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  description text DEFAULT '',
+  cities text[] DEFAULT '{}',
+  postal_codes text[] DEFAULT '{}',
+  price numeric NOT NULL DEFAULT 0,
+  free_delivery_above numeric,
+  min_order_value numeric,
+  is_active boolean NOT NULL DEFAULT true,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- ================================================
+-- TABELA: clients
 -- ================================================
 CREATE TABLE public.clients (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -313,7 +329,7 @@ CREATE TABLE public.clients (
 );
 
 -- ================================================
--- TABELA: orders (zamówienia)
+-- TABELA: orders + order_items + sub_items
 -- ================================================
 CREATE TABLE public.orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -364,7 +380,7 @@ CREATE TABLE public.order_item_sub_items (
 );
 
 -- ================================================
--- TABELA: payment_methods (metody płatności)
+-- TABELA: payment_methods
 -- ================================================
 CREATE TABLE public.payment_methods (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -376,31 +392,13 @@ CREATE TABLE public.payment_methods (
 );
 
 -- ================================================
--- TABELA: blocked_dates (zablokowane daty)
+-- TABELA: blocked_dates
 -- ================================================
 CREATE TABLE public.blocked_dates (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   blocked_date date NOT NULL,
   reason text DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
-);
-
--- ================================================
--- TABELA: delivery_zones (strefy dostaw - legacy)
--- ================================================
-CREATE TABLE public.delivery_zones (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  description text DEFAULT '',
-  cities text[] DEFAULT '{}',
-  postal_codes text[] DEFAULT '{}',
-  price numeric NOT NULL DEFAULT 0,
-  free_delivery_above numeric,
-  min_order_value numeric,
-  is_active boolean NOT NULL DEFAULT true,
-  sort_order integer NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- ================================================
@@ -414,86 +412,125 @@ BEGIN
 END;
 $$;
 
--- Dodaj trigger do każdej tabeli z kolumną updated_at:
--- CREATE TRIGGER update_<table>_updated_at
---   BEFORE UPDATE ON public.<table>
---   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Dodaj trigger do tabel z updated_at:
+CREATE TRIGGER update_company_settings_updated_at BEFORE UPDATE ON public.company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_event_types_updated_at BEFORE UPDATE ON public.event_types FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_product_categories_updated_at BEFORE UPDATE ON public.product_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_extras_categories_updated_at BEFORE UPDATE ON public.extras_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_dishes_updated_at BEFORE UPDATE ON public.dishes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_bundles_updated_at BEFORE UPDATE ON public.bundles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_configurable_sets_updated_at BEFORE UPDATE ON public.configurable_sets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_extras_updated_at BEFORE UPDATE ON public.extras FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_ingredients_updated_at BEFORE UPDATE ON public.ingredients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_delivery_zones_updated_at BEFORE UPDATE ON public.delivery_zones FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_clients_updated_at BEFORE UPDATE ON public.clients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ================================================
+-- RLS (Row-Level Security) — domyślnie full access
+-- W produkcji ogranicz dostęp!
+-- ================================================
+ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_types ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_category_mappings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.extras_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.dishes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bundles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bundle_variants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.configurable_sets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.config_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.config_group_options ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.extras ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ingredients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.dish_ingredients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.delivery_zones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_item_sub_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.blocked_dates ENABLE ROW LEVEL SECURITY;
+
+-- Polityki full access (zastąp bardziej restrykcyjnymi w produkcji):
+CREATE POLICY "full_access" ON public.company_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.event_types FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.product_categories FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.event_category_mappings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.extras_categories FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.dishes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.bundles FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.bundle_variants FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.configurable_sets FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.config_groups FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.config_group_options FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.extras FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.ingredients FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.dish_ingredients FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.delivery_zones FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.clients FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.orders FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.order_items FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.order_item_sub_items FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.payment_methods FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "full_access" ON public.blocked_dates FOR ALL USING (true) WITH CHECK (true);
 ```
 
 ---
 
-## Krok 3: Konfiguracja Supabase
+## Krok 2: Podpięcie Supabase do własnej bazy
 
-### Ścieżka A: Supabase Cloud (rekomendowana)
+### Opcja A: Supabase Cloud (rekomendowana — najmniej pracy)
 
 1. Załóż konto na [supabase.com](https://supabase.com)
-2. Utwórz nowy projekt
-3. Wykonaj powyższy SQL w **SQL Editor**
-4. Skopiuj:
-   - **Project URL** (np. `https://xyz.supabase.co`)
-   - **Anon Key** (publiczny klucz)
+2. Utwórz projekt → wykonaj SQL z powyżej w SQL Editor
+3. Skopiuj **Project URL** i **Anon Key**
 
-5. Zmień plik `src/integrations/supabase/client.ts`:
+### Opcja B: Self-hosted Supabase na DigitalOcean
 
-```typescript
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from './types'
-
-const SUPABASE_URL = "https://TWOJ-PROJEKT.supabase.co"
-const SUPABASE_ANON_KEY = "TWOJ-ANON-KEY"
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
+```bash
+# Na Droplet z Docker:
+git clone --depth 1 https://github.com/supabase/supabase
+cd supabase/docker
+cp .env.example .env
+# Edytuj .env — ustaw connection string do Managed Database
+docker compose up -d
 ```
 
-6. Wygeneruj nowe typy TypeScript:
+### Zmiana w kodzie (JEDYNY plik do zmiany):
+
+```typescript
+// src/integrations/supabase/client.ts
+const SUPABASE_URL = "https://TWOJ-PROJEKT.supabase.co"
+const SUPABASE_ANON_KEY = "TWOJ-ANON-KEY"
+```
+
+### Regeneracja typów:
 ```bash
 npx supabase gen types typescript --project-id TWOJ-PROJECT-ID > src/integrations/supabase/types.ts
 ```
 
-### Ścieżka B: Self-hosted Supabase
-
-Dokumentacja: https://supabase.com/docs/guides/self-hosting
-
-```bash
-# Klonuj repozytorium Supabase
-git clone --depth 1 https://github.com/supabase/supabase
-cd supabase/docker
-cp .env.example .env
-docker compose up -d
-```
-
 ---
 
-## Krok 4: Edge Functions → własny backend
+## Krok 3: Edge Function
 
-### Aktualnie jest 1 edge function:
+### Jedyna edge function: `calculate-delivery`
 
-#### `calculate-delivery` — obliczanie kosztu dostawy
+**Co robi:** Geokoduje adres klienta (Nominatim) → oblicza trasę (OSRM) → zwraca km i czas.
 
-**Lokalizacja:** `supabase/functions/calculate-delivery/index.ts`
-
-**Co robi:**
-1. Przyjmuje adres klienta + współrzędne firmy
-2. Geokoduje adres przez Nominatim (OpenStreetMap)
-3. Oblicza trasę przez OSRM
-4. Zwraca odległość w km i czas dojazdu
-
-**Opcja 1: Zostaw na Supabase (Edge Function)**
-
-Jeśli korzystasz z Supabase Cloud, wystarczy wdrożyć funkcję:
+**Opcja 1 — Zostaw na Supabase:**
 ```bash
 npx supabase functions deploy calculate-delivery --project-ref TWOJ-PROJECT-ID
 ```
 
-**Opcja 2: Przenieś na własny backend (Node.js/Express)**
+**Opcja 2 — Przenieś na własny backend (Express/Node.js):**
 
-Utwórz plik `server/routes/delivery.js`:
+Utwórz `server/routes/delivery.js`:
 
 ```javascript
 const express = require('express');
 const router = express.Router();
 
-// Oczyszczanie polskich prefiksów adresów
 function cleanPolishAddress(address) {
   return address
     .replace(/\bul\.\s*/gi, '')
@@ -508,54 +545,32 @@ function cleanPolishAddress(address) {
 async function geocodeAddress(address) {
   const cleaned = cleanPolishAddress(address);
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleaned)}&countrycodes=pl&limit=1`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'KingOfCatering/1.0' }
-  });
+  const res = await fetch(url, { headers: { 'User-Agent': 'KingOfCatering/1.0' } });
   const data = await res.json();
-  if (!data || data.length === 0) return null;
-  return {
-    lat: parseFloat(data[0].lat),
-    lng: parseFloat(data[0].lon),
-    displayName: data[0].display_name
-  };
+  if (!data?.length) return null;
+  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), displayName: data[0].display_name };
 }
 
 async function calculateRoute(fromLat, fromLng, toLat, toLng) {
   const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=false`;
   const res = await fetch(url);
   const data = await res.json();
-  if (!data.routes || data.routes.length === 0) return null;
-  return {
-    distanceKm: Math.round(data.routes[0].distance / 100) / 10,
-    durationMin: Math.round(data.routes[0].duration / 60)
-  };
+  if (!data.routes?.length) return null;
+  return { distanceKm: Math.round(data.routes[0].distance / 100) / 10, durationMin: Math.round(data.routes[0].duration / 60) };
 }
 
 router.post('/calculate-delivery', async (req, res) => {
   try {
     const { address, companyLat, companyLng } = req.body;
-
-    if (!address || companyLat == null || companyLng == null) {
-      return res.status(400).json({ error: 'Missing params' });
-    }
+    if (!address || companyLat == null || companyLng == null) return res.status(400).json({ error: 'Missing params' });
 
     const geo = await geocodeAddress(address);
-    if (!geo) {
-      return res.json({ error: 'address_not_found', message: 'Nie znaleziono adresu' });
-    }
+    if (!geo) return res.json({ error: 'address_not_found', message: 'Nie znaleziono adresu' });
 
     const route = await calculateRoute(companyLat, companyLng, geo.lat, geo.lng);
-    if (!route) {
-      return res.json({ error: 'route_not_found', message: 'Nie udało się obliczyć trasy' });
-    }
+    if (!route) return res.json({ error: 'route_not_found', message: 'Nie udało się obliczyć trasy' });
 
-    return res.json({
-      distanceKm: route.distanceKm,
-      durationMin: route.durationMin,
-      customerLat: geo.lat,
-      customerLng: geo.lng,
-      customerAddress: geo.displayName
-    });
+    return res.json({ distanceKm: route.distanceKm, durationMin: route.durationMin, customerLat: geo.lat, customerLng: geo.lng, customerAddress: geo.displayName });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'internal_error' });
@@ -565,64 +580,45 @@ router.post('/calculate-delivery', async (req, res) => {
 module.exports = router;
 ```
 
-**Zmiana w frontendzie** (`src/components/catering/ContactForm.tsx`):
-
-Zamień:
+Zmiana w frontendzie (`src/components/catering/ContactForm.tsx`):
 ```typescript
-const { data, error } = await supabase.functions.invoke("calculate-delivery", {
-  body: { address, companyLat, companyLng },
-});
-```
+// Zamień:
+const { data } = await supabase.functions.invoke("calculate-delivery", { body: { ... } });
 
-Na:
-```typescript
-const res = await fetch("https://TWOJ-BACKEND.pl/api/calculate-delivery", {
+// Na:
+const res = await fetch("https://TWOJ-BACKEND/api/calculate-delivery", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ address: fullAddress, companyLat, companyLng }),
+  body: JSON.stringify({ address, companyLat, companyLng }),
 });
 const data = await res.json();
 ```
 
-**Opcja 3: Bezpośrednio z frontendu (bez backendu)**
-
-Możesz wywołać Nominatim i OSRM prosto z przeglądarki. Zobacz `src/components/admin/settings/SettingsDeliveryView.tsx` — tam geocoding już działa bezpośrednio z frontendu.
+**Opcja 3 — Bez backendu:** Wywołaj Nominatim i OSRM bezpośrednio z frontendu (jak w `SettingsDeliveryView.tsx`).
 
 ---
 
-## Krok 5: Zmienne środowiskowe
+## Krok 4: Zmienne środowiskowe
 
-### Obecne zmienne (Lovable Cloud):
+Utwórz `.env` z nowymi wartościami:
 ```
-VITE_SUPABASE_URL=https://nzcbboigpstffizshcxm.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
-VITE_SUPABASE_PROJECT_ID=nzcbboigpstffizshcxm
-```
-
-### Po migracji — utwórz plik `.env`:
-```
-VITE_SUPABASE_URL=https://TWOJ-NOWY-PROJEKT.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=TWOJ-NOWY-ANON-KEY
+VITE_SUPABASE_URL=https://TWOJ-PROJEKT.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=TWOJ-ANON-KEY
 ```
 
-⚠️ **Pamiętaj**: zmienne z prefiksem `VITE_` są widoczne publicznie w przeglądarce — to jest OK dla anon key.
+⚠️ Zmienne `VITE_` są publiczne w przeglądarce — to OK dla anon key.
 
 ---
 
-## Krok 6: Build i deploy frontendu
+## Krok 5: Deploy frontendu
 
 ```bash
-# Budowanie
+npm install
 npm run build
-
-# Wynik → folder dist/
-# Możesz go wgrać na:
-# - Vercel (npm i -g vercel && vercel)
-# - Netlify (drag & drop dist/)
-# - VPS z nginx
+# Wynik → dist/
 ```
 
-### Przykładowa konfiguracja nginx:
+### Nginx na DigitalOcean Droplet:
 ```nginx
 server {
     listen 80;
@@ -636,95 +632,57 @@ server {
 }
 ```
 
+Alternatywnie: Vercel, Netlify, DigitalOcean App Platform.
+
 ---
 
 ## Mapa plików
 
-### 📁 Kluczowe pliki do modyfikacji przy migracji:
+### 🔧 Pliki do zmiany przy migracji (2-3 pliki):
 
-| Plik | Opis | Co zmienić |
-|------|------|-----------|
-| `src/integrations/supabase/client.ts` | Klient Supabase | URL + klucz nowego projektu |
-| `src/integrations/supabase/types.ts` | Typy TypeScript bazy | Wygeneruj nowe z `supabase gen types` |
-| `.env` | Zmienne środowiskowe | Nowy URL i klucz |
-| `supabase/functions/calculate-delivery/index.ts` | Edge function dostawy | Przenieś na backend LUB zostaw na Supabase |
+| Plik | Co zmienić |
+|------|-----------|
+| `src/integrations/supabase/client.ts` | URL + klucz nowego Supabase |
+| `src/integrations/supabase/types.ts` | Wygeneruj z `supabase gen types` |
+| `.env` | Nowy URL i klucz |
 
-### 📁 Pliki których NIE MUSISZ zmieniać:
+### ✅ Pliki których NIE zmieniasz:
 
-| Plik/Folder | Opis |
-|------------|------|
-| `src/components/` | Komponenty React — działają niezależnie |
-| `src/pages/` | Strony aplikacji |
-| `src/hooks/` | Hooki — pobierają dane przez klienta Supabase |
-| `src/data/` | Statyczne dane (fallback) |
-| `public/` | Obrazki i zasoby statyczne |
+Cała reszta — komponenty, hooki, strony, logika biznesowa, style. Wszystko działa z dowolnym Supabase backendem.
 
-### 📁 Struktura komponentów:
+### 📁 Struktura:
 
 ```
 src/
 ├── components/
-│   ├── catering/           ← Kreator zamówień klienta
-│   │   ├── CateringWizard.tsx    (główny komponent kreatora)
-│   │   ├── ProductsStep.tsx      (wybór produktów)
-│   │   ├── ExtrasStep.tsx        (wybór dodatków)
-│   │   ├── ContactForm.tsx       (formularz kontaktowy + dostawa)
-│   │   ├── OrderSummary.tsx      (podsumowanie zamówienia)
-│   │   ├── ProductCard.tsx       (karta produktu)
-│   │   ├── ProductModal.tsx      (modal szczegółów)
-│   │   ├── CartDrawer.tsx        (koszyk)
-│   │   └── EventDetails.tsx      (szczegóły wydarzenia)
-│   │
-│   ├── admin/              ← Panel administracyjny
-│   │   ├── OrdersView.tsx        (lista zamówień)
-│   │   ├── ClientsView.tsx       (lista klientów)
-│   │   ├── ReportsView.tsx       (raporty)
-│   │   ├── SettingsView.tsx      (ustawienia - router)
-│   │   └── settings/
-│   │       ├── SettingsCompanyView.tsx   (dane firmy)
-│   │       ├── SettingsDeliveryView.tsx  (strefy dostaw)
-│   │       ├── SettingsDishesView.tsx    (zarządzanie daniami)
-│   │       ├── SettingsEventsView.tsx    (typy wydarzeń)
-│   │       ├── SettingsCalendarView.tsx  (zablokowane daty)
-│   │       ├── SettingsOrdersView.tsx    (ustawienia zamówień)
-│   │       └── SettingsFormView.tsx      (ustawienia formularza)
-│   │
-│   └── ui/                 ← Komponenty UI (shadcn/ui)
-│
+│   ├── catering/           ← Kreator zamówień (gotowy)
+│   ├── admin/              ← Panel admina (gotowy)
+│   └── ui/                 ← shadcn/ui (gotowy)
 ├── hooks/
-│   ├── useCateringOrder.ts       (stan zamówienia)
-│   ├── useSupabaseData.ts        (pobieranie danych z bazy)
-│   ├── useAdminAuth.ts           (autoryzacja admina)
-│   └── use-mobile.tsx            (wykrywanie mobilki)
-│
+│   ├── useSupabaseData.ts  ← Pobieranie danych (gotowy)
+│   ├── useCateringOrder.ts ← Stan zamówienia (gotowy)
+│   └── useAdminAuth.ts     ← Auth admina (gotowy)
 ├── lib/
-│   ├── submitOrder.ts            (logika składania zamówienia)
-│   └── utils.ts                  (funkcje pomocnicze)
-│
-├── pages/
-│   ├── Index.tsx                 (strona główna — kreator)
-│   ├── Admin.tsx                 (panel admina)
-│   ├── Login.tsx                 (logowanie)
-│   └── NotFound.tsx              (404)
-│
+│   ├── submitOrder.ts      ← Składanie zamówień (gotowy)
+│   └── utils.ts
+├── pages/                  ← Strony (gotowe)
 └── integrations/supabase/
-    ├── client.ts                 (⚠️ ZMIEŃ URL + KLUCZ)
-    └── types.ts                  (⚠️ WYGENERUJ NOWE)
+    ├── client.ts           ← ⚠️ ZMIEŃ URL + KLUCZ
+    └── types.ts            ← ⚠️ WYGENERUJ NOWE
 ```
 
 ---
 
 ## Schemat bazy danych
 
-### Diagram relacji:
-
 ```
-company_settings (1 wiersz)
-    └── Ustawienia dostawy, firma, kontakt
+company_settings (1 wiersz — konfiguracja firmy)
 
 event_types ──┐
-              ├── event_category_mappings
+              ├── event_category_mappings (filtrowanie kategorii wg wydarzenia)
 product_categories ──┘
+
+extras_categories ──── extras (dodatki z kategoriami)
 
 dishes ──── dish_ingredients ──── ingredients
   │
@@ -732,60 +690,43 @@ dishes ──── dish_ingredients ──── ingredients
   │
   └── config_group_options ──── config_groups ──── configurable_sets
 
-extras (niezależna tabela)
-
 clients ──── orders ──── order_items ──── order_item_sub_items
 
-payment_methods (niezależna tabela)
-blocked_dates (niezależna tabela)
-delivery_zones (niezależna tabela - legacy, zastąpiona przez km)
+payment_methods (niezależna)
+blocked_dates (niezależna)
+delivery_zones (strefy dostaw)
 ```
 
-### Opis tabel:
+---
 
-| Tabela | Cel | Ważne pola |
-|--------|-----|------------|
-| `company_settings` | Dane firmy, ustawienia dostawy | `company_lat/lng` — punkt startowy dostawy |
-| `dishes` | Pojedyncze produkty (patery, dania) | `product_type`, `price_brutto`, `category_slug` |
-| `bundles` + `bundle_variants` | Produkty z wariantami (tacos, burgery) | Warianty mają swoje ceny |
-| `configurable_sets` + `config_groups` + `config_group_options` | Zestawy konfigurowalne (menu na osobę) | `price_per_person`, grupy z min/max selekcji |
-| `extras` | Dodatki (obsługa kelnerska, zastawa) | `category` (pakowanie/obsluga/dodatki) |
-| `orders` + `order_items` + `order_item_sub_items` | Zamówienia | `order_number`, `status`, `delivery_cost` |
-| `clients` | Baza klientów | Dane kontaktowe + firmowe |
-| `event_types` | Typy wydarzeń do wyboru | Wesele, Konferencja, itp. |
-| `payment_methods` | Metody płatności | `is_active` włącza/wyłącza |
-| `blocked_dates` | Zablokowane daty w kalendarzu | `blocked_date` |
+## Checklist
+
+- [ ] Utworzenie PostgreSQL na DigitalOcean
+- [ ] Wykonanie SQL (tworzenie tabel) — skopiuj z tego pliku
+- [ ] Nowy projekt Supabase (Cloud lub self-hosted) podpięty do bazy
+- [ ] Zmiana URL + klucz w `client.ts`
+- [ ] Regeneracja `types.ts`
+- [ ] Export danych z Lovable Cloud → import do nowej bazy
+- [ ] Deploy edge function LUB przeniesienie na backend
+- [ ] `npm run build` → deploy na DigitalOcean
+- [ ] Test zamówienia end-to-end
+- [ ] Konfiguracja domeny + SSL (Let's Encrypt)
 
 ---
 
 ## FAQ
 
-### Q: Czy mogę użyć MySQL zamiast PostgreSQL?
-**A:** Nie bezpośrednio. Supabase wymaga PostgreSQL. Jeśli chcesz MySQL, musisz zastąpić cały klient Supabase własnym API.
+**Q: Ile plików muszę zmienić?**
+A: Maksymalnie 2-3 pliki (`client.ts`, `types.ts`, `.env`). Opcjonalnie `ContactForm.tsx` jeśli przenosisz edge function.
 
-### Q: Czy muszę płacić za Nominatim/OSRM?
-**A:** Nie. Oba API są darmowe. Nominatim ma limit ~1 zapytanie/sekundę. Dla cateringu to więcej niż wystarczające.
+**Q: Czy mogę użyć MySQL?**
+A: Nie. Cały kod korzysta z Supabase SDK który wymaga PostgreSQL.
 
-### Q: Jak przenieść dane z Lovable Cloud?
-**A:** Wyeksportuj dane z panelu Lovable Cloud (SQL dump) i zaimportuj do nowej bazy.
+**Q: Jak przenieść dane z Lovable Cloud?**
+A: Eksport SQL dump z panelu Lovable Cloud → import do nowej bazy.
 
-### Q: Autentykacja — jak działa?
-**A:** Obecnie używa Supabase Auth. Jeśli zostaniesz na Supabase Cloud, działa tak samo. Przy własnym backendzie musisz wdrożyć własne uwierzytelnianie (np. Passport.js, NextAuth, itp.).
+**Q: Nominatim/OSRM kosztują?**
+A: Nie, oba API są darmowe. Nominatim: ~1 req/s. Dla cateringu to więcej niż wystarczające.
 
-### Q: Co z RLS (Row-Level Security)?
-**A:** Aktualnie wszystkie tabele mają politykę `true` (pełny dostęp). Przed produkcją powinieneś ograniczyć dostęp — np. zamówienia widoczne tylko dla zalogowanych adminów.
-
----
-
-## Checklist migracji
-
-- [ ] Eksport kodu z Lovable (GitHub/ZIP)
-- [ ] Stworzenie nowego projektu Supabase / własnej bazy PostgreSQL
-- [ ] Wykonanie SQL z tworzeniem tabel
-- [ ] Eksport i import danych (jeśli masz istniejące)
-- [ ] Zmiana URL i klucza w `client.ts` / `.env`
-- [ ] Regeneracja typów TypeScript
-- [ ] Deploy edge function LUB przeniesienie na backend
-- [ ] `npm run build` i deploy frontendu
-- [ ] Test zamówienia end-to-end
-- [ ] Konfiguracja domeny i SSL
+**Q: Co z autentykacją admina?**
+A: Supabase Auth — wystarczy utworzyć użytkownika admina w nowym projekcie Supabase. Cała logika logowania jest gotowa w kodzie.
