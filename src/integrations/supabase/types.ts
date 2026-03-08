@@ -219,6 +219,7 @@ export type Database = {
           min_order_value: number | null
           nip: string | null
           phone: string | null
+          privacy_policy_url: string | null
           sms_notifications: boolean | null
           updated_at: string
         }
@@ -243,6 +244,7 @@ export type Database = {
           min_order_value?: number | null
           nip?: string | null
           phone?: string | null
+          privacy_policy_url?: string | null
           sms_notifications?: boolean | null
           updated_at?: string
         }
@@ -267,6 +269,7 @@ export type Database = {
           min_order_value?: number | null
           nip?: string | null
           phone?: string | null
+          privacy_policy_url?: string | null
           sms_notifications?: boolean | null
           updated_at?: string
         }
