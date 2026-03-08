@@ -27,6 +27,7 @@ export function CartDrawer({
   onExtraChange, onPackagingChange, onWaiterServiceChange,
   products, extraItems, packagingOptions, waiterServiceOptions,
 }: CartDrawerProps) {
+  const ct = order.cateringType;
   type CartItem = { key: string; name: string; price: number; quantity: number; type: "simple" | "expandable" | "configurable" | "extra" | "packaging" | "waiter"; productId: string; variantId?: string; isReadOnly?: boolean; };
   
   const cartItems: CartItem[] = [];
