@@ -113,7 +113,7 @@ const mockOrders: Order[] = [
     id: "ZAM-KOC5CJA", dbId: "", clientId: null, client: "Maria Wiśniewska", email: "maria.w@email.pl", phone: "+48 700 555 666",
     event: "Wesele", date: "28 sty 2026", deliveryAddress: "Dworek pod Lipami, Piaseczno",
     amount: "3 276,00 zł", amountNum: 3276, status: "Zrealizowane", notes: "Dekoracja stołu premium",
-    createdAt: "5 sty 2026", deliveryCost: 0, guestCount: 30,
+    createdAt: "5 sty 2026", deliveryCost: 0, guestCount: 30, discount: 0,
     items: [
       { name: "Zestaw nr 2 Premium", quantity: 30, unit: "os.", pricePerUnit: 95, total: 2850, type: "configurable", foodCostPerUnit: 32,
         subItems: [
