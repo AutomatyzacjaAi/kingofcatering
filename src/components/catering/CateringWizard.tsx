@@ -135,8 +135,8 @@ export function CateringWizard() {
             onConfigurableChange={updateConfigurable}
             onServingTimeChange={updateServingTime}
             onProductNotesChange={updateProductNotes}
-            products={products}
-            categories={categories}
+            products={filteredProducts}
+            categories={filteredCategories}
           />
         );
       case 2:
