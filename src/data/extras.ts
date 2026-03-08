@@ -22,6 +22,7 @@ export type PackagingOption = {
   priceLabel: string;
   requiresPersonCount?: boolean;
   contents?: string[];
+  extrasCategoryId?: string;
 };
 
 export type WaiterServiceOption = {
