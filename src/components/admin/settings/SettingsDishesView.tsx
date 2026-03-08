@@ -807,7 +807,7 @@ const BundlesTab = ({ bundles, dishes, categories, reload }: { bundles: Bundle[]
                 {b.image ? <img src={b.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <Package className="w-5 h-5 text-primary" />}
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">{b.icon}</span>
+                    <p className="text-sm font-medium">{b.name}</p>
                     <p className="text-sm font-medium">{b.name}</p>
                     {b.categorySlug && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{b.categorySlug}</Badge>}
                   </div>
