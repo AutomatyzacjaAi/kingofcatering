@@ -402,38 +402,17 @@ function ConfigurableProductContent({
           
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Liczba osób:</span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => {
-                  if (quantity <= product.minPersons) {
-                    onQuantityChange(0);
-                  } else {
-                    onQuantityChange(quantity - 1);
-                  }
-                }}
-                disabled={quantity === 0}
-              >
-                <Minus className="w-4 h-4" />
-              </Button>
-              <span className="w-12 text-center text-xl font-bold">{quantity}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => {
-                  if (quantity === 0) {
-                    onQuantityChange(product.minPersons);
-                  } else {
-                    onQuantityChange(quantity + 1);
-                  }
-                }}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+            <QuantityInput
+              value={quantity}
+              min={product.minPersons}
+              onChange={(newQty) => {
+                if (newQty > 0 && newQty < product.minPersons) {
+                  onQuantityChange(product.minPersons);
+                } else {
+                  onQuantityChange(newQty);
+                }
+              }}
+            />
           </div>
           
           {quantity > 0 && (
