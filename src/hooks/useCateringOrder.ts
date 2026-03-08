@@ -66,6 +66,8 @@ const initialOrder: CateringOrder = {
   contactStreet: "",
   contactBuildingNumber: "",
   contactApartmentNumber: "",
+  companyName: "",
+  companyNip: "",
   notes: "",
   paymentMethod: "",
   deliveryZoneId: null,

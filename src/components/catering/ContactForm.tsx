@@ -273,7 +273,40 @@ export function ContactForm({
             )}
           </div>
 
-          {/* Notes */}
+          {/* Company section */}
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center gap-3 mb-4">
+              <Checkbox
+                id="isCompany"
+                checked={isCompany}
+                onCheckedChange={(checked) => {
+                  setIsCompany(checked === true);
+                  if (!checked) { onCompanyNameChange(""); onCompanyNipChange(""); }
+                }}
+              />
+              <label htmlFor="isCompany" className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                <Briefcase className="w-4 h-4 text-primary" />
+                Kupuję jako firma
+              </label>
+            </div>
+            {isCompany && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName" className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    Nazwa firmy
+                  </Label>
+                  <Input id="companyName" placeholder="Firma Sp. z o.o." value={companyName} onChange={(e) => onCompanyNameChange(e.target.value)} className="h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="companyNip">NIP</Label>
+                  <Input id="companyNip" placeholder="123-456-78-90" value={companyNip} onChange={(e) => onCompanyNipChange(e.target.value)} className="h-12" />
+                </div>
+              </div>
+            )}
+          </div>
+
+
           <div className="pt-4 border-t border-border">
             <div className="space-y-2">
               <Label htmlFor="notes" className="flex items-center gap-2">

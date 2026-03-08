@@ -208,6 +208,8 @@ export function CateringWizard() {
             contactStreet={order.contactStreet}
             contactBuildingNumber={order.contactBuildingNumber}
             contactApartmentNumber={order.contactApartmentNumber}
+            companyName={order.companyName}
+            companyNip={order.companyNip}
             notes={order.notes}
             onNameChange={(name) => updateOrder({ contactName: name })}
             onEmailChange={(email) => updateOrder({ contactEmail: email })}
@@ -216,6 +218,8 @@ export function CateringWizard() {
             onStreetChange={(street) => updateOrder({ contactStreet: street })}
             onBuildingNumberChange={(num) => updateOrder({ contactBuildingNumber: num })}
             onApartmentNumberChange={(num) => updateOrder({ contactApartmentNumber: num })}
+            onCompanyNameChange={(name) => updateOrder({ companyName: name })}
+            onCompanyNipChange={(nip) => updateOrder({ companyNip: nip })}
             onNotesChange={(notes) => updateOrder({ notes })}
             deliveryConfig={deliveryConfig}
             orderTotal={totalPrice}
