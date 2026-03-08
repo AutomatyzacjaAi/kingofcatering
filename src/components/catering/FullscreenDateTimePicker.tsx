@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format, isBefore, startOfDay } from "date-fns";
+import { format, isBefore, startOfDay, addDays } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ type FullscreenDateTimePickerProps = {
   onConfirm: (date: Date, time: string) => void;
   onClose: () => void;
   busyDates?: Date[];
+  minLeadDays?: number;
 };
 
 const TIME_SLOTS = [
@@ -31,10 +32,12 @@ export function FullscreenDateTimePicker({
   onConfirm,
   onClose,
   busyDates = [],
+  minLeadDays = 0,
 }: FullscreenDateTimePickerProps) {
   const [tempDate, setTempDate] = useState<Date | undefined>(selectedDate);
   const [tempTime, setTempTime] = useState<string>(selectedTime || "");
   const today = startOfDay(new Date());
+  const earliestDate = minLeadDays > 0 ? addDays(today, minLeadDays) : today;
 
   useEffect(() => {
     if (isOpen) {
@@ -51,7 +54,7 @@ export function FullscreenDateTimePicker({
   };
 
   const isDisabled = (date: Date) => {
-    return isBefore(startOfDay(date), today);
+    return isBefore(startOfDay(date), earliestDate);
   };
 
   const handleConfirm = () => {

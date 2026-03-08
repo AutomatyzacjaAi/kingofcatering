@@ -16,7 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/sonner";
 
-type OrderStatus = "Nowe" | "Nowe zamówienie" | "Nowa oferta" | "Potwierdzone" | "W realizacji" | "Zrealizowane" | "Anulowane";
+type OrderStatus = "Nowe zamówienie" | "Nowa oferta" | "Potwierdzone" | "W realizacji" | "Zrealizowane" | "Anulowane";
 
 interface OrderItem {
   name: string;
@@ -50,7 +50,6 @@ interface Order {
 }
 
 const statusColors: Record<OrderStatus, string> = {
-  "Nowe": "bg-blue-50 text-blue-700 border-blue-200",
   "Nowe zamówienie": "bg-blue-50 text-blue-700 border-blue-200",
   "Nowa oferta": "bg-purple-50 text-purple-700 border-purple-200",
   "Potwierdzone": "bg-green-50 text-green-700 border-green-200",
@@ -59,13 +58,13 @@ const statusColors: Record<OrderStatus, string> = {
   "Anulowane": "bg-red-50 text-red-700 border-red-200",
 };
 
-const allStatuses: OrderStatus[] = ["Nowe", "Nowe zamówienie", "Nowa oferta", "Potwierdzone", "W realizacji", "Zrealizowane", "Anulowane"];
+const allStatuses: OrderStatus[] = ["Nowe zamówienie", "Nowa oferta", "Potwierdzone", "W realizacji", "Zrealizowane", "Anulowane"];
 
 const mockOrders: Order[] = [
   {
     id: "ZAM-KOC8L7K", dbId: "", clientId: null, client: "Anna Kowalska", email: "anna.k@email.pl", phone: "+48 500 111 222",
     event: "Urodziny", date: "28 sty 2026", deliveryAddress: "ul. Kwiatowa 5, Warszawa",
-    amount: "2 211,00 zł", amountNum: 2211, status: "Nowe", notes: "Bez orzechów - alergia",
+    amount: "2 211,00 zł", amountNum: 2211, status: "Nowe zamówienie", notes: "Bez orzechów - alergia",
     createdAt: "15 sty 2026", deliveryCost: 50, guestCount: 30,
     items: [
       { name: "Patera Serów Europejskich", quantity: 2, unit: "szt.", pricePerUnit: 450, total: 900, type: "simple", foodCostPerUnit: 135,
@@ -1579,7 +1578,7 @@ const OrdersView = () => {
           deliveryAddress: o.delivery_address || "",
           amount: fmtNum(Number(o.amount)) + " zł",
           amountNum: Number(o.amount),
-          status: (o.status as OrderStatus) || "Nowe",
+          status: (o.status as OrderStatus) || "Nowe zamówienie",
           notes: o.notes || "",
           items,
           createdAt: formatDate(o.created_at),

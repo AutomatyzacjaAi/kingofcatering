@@ -24,6 +24,7 @@ export function CateringWizard() {
     blockedDates,
     deliveryConfig,
     eventCategoryMappings,
+    orderConfig,
   } = useSupabaseData();
 
   const {
@@ -161,6 +162,7 @@ export function CateringWizard() {
             onEventTimeChange={(time) => updateOrder({ eventTime: time })}
             eventTypes={eventTypes}
             blockedDates={blockedDates}
+            minLeadDays={orderConfig.minLeadDays}
           />
         );
       case 1:
@@ -245,6 +247,7 @@ export function CateringWizard() {
             packagingOptions={packagingOptions}
             waiterServiceOptions={waiterServiceOptions}
             paymentMethods={paymentMethods}
+            minOrderValue={orderConfig.minOrderValue}
           />
         );
       default:

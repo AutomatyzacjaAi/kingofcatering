@@ -30,6 +30,7 @@ type EventDetailsProps = {
   onEventTimeChange: (time: string) => void;
   eventTypes: EventType[];
   blockedDates: Date[];
+  minLeadDays?: number;
 };
 
 export function EventDetails({
@@ -45,6 +46,7 @@ export function EventDetails({
   onEventTimeChange,
   eventTypes,
   blockedDates,
+  minLeadDays = 0,
 }: EventDetailsProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
@@ -234,6 +236,7 @@ export function EventDetails({
         onConfirm={handleConfirm}
         onClose={() => setIsPickerOpen(false)}
         busyDates={blockedDates}
+        minLeadDays={minLeadDays}
       />
     </div>
   );
