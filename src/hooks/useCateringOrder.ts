@@ -41,6 +41,7 @@ export type CateringOrder = {
 };
 
 const initialOrder: CateringOrder = {
+  cateringType: "wyjazdowy",
   guestCount: 50,
   eventType: "",
   eventDate: "",
