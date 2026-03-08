@@ -427,7 +427,9 @@ const DishesTab = ({ dishes, ingredients, categories, reload }: { dishes: Dish[]
     const payload = {
       name: formName.trim(), description: formDesc.trim(), long_description: formLongDesc.trim(),
       image_url: formImage, price_netto: parseFloat(formPriceNetto) || 0, vat_rate: formVat,
-      price_brutto: priceBrutto, price_per_unit: priceBrutto, unit_label: formUnitLabel,
+      price_brutto: priceBrutto, price_per_unit: priceBrutto,
+      price_per_unit_on_site: formPriceBruttoOnSite ? parseFloat(formPriceBruttoOnSite) || null : null,
+      unit_label: formUnitLabel,
       min_quantity: parseInt(formMinQty) || 1, icon: formIcon, category_slug: formCategorySlug,
       allergens: formAllergens, dietary_tags: formDietaryTags,
       contents: formContents.split("\n").map(s => s.trim()).filter(Boolean),
