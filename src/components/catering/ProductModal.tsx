@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { Plus, Minus, AlertTriangle, X, Clock } from "lucide-react";
+import { AlertTriangle, X, Clock } from "lucide-react";
+import { QuantityInput } from "./QuantityInput";
 import type { Product, SimpleProduct, ExpandableProduct, ConfigurableProduct } from "@/data/products";
 
 type ProductModalProps = {
