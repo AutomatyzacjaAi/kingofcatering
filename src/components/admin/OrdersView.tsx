@@ -1374,7 +1374,16 @@ const AddOrderSheet = ({ open, onClose, onAdd }: { open: boolean; onClose: () =>
   const [time, setTime] = useState("");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+  const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryStreet, setDeliveryStreet] = useState("");
+  const [deliveryBuilding, setDeliveryBuilding] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [deliveryDistanceKm, setDeliveryDistanceKm] = useState<number | null>(null);
+  const [deliveryCalculating, setDeliveryCalculating] = useState(false);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
+  const [companySettings, setCompanySettings] = useState<{ companyLat: number | null; companyLng: number | null; pricePerKm: number; maxDeliveryKm: number | null; freeDeliveryAbove: number | null } | null>(null);
+  const deliveryDebounceRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
