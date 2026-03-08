@@ -2115,12 +2115,6 @@ const OrdersView = () => {
                     <button onClick={() => openEdit(order)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                       <Pencil className="w-4 h-4" />
                     </button>
-                    <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                      <Printer className="w-4 h-4" />
-                    </button>
                     <button className="p-1.5 rounded-md text-destructive/60 hover:text-destructive hover:bg-destructive/10 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
