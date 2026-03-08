@@ -75,8 +75,8 @@ export function CartDrawer({
 
   if (order.selectedPackaging) {
     const packaging = packagingOptions.find(p => p.id === order.selectedPackaging);
-    if (packaging && packaging.price > 0) {
-      cartItems.push({ key: `packaging-${order.selectedPackaging}`, name: packaging.name, price: packaging.price, quantity: order.packagingPersonCount, type: "packaging", productId: order.selectedPackaging, isReadOnly: true });
+    if (packaging && getPackagingPrice(packaging, ct) > 0) {
+      cartItems.push({ key: `packaging-${order.selectedPackaging}`, name: packaging.name, price: getPackagingPrice(packaging, ct), quantity: order.packagingPersonCount, type: "packaging", productId: order.selectedPackaging, isReadOnly: true });
     }
   }
 
