@@ -9,7 +9,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { type ClientData, mockClientOrders } from "@/data/clientsData";
+import { supabase } from "@/integrations/supabase/client";
+import type { ClientData } from "./ClientsView";
 
 const statusColors: Record<string, string> = {
   "Nowe": "bg-blue-50 text-blue-700 border-blue-200",
@@ -19,17 +20,80 @@ const statusColors: Record<string, string> = {
   "Anulowane": "bg-red-50 text-red-700 border-red-200",
 };
 
+interface ClientOrder {
+  id: string;
+  orderNumber: string;
+  date: string;
+  event: string;
+  amount: string;
+  status: string;
+}
+
 interface Props {
   client: ClientData;
   onBack: () => void;
   onSave: (client: ClientData) => void;
 }
 
+const fmtDate = (d: string) => {
+  const date = new Date(d);
+  const months = ["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
+const fmtPLN = (n: number) => n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 const ClientDetailView = ({ client, onBack, onSave }: Props) => {
   const [form, setForm] = useState<ClientData>(client);
-  const orders = mockClientOrders[client.id] || [];
+  const [orders, setOrders] = useState<ClientOrder[]>([]);
 
   useEffect(() => { setForm(client); }, [client]);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!client.id || !client.createdAt) return; // new client
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("client_id", client.id)
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setOrders(data.map((o) => ({
+          id: o.id,
+          orderNumber: o.order_number,
+          date: o.event_date ? fmtDate(o.event_date) : fmtDate(o.created_at),
+          event: o.event_type || "",
+          amount: fmtPLN(Number(o.amount)) + " zł",
+          status: o.status,
+        })));
+      }
+
+      // Also check orders by email match (for orders placed without client_id)
+      if (client.email) {
+        const { data: emailOrders } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("client_email", client.email)
+          .is("client_id", null)
+          .order("created_at", { ascending: false });
+
+        if (emailOrders && emailOrders.length > 0) {
+          setOrders((prev) => [
+            ...prev,
+            ...emailOrders.map((o) => ({
+              id: o.id,
+              orderNumber: o.order_number,
+              date: o.event_date ? fmtDate(o.event_date) : fmtDate(o.created_at),
+              event: o.event_type || "",
+              amount: fmtPLN(Number(o.amount)) + " zł",
+              status: o.status,
+            })),
+          ]);
+        }
+      }
+    };
+    fetchOrders();
+  }, [client.id, client.email, client.createdAt]);
 
   const set = (field: keyof ClientData, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -40,7 +104,6 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack}>
@@ -59,7 +122,6 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
         </Button>
       </div>
 
-      {/* Stats bar - only for existing clients */}
       {client.orders > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-6">
           <Card>
@@ -84,7 +146,6 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Personal data */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -120,7 +181,6 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
           </CardContent>
         </Card>
 
-        {/* Company data */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -156,7 +216,6 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
           </CardContent>
         </Card>
 
-        {/* Address */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -182,7 +241,6 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
           </CardContent>
         </Card>
 
-        {/* Notes */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -201,13 +259,12 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
         </Card>
       </div>
 
-      {/* Order history - only for existing clients */}
       {orders.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary" />
-              Historia zamówień
+              Historia zamówień ({orders.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -224,7 +281,7 @@ const ClientDetailView = ({ client, onBack, onSave }: Props) => {
               <TableBody>
                 {orders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell className="font-mono text-sm text-muted-foreground">{order.id}</TableCell>
+                    <TableCell className="font-mono text-sm text-muted-foreground">{order.orderNumber}</TableCell>
                     <TableCell className="text-muted-foreground">{order.date}</TableCell>
                     <TableCell className="text-muted-foreground">{order.event || "—"}</TableCell>
                     <TableCell className="font-semibold text-foreground">{order.amount}</TableCell>
