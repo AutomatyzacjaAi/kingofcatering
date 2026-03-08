@@ -223,6 +223,38 @@ async function fetchBlockedDates(): Promise<Date[]> {
   return (data ?? []).map((d) => new Date(d.blocked_date));
 }
 
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  description: string;
+  cities: string[];
+  postal_codes: string[];
+  price: number;
+  free_delivery_above: number | null;
+  min_order_value: number | null;
+  is_active: boolean;
+}
+
+async function fetchDeliveryZones(): Promise<DeliveryZone[]> {
+  const { data, error } = await supabase
+    .from("delivery_zones")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order");
+  if (error) throw error;
+  return (data ?? []).map((z) => ({
+    id: z.id,
+    name: z.name,
+    description: z.description ?? "",
+    cities: (z.cities as string[]) ?? [],
+    postal_codes: (z.postal_codes as string[]) ?? [],
+    price: Number(z.price),
+    free_delivery_above: z.free_delivery_above != null ? Number(z.free_delivery_above) : null,
+    min_order_value: z.min_order_value != null ? Number(z.min_order_value) : null,
+    is_active: z.is_active,
+  }));
+}
+
 // ─── Hook ────────────────────────────────────────────────────────
 
 export function useSupabaseData() {
