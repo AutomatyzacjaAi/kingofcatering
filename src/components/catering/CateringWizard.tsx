@@ -19,6 +19,7 @@ export function CateringWizard() {
     waiterServiceOptions,
     paymentMethods,
     blockedDates,
+    deliveryZones,
   } = useSupabaseData();
 
   const {
