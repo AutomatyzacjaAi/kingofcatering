@@ -1193,7 +1193,8 @@ const SettingsDishesView = () => {
     const dishesList: Dish[] = (dishData ?? []).map(d => ({
       id: d.id, name: d.name, description: d.description ?? "", longDescription: d.long_description ?? "",
       image: d.image_url, priceNetto: Number(d.price_netto), vatRate: d.vat_rate, priceBrutto: Number(d.price_brutto),
-      pricePerUnit: Number(d.price_per_unit ?? d.price_brutto), unitLabel: d.unit_label ?? "szt.",
+      pricePerUnit: Number(d.price_per_unit ?? d.price_brutto), pricePerUnitOnSite: d.price_per_unit_on_site != null ? Number(d.price_per_unit_on_site) : null,
+      unitLabel: d.unit_label ?? "szt.",
       minQuantity: d.min_quantity ?? 1, icon: d.icon ?? "🍽️", categorySlug: d.category_slug,
       contents: (d.contents as string[]) ?? [], allergens: (d.allergens as string[]) ?? [],
       dietaryTags: (d.dietary_tags as string[]) ?? [], productType: d.product_type,
