@@ -157,6 +157,7 @@ export function ExtrasTab({ extras, extrasCategories, reload }: Props) {
       long_description: formLongDesc.trim(),
       image_url: formImage,
       category: formCategory,
+      price_on_site: formPriceOnSite ? parseFloat(formPriceOnSite) || null : null,
       extras_category_id: formExtrasCategoryId,
       price: priceBrutto,
       price_netto: priceNetto,
