@@ -915,7 +915,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
     const g: ConfigGroup = {
       id: editingGroupId || crypto.randomUUID(), name: groupName.trim(),
       minSelections: parseInt(groupMin) || 1, maxSelections: parseInt(groupMax) || 3,
-      options: groupOptions, sortOrder: formGroups.length,
+      multiplier: parseFloat(groupMultiplier) || 1, options: groupOptions, sortOrder: formGroups.length,
     };
     if (editingGroupId) setFormGroups(formGroups.map(fg => fg.id === editingGroupId ? g : fg));
     else setFormGroups([...formGroups, g]);
