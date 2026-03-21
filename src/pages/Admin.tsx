@@ -4,6 +4,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import AdminSidebar, { type AdminSection } from "@/components/admin/AdminSidebar";
 import OrdersView from "@/components/admin/OrdersView";
 import ClientsView from "@/components/admin/ClientsView";
+import DedicatedOffersView from "@/components/admin/DedicatedOffersView";
 import ReportsView from "@/components/admin/ReportsView";
 import SettingsCompanyView from "@/components/admin/settings/SettingsCompanyView";
 import SettingsOrdersView from "@/components/admin/settings/SettingsOrdersView";
@@ -27,6 +28,7 @@ const Admin = () => {
       <main className="flex-1 p-8 overflow-auto">
         {activeSection === "orders" && <OrdersView />}
         {activeSection === "clients" && <ClientsView />}
+        {activeSection === "dedicated-offers" && <DedicatedOffersView />}
         {activeSection === "reports" && <ReportsView />}
         {activeSection === "settings-company" && <SettingsCompanyView />}
         {activeSection === "settings-orders" && <SettingsOrdersView />}
