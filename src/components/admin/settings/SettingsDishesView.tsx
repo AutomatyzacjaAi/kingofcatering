@@ -886,7 +886,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   const [showDishPickerForGroup, setShowDishPickerForGroup] = useState(false);
 
   const resetGroupForm = () => {
-    setGroupName(""); setGroupMin("1"); setGroupMax("3"); setGroupOptions([]);
+    setGroupName(""); setGroupMin("1"); setGroupMax("3"); setGroupMultiplier("1"); setGroupOptions([]);
     setShowGroupForm(false); setEditingGroupId(null); setShowDishPickerForGroup(false);
   };
   const resetForm = () => {
