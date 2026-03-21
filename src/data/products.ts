@@ -348,6 +348,7 @@ export const products: Product[] = [
     category: "zestawy",
     optionGroups: [
       {
+        multiplier: 2.5,
         id: "miesa",
         name: "Mięsiwa i ryby",
         minSelections: 2,
