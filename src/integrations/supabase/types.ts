@@ -400,6 +400,180 @@ export type Database = {
         }
         Relationships: []
       }
+      dedicated_offer_items: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+          price: number
+          section_id: string
+          sort_order: number
+          unit_label: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+          price?: number
+          section_id: string
+          sort_order?: number
+          unit_label?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          section_id?: string
+          sort_order?: number
+          unit_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dedicated_offer_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "dedicated_offer_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dedicated_offer_sections: {
+        Row: {
+          icon: string | null
+          id: string
+          name: string
+          offer_id: string
+          sort_order: number
+        }
+        Insert: {
+          icon?: string | null
+          id?: string
+          name: string
+          offer_id: string
+          sort_order?: number
+        }
+        Update: {
+          icon?: string | null
+          id?: string
+          name?: string
+          offer_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dedicated_offer_sections_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "dedicated_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dedicated_offer_selections: {
+        Row: {
+          id: string
+          item_id: string
+          notes: string | null
+          offer_id: string
+          quantity: number
+          selected: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          notes?: string | null
+          offer_id: string
+          quantity?: number
+          selected?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          notes?: string | null
+          offer_id?: string
+          quantity?: number
+          selected?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dedicated_offer_selections_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "dedicated_offer_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dedicated_offer_selections_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "dedicated_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dedicated_offers: {
+        Row: {
+          client_company: string | null
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          created_at: string
+          event_date_end: string | null
+          event_date_start: string | null
+          event_name: string | null
+          id: string
+          notes: string | null
+          status: string
+          template_id: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          client_company?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          event_date_end?: string | null
+          event_date_start?: string | null
+          event_name?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          template_id?: string | null
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          client_company?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          created_at?: string
+          event_date_end?: string | null
+          event_date_start?: string | null
+          event_name?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          template_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dedicated_offers_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "offer_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_zones: {
         Row: {
           cities: string[] | null
@@ -755,6 +929,103 @@ export type Database = {
           name?: string
           price_per_unit?: number
           unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      offer_template_section_items: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+          price: number
+          section_id: string
+          sort_order: number
+          unit_label: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+          price?: number
+          section_id: string
+          sort_order?: number
+          unit_label?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          section_id?: string
+          sort_order?: number
+          unit_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_template_section_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "offer_template_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_template_sections: {
+        Row: {
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number
+          template_id: string
+        }
+        Insert: {
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+          template_id: string
+        }
+        Update: {
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_template_sections_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "offer_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_type: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3, Truck } from "lucide-react";
+import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, ShoppingCart, CalendarDays, PartyPopper, UtensilsCrossed, FileText, BarChart3, Truck, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AdminSection = "orders" | "clients" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
+export type AdminSection = "orders" | "clients" | "dedicated-offers" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -11,9 +11,10 @@ interface AdminSidebarProps {
   onLogout?: () => void;
 }
 
-const mainNavItems: { id: "orders" | "clients" | "reports"; icon: typeof ClipboardList; label: string }[] = [
+const mainNavItems: { id: "orders" | "clients" | "dedicated-offers" | "reports"; icon: typeof ClipboardList; label: string }[] = [
   { id: "orders", icon: ClipboardList, label: "Zamówienia" },
   { id: "clients", icon: Users, label: "Klienci" },
+  { id: "dedicated-offers", icon: Gift, label: "Oferty dedykowane" },
   { id: "reports", icon: BarChart3, label: "Raporty" },
 ];
 
