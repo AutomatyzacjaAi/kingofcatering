@@ -11,9 +11,10 @@ interface AdminSidebarProps {
   onLogout?: () => void;
 }
 
-const mainNavItems: { id: "orders" | "clients" | "reports"; icon: typeof ClipboardList; label: string }[] = [
+const mainNavItems: { id: "orders" | "clients" | "dedicated-offers" | "reports"; icon: typeof ClipboardList; label: string }[] = [
   { id: "orders", icon: ClipboardList, label: "Zamówienia" },
   { id: "clients", icon: Users, label: "Klienci" },
+  { id: "dedicated-offers", icon: Gift, label: "Oferty dedykowane" },
   { id: "reports", icon: BarChart3, label: "Raporty" },
 ];
 
