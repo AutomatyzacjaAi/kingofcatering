@@ -965,7 +965,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
       const g = formGroups[gi];
       const { data: groupData, error: groupErr } = await supabase.from("config_groups").insert({
         set_id: setId!, name: g.name, min_selections: g.minSelections,
-        max_selections: g.maxSelections, sort_order: gi,
+        max_selections: g.maxSelections, multiplier: g.multiplier, sort_order: gi,
       }).select("id").single();
       if (groupErr || !groupData) continue;
 
