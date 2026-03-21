@@ -1055,7 +1055,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium">{g.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">(wybór: {g.minSelections}–{g.maxSelections})</span>
+                      <span className="text-xs text-muted-foreground ml-2">(wybór: {g.minSelections}–{g.maxSelections}{g.multiplier !== 1 ? `, ×${g.multiplier}` : ""})</span>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => editGroup(g)} className="p-1 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
