@@ -574,9 +574,11 @@ export type Database = {
       }
       dedicated_offers: {
         Row: {
+          client_address: string | null
           client_company: string | null
           client_email: string | null
           client_name: string
+          client_nip: string | null
           client_phone: string | null
           created_at: string
           event_date_end: string | null
@@ -590,9 +592,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_address?: string | null
           client_company?: string | null
           client_email?: string | null
           client_name?: string
+          client_nip?: string | null
           client_phone?: string | null
           created_at?: string
           event_date_end?: string | null
@@ -606,9 +610,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_address?: string | null
           client_company?: string | null
           client_email?: string | null
           client_name?: string
+          client_nip?: string | null
           client_phone?: string | null
           created_at?: string
           event_date_end?: string | null
