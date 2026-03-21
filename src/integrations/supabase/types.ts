@@ -408,6 +408,8 @@ export type Database = {
           price: number
           section_id: string
           sort_order: number
+          source_id: string | null
+          source_type: string | null
           unit_label: string | null
         }
         Insert: {
@@ -417,6 +419,8 @@ export type Database = {
           price?: number
           section_id: string
           sort_order?: number
+          source_id?: string | null
+          source_type?: string | null
           unit_label?: string | null
         }
         Update: {
@@ -426,6 +430,8 @@ export type Database = {
           price?: number
           section_id?: string
           sort_order?: number
+          source_id?: string | null
+          source_type?: string | null
           unit_label?: string | null
         }
         Relationships: [
@@ -941,6 +947,8 @@ export type Database = {
           price: number
           section_id: string
           sort_order: number
+          source_id: string | null
+          source_type: string | null
           unit_label: string | null
         }
         Insert: {
@@ -950,6 +958,8 @@ export type Database = {
           price?: number
           section_id: string
           sort_order?: number
+          source_id?: string | null
+          source_type?: string | null
           unit_label?: string | null
         }
         Update: {
@@ -959,6 +969,8 @@ export type Database = {
           price?: number
           section_id?: string
           sort_order?: number
+          source_id?: string | null
+          source_type?: string | null
           unit_label?: string | null
         }
         Relationships: [

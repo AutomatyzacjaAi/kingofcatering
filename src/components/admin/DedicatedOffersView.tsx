@@ -3,14 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, ExternalLink, Copy, FileText, Trash2, Eye } from "lucide-react";
+import { Plus, ExternalLink, Copy, FileText, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import OfferTemplatesManager from "./offers/OfferTemplatesManager";
+import AdminOfferEditor from "./offers/AdminOfferEditor";
 
 interface DedicatedOffer {
   id: string;
@@ -54,9 +55,9 @@ const DedicatedOffersView = () => {
   const [offers, setOffers] = useState<DedicatedOffer[]>([]);
   const [templates, setTemplates] = useState<OfferTemplate[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editOffer, setEditOffer] = useState<DedicatedOffer | null>(null);
+  const [editingOfferId, setEditingOfferId] = useState<string | null>(null);
 
-  // Form state
+  // Form state for new offer
   const [formTemplateId, setFormTemplateId] = useState("");
   const [formClientName, setFormClientName] = useState("");
   const [formClientEmail, setFormClientEmail] = useState("");
@@ -78,7 +79,6 @@ const DedicatedOffersView = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  // Realtime for offer status changes
   useEffect(() => {
     const channel = supabase
       .channel("dedicated-offers-changes")
@@ -99,16 +99,9 @@ const DedicatedOffersView = () => {
   };
 
   const resetForm = () => {
-    setFormTemplateId("");
-    setFormClientName("");
-    setFormClientEmail("");
-    setFormClientPhone("");
-    setFormClientCompany("");
-    setFormEventName("");
-    setFormDateStart("");
-    setFormDateEnd("");
-    setFormNotes("");
-    setEditOffer(null);
+    setFormTemplateId(""); setFormClientName(""); setFormClientEmail("");
+    setFormClientPhone(""); setFormClientCompany(""); setFormEventName("");
+    setFormDateStart(""); setFormDateEnd(""); setFormNotes("");
   };
 
   const openNewOffer = () => {
@@ -116,68 +109,36 @@ const DedicatedOffersView = () => {
     setSheetOpen(true);
   };
 
-  const openEditOffer = (offer: DedicatedOffer) => {
-    setEditOffer(offer);
-    setFormTemplateId(offer.template_id || "");
-    setFormClientName(offer.client_name);
-    setFormClientEmail(offer.client_email);
-    setFormClientPhone(offer.client_phone);
-    setFormClientCompany(offer.client_company);
-    setFormEventName(offer.event_name);
-    setFormDateStart(offer.event_date_start || "");
-    setFormDateEnd(offer.event_date_end || "");
-    setFormNotes(offer.notes);
-    setSheetOpen(true);
-  };
+  const handleCreate = async () => {
+    if (!formClientName.trim()) { toast.error("Podaj imię klienta"); return; }
 
-  const handleSave = async () => {
-    if (!formClientName.trim()) {
-      toast.error("Podaj imię klienta");
-      return;
-    }
-
+    const token = generateToken();
     const payload = {
       template_id: formTemplateId || null,
-      client_name: formClientName,
-      client_email: formClientEmail,
-      client_phone: formClientPhone,
-      client_company: formClientCompany,
+      client_name: formClientName, client_email: formClientEmail,
+      client_phone: formClientPhone, client_company: formClientCompany,
       event_name: formEventName,
-      event_date_start: formDateStart || null,
-      event_date_end: formDateEnd || null,
-      notes: formNotes,
+      event_date_start: formDateStart || null, event_date_end: formDateEnd || null,
+      notes: formNotes, token, status: "draft",
     };
 
-    if (editOffer) {
-      const { error } = await supabase.from("dedicated_offers").update(payload).eq("id", editOffer.id);
-      if (error) { toast.error("Błąd zapisu"); return; }
-      toast.success("Oferta zaktualizowana");
-    } else {
-      const token = generateToken();
-      
-      // Create the offer
-      const { data: newOffer, error } = await supabase
-        .from("dedicated_offers")
-        .insert({ ...payload, token, status: "draft" })
-        .select("id")
-        .single();
-      if (error || !newOffer) { toast.error("Błąd tworzenia oferty"); return; }
+    const { data: newOffer, error } = await supabase
+      .from("dedicated_offers").insert(payload).select("id").single();
+    if (error || !newOffer) { toast.error("Błąd tworzenia oferty"); return; }
 
-      // If template selected, copy sections and items
-      if (formTemplateId) {
-        await copyTemplateToOffer(formTemplateId, newOffer.id);
-      }
-
-      toast.success("Oferta utworzona");
+    if (formTemplateId) {
+      await copyTemplateToOffer(formTemplateId, newOffer.id);
     }
 
+    toast.success("Oferta utworzona");
     setSheetOpen(false);
     resetForm();
     fetchData();
+    // Open editor immediately
+    setEditingOfferId(newOffer.id);
   };
 
   const copyTemplateToOffer = async (templateId: string, offerId: string) => {
-    // Fetch template sections with items
     const { data: sections } = await supabase
       .from("offer_template_sections")
       .select("*, offer_template_section_items(*)")
@@ -190,17 +151,13 @@ const DedicatedOffersView = () => {
       const { data: newSection } = await supabase
         .from("dedicated_offer_sections")
         .insert({ offer_id: offerId, name: section.name, icon: section.icon, sort_order: section.sort_order })
-        .select("id")
-        .single();
+        .select("id").single();
 
       if (newSection && (section as any).offer_template_section_items?.length) {
         const items = (section as any).offer_template_section_items.map((item: any) => ({
-          section_id: newSection.id,
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          unit_label: item.unit_label,
-          sort_order: item.sort_order,
+          section_id: newSection.id, name: item.name, description: item.description,
+          price: item.price, unit_label: item.unit_label, sort_order: item.sort_order,
+          source_type: item.source_type, source_id: item.source_id,
         }));
         await supabase.from("dedicated_offer_items").insert(items);
       }
@@ -227,23 +184,25 @@ const DedicatedOffersView = () => {
 
   const getOfferUrl = (token: string) => `${window.location.origin}/offer/${token}`;
 
+  // If editing an offer, show the full editor
+  if (editingOfferId) {
+    return (
+      <AdminOfferEditor
+        offerId={editingOfferId}
+        onBack={() => { setEditingOfferId(null); fetchData(); }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Oferty dedykowane</h1>
         <div className="flex gap-2">
-          <Button
-            variant={tab === "offers" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setTab("offers")}
-          >
+          <Button variant={tab === "offers" ? "default" : "outline"} size="sm" onClick={() => setTab("offers")}>
             <FileText className="w-4 h-4 mr-1" /> Oferty
           </Button>
-          <Button
-            variant={tab === "templates" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setTab("templates")}
-          >
+          <Button variant={tab === "templates" ? "default" : "outline"} size="sm" onClick={() => setTab("templates")}>
             <FileText className="w-4 h-4 mr-1" /> Szablony
           </Button>
         </div>
@@ -277,22 +236,16 @@ const DedicatedOffersView = () => {
                           {statusLabels[offer.status] || offer.status}
                         </Badge>
                       </div>
-                      {offer.event_name && (
-                        <p className="text-sm text-muted-foreground">{offer.event_name}</p>
-                      )}
+                      {offer.event_name && <p className="text-sm text-muted-foreground">{offer.event_name}</p>}
                       {offer.event_date_start && (
                         <p className="text-xs text-muted-foreground">
-                          📅 {offer.event_date_start}
-                          {offer.event_date_end && ` — ${offer.event_date_end}`}
+                          📅 {offer.event_date_start}{offer.event_date_end && ` — ${offer.event_date_end}`}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground font-mono">{getOfferUrl(offer.token)}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       <Select value={offer.status} onValueChange={(v) => handleStatusChange(offer.id, v)}>
-                        <SelectTrigger className="w-[140px] h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="draft">Szkic</SelectItem>
                           <SelectItem value="sent">Wysłana</SelectItem>
@@ -309,8 +262,8 @@ const DedicatedOffersView = () => {
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openEditOffer(offer)}>
-                        <Eye className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" onClick={() => setEditingOfferId(offer.id)}>
+                        <Edit className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(offer.id)}>
                         <Trash2 className="w-4 h-4 text-destructive" />
@@ -324,19 +277,17 @@ const DedicatedOffersView = () => {
         </>
       )}
 
-      {/* New/Edit Offer Sheet */}
+      {/* New Offer Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{editOffer ? "Edytuj ofertę" : "Nowa oferta dedykowana"}</SheetTitle>
+            <SheetTitle>Nowa oferta dedykowana</SheetTitle>
           </SheetHeader>
           <div className="space-y-4 mt-6">
             <div>
               <Label>Szablon oferty</Label>
               <Select value={formTemplateId} onValueChange={setFormTemplateId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Wybierz szablon (opcjonalnie)" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Wybierz szablon (opcjonalnie)" /></SelectTrigger>
                 <SelectContent>
                   {templates.map((t) => (
                     <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
@@ -344,7 +295,6 @@ const DedicatedOffersView = () => {
                 </SelectContent>
               </Select>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Imię i nazwisko *</Label>
@@ -355,23 +305,20 @@ const DedicatedOffersView = () => {
                 <Input value={formClientCompany} onChange={(e) => setFormClientCompany(e.target.value)} placeholder="Nazwa firmy" />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Email</Label>
-                <Input value={formClientEmail} onChange={(e) => setFormClientEmail(e.target.value)} placeholder="email@example.com" />
+                <Input value={formClientEmail} onChange={(e) => setFormClientEmail(e.target.value)} />
               </div>
               <div>
                 <Label>Telefon</Label>
-                <Input value={formClientPhone} onChange={(e) => setFormClientPhone(e.target.value)} placeholder="+48 ..." />
+                <Input value={formClientPhone} onChange={(e) => setFormClientPhone(e.target.value)} />
               </div>
             </div>
-
             <div>
               <Label>Nazwa wydarzenia</Label>
               <Input value={formEventName} onChange={(e) => setFormEventName(e.target.value)} placeholder="np. Konferencja IT Summit 2026" />
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Data rozpoczęcia</Label>
@@ -382,15 +329,11 @@ const DedicatedOffersView = () => {
                 <Input type="date" value={formDateEnd} onChange={(e) => setFormDateEnd(e.target.value)} />
               </div>
             </div>
-
             <div>
               <Label>Notatki</Label>
-              <Textarea value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Dodatkowe informacje..." />
+              <Textarea value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
             </div>
-
-            <Button onClick={handleSave} className="w-full">
-              {editOffer ? "Zapisz zmiany" : "Utwórz ofertę"}
-            </Button>
+            <Button onClick={handleCreate} className="w-full">Utwórz ofertę</Button>
           </div>
         </SheetContent>
       </Sheet>
