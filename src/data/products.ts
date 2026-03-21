@@ -363,6 +363,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "dodatki",
         name: "Dodatki",
         minSelections: 2,
