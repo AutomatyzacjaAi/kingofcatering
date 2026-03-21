@@ -1075,7 +1075,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
               {showGroupForm && (
                 <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Nazwa grupy</Label>
                       <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="np. Dania główne" className="h-8 text-xs" />
@@ -1087,6 +1087,10 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
                     <div className="space-y-1">
                       <Label className="text-xs">Max. wybór</Label>
                       <Input type="number" value={groupMax} onChange={(e) => setGroupMax(e.target.value)} className="h-8 text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Przelicznik</Label>
+                      <Input type="number" step="0.1" value={groupMultiplier} onChange={(e) => setGroupMultiplier(e.target.value)} className="h-8 text-xs" placeholder="np. 2.5" />
                     </div>
                   </div>
 
