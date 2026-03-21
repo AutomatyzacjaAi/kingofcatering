@@ -85,6 +85,8 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientCompany, setClientCompany] = useState("");
+  const [clientNip, setClientNip] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
   const [eventName, setEventName] = useState("");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
