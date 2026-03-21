@@ -4,12 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { CalendarDays, MapPin, Clock, Users, Save, Check } from "lucide-react";
-import { format, parseISO, eachDayOfInterval } from "date-fns";
+import { CalendarDays, MapPin, Clock, Users, Save, Check, Plus, ChevronDown, ChevronUp, Building2, Phone, Mail, User, FileText } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import { pl } from "date-fns/locale";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface OfferItem {
   id: string;
@@ -46,6 +48,8 @@ interface Offer {
   client_company: string;
   client_email: string;
   client_phone: string;
+  client_nip: string;
+  client_address: string;
   event_name: string;
   event_date_start: string | null;
   event_date_end: string | null;
@@ -71,6 +75,15 @@ const ClientOffer = () => {
   const [notFound, setNotFound] = useState(false);
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
+
+  // Editable client fields
+  const [clientName, setClientName] = useState("");
+  const [clientCompany, setClientCompany] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientNip, setClientNip] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -85,13 +98,20 @@ const ClientOffer = () => {
       .single();
 
     if (!offerData) { setNotFound(true); setLoading(false); return; }
-    setOffer(offerData);
+    setOffer(offerData as any);
+
+    // Set editable fields
+    setClientName(offerData.client_name || "");
+    setClientCompany(offerData.client_company || "");
+    setClientEmail(offerData.client_email || "");
+    setClientPhone(offerData.client_phone || "");
+    setClientNip((offerData as any).client_nip || "");
+    setClientAddress((offerData as any).client_address || "");
 
     if (offerData.status === "draft" || offerData.status === "sent") {
       await supabase.from("dedicated_offers").update({ status: "viewed" }).eq("id", offerData.id);
     }
 
-    // Fetch days
     const { data: daysData } = await supabase
       .from("dedicated_offer_days")
       .select("*")
@@ -101,7 +121,6 @@ const ClientOffer = () => {
     const fetchedDays = daysData || [];
     setDays(fetchedDays);
 
-    // Fetch sections with items
     const { data: secs } = await supabase
       .from("dedicated_offer_sections")
       .select("*, dedicated_offer_items(*)")
@@ -114,12 +133,10 @@ const ClientOffer = () => {
     }));
     setSections(formattedSections);
 
-    // Set active day
     if (fetchedDays.length > 0) {
       setActiveDay(fetchedDays[0].id);
     }
 
-    // Fetch existing selections
     const { data: existingSelections } = await supabase
       .from("dedicated_offer_selections")
       .select("*")
@@ -150,6 +167,18 @@ const ClientOffer = () => {
   const handleSave = async () => {
     if (!offer) return;
     setSaving(true);
+
+    // Save client data
+    await supabase.from("dedicated_offers").update({
+      client_name: clientName,
+      client_company: clientCompany,
+      client_email: clientEmail,
+      client_phone: clientPhone,
+      client_nip: clientNip,
+      client_address: clientAddress,
+    } as any).eq("id", offer.id);
+
+    // Save selections
     await supabase.from("dedicated_offer_selections").delete().eq("offer_id", offer.id);
     const toInsert = Object.values(selections).filter((s) => s.selected || s.quantity > 0);
     if (toInsert.length > 0) {
@@ -174,18 +203,42 @@ const ClientOffer = () => {
     ? sections.filter((s) => s.day_id === activeDay)
     : sections.filter((s) => !s.day_id);
 
-  // Get unique category names for tabs
   const categories = daySections.map((s) => ({ id: s.id, name: s.name, icon: s.icon }));
   const activeCategoryId = activeCategory || (categories.length > 0 ? categories[0].id : null);
   const activeSectionData = daySections.find((s) => s.id === activeCategoryId);
-
   const activeDayData = days.find((d) => d.id === activeDay);
 
   const formatDayLabel = (dateStr: string) => {
     try {
       const date = parseISO(dateStr);
-      return format(date, "EEE. dd.MM", { locale: pl });
+      return format(date, "EEEE", { locale: pl });
     } catch { return dateStr; }
+  };
+
+  const formatDayDate = (dateStr: string) => {
+    try {
+      const date = parseISO(dateStr);
+      return format(date, "dd.MM.yyyy", { locale: pl });
+    } catch { return dateStr; }
+  };
+
+  // Count selected items for a given day
+  const countSelectedForDay = (dayId: string) => {
+    const daySecs = sections.filter((s) => s.day_id === dayId);
+    let count = 0;
+    daySecs.forEach((sec) => {
+      sec.items.forEach((item) => {
+        if (selections[item.id]?.selected) count++;
+      });
+    });
+    return count;
+  };
+
+  // Count selected items for a section
+  const countSelectedForSection = (sectionId: string) => {
+    const sec = sections.find((s) => s.id === sectionId);
+    if (!sec) return 0;
+    return sec.items.filter((item) => selections[item.id]?.selected).length;
   };
 
   if (loading) {
@@ -221,7 +274,6 @@ const ClientOffer = () => {
               <p className="text-xs text-muted-foreground">
                 {offer?.event_date_start && format(parseISO(offer.event_date_start), "dd.MM.yyyy")}
                 {offer?.event_date_end && ` — ${format(parseISO(offer.event_date_end), "dd.MM.yyyy")}`}
-                {offer?.client_company && ` · ${offer.client_company}`}
               </p>
             </div>
           </div>
@@ -233,126 +285,172 @@ const ClientOffer = () => {
 
       <div className="max-w-2xl mx-auto p-4 space-y-4 pb-28">
 
-        {/* Contact info card */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dane kontaktowe</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-muted/50 rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Imię i nazwisko</p>
-                <p className="text-sm font-medium text-foreground">{offer?.client_name || "—"}</p>
-              </div>
-              <div className="bg-muted/50 rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Firma</p>
-                <p className="text-sm font-medium text-foreground">{offer?.client_company || "—"}</p>
-              </div>
-              <div className="bg-muted/50 rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="text-sm font-medium text-foreground">{offer?.client_email || "—"}</p>
-              </div>
-              <div className="bg-muted/50 rounded-lg px-3 py-2">
-                <p className="text-xs text-muted-foreground">Telefon</p>
-                <p className="text-sm font-medium text-foreground">{offer?.client_phone || "—"}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Editable contact info card */}
+        <Collapsible open={contactOpen} onOpenChange={setContactOpen}>
+          <Card>
+            <CardContent className="p-4">
+              <CollapsibleTrigger className="w-full">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <User className="w-3.5 h-3.5" /> Dane kontaktowe i firma
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {clientName && <span className="text-xs text-foreground font-medium">{clientName}</span>}
+                    {contactOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </div>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div>
+                    <Label className="text-xs flex items-center gap-1.5 mb-1"><User className="w-3 h-3" /> Imię i nazwisko</Label>
+                    <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Jan Kowalski" />
+                  </div>
+                  <div>
+                    <Label className="text-xs flex items-center gap-1.5 mb-1"><Building2 className="w-3 h-3" /> Firma</Label>
+                    <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="Nazwa firmy" />
+                  </div>
+                  <div>
+                    <Label className="text-xs flex items-center gap-1.5 mb-1"><Mail className="w-3 h-3" /> Email</Label>
+                    <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jan@firma.pl" />
+                  </div>
+                  <div>
+                    <Label className="text-xs flex items-center gap-1.5 mb-1"><Phone className="w-3 h-3" /> Telefon</Label>
+                    <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+48 600 000 000" />
+                  </div>
+                  <div>
+                    <Label className="text-xs flex items-center gap-1.5 mb-1"><FileText className="w-3 h-3" /> NIP</Label>
+                    <Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs flex items-center gap-1.5 mb-1"><MapPin className="w-3 h-3" /> Adres</Label>
+                    <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1, 00-000 Warszawa" />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </CardContent>
+          </Card>
+        </Collapsible>
 
-        {/* Event info card */}
-        <Card>
-          <CardContent className="p-4 space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Informacje o wydarzeniu</h3>
-            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-              <CalendarDays className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">
-                {offer?.event_date_start && format(parseISO(offer.event_date_start), "dd.MM.yyyy")}
-                {offer?.event_date_end && ` — ${format(parseISO(offer.event_date_end), "dd.MM.yyyy")}`}
-              </span>
-            </div>
-            {offer?.event_name && (
-              <div className="bg-muted/50 rounded-lg px-3 py-2">
-                <p className="text-sm text-foreground">{offer.event_name}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Day tabs */}
-        {days.length > 0 && (
-          <div className="flex gap-2">
-            {days.map((day) => (
-              <button
-                key={day.id}
-                onClick={() => { setActiveDay(day.id); setActiveCategory(null); }}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                  activeDay === day.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground border border-border hover:bg-muted"
-                }`}
-              >
-                {formatDayLabel(day.day_date)}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Day details */}
-        {activeDayData && (
+        {/* Event info */}
+        {offer?.event_name && (
           <Card>
             <CardContent className="p-4 space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Wybór — {formatDayLabel(activeDayData.day_date)}
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <CalendarDays className="w-3.5 h-3.5" /> Wydarzenie
               </h3>
-              {activeDayData.location && (
-                <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">{activeDayData.location}</span>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                {(activeDayData.start_time || activeDayData.end_time) && (
-                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-foreground">
-                      {activeDayData.start_time || "—"} – {activeDayData.end_time || "—"}
-                    </span>
-                  </div>
-                )}
-                {activeDayData.guest_count > 0 && (
-                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-foreground">{activeDayData.guest_count} uczestników</span>
-                  </div>
-                )}
-              </div>
+              <p className="text-sm font-medium text-foreground">{offer.event_name}</p>
+              <p className="text-xs text-muted-foreground">
+                {offer.event_date_start && format(parseISO(offer.event_date_start), "dd MMMM yyyy", { locale: pl })}
+                {offer.event_date_end && ` — ${format(parseISO(offer.event_date_end), "dd MMMM yyyy", { locale: pl })}`}
+              </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Category tabs */}
-        {categories.length > 0 && (
-          <div className="flex gap-2 flex-wrap">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  activeCategoryId === cat.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-muted-foreground border border-border hover:bg-muted"
-                }`}
-              >
-                <span>{cat.icon}</span> {cat.name}
-              </button>
-            ))}
+        {/* Day selection - attractive boxes */}
+        {days.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Wybierz dzień</h3>
+            <div className="grid gap-2">
+              {days.map((day) => {
+                const isActive = activeDay === day.id;
+                const selectedCount = countSelectedForDay(day.id);
+                return (
+                  <button
+                    key={day.id}
+                    onClick={() => { setActiveDay(day.id); setActiveCategory(null); }}
+                    className={`w-full text-left p-3 rounded-xl border transition-all ${
+                      isActive
+                        ? "bg-primary/10 border-primary ring-1 ring-primary/30"
+                        : "bg-card border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold ${
+                          isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {format(parseISO(day.day_date), "dd")}
+                        </div>
+                        <div>
+                          <p className={`text-sm font-semibold capitalize ${isActive ? "text-primary" : "text-foreground"}`}>
+                            {formatDayLabel(day.day_date)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{formatDayDate(day.day_date)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {day.location && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {day.location}
+                          </span>
+                        )}
+                        {selectedCount > 0 && (
+                          <Badge className="bg-primary/20 text-primary text-[10px]">{selectedCount} wybranych</Badge>
+                        )}
+                      </div>
+                    </div>
+                    {(day.start_time || day.guest_count > 0) && (
+                      <div className="flex gap-3 mt-2 ml-[52px]">
+                        {day.start_time && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> {day.start_time}{day.end_time && ` – ${day.end_time}`}
+                          </span>
+                        )}
+                        {day.guest_count > 0 && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Users className="w-3 h-3" /> {day.guest_count} os.
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Category tabs for active day */}
+        {activeDay && categories.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Kategorie — {activeDayData && formatDayLabel(activeDayData.day_date)}
+            </h3>
+            <div className="flex gap-2 flex-wrap">
+              {categories.map((cat) => {
+                const count = countSelectedForSection(cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      activeCategoryId === cat.id
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-card text-muted-foreground border border-border hover:bg-muted"
+                    }`}
+                  >
+                    <span>{cat.icon}</span> {cat.name}
+                    {count > 0 && (
+                      <span className={`ml-1 w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${
+                        activeCategoryId === cat.id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/20 text-primary"
+                      }`}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* Items in active category */}
         {activeSectionData && (
           <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {activeSectionData.icon} {activeSectionData.name}
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <span className="text-base">{activeSectionData.icon}</span> {activeSectionData.name}
             </h3>
             {activeSectionData.items.map((item) => {
               const sel = selections[item.id];
@@ -400,13 +498,13 @@ const ClientOffer = () => {
           </div>
         )}
 
-        {/* No-day sections (legacy/fallback) */}
+        {/* No-day sections fallback */}
         {days.length === 0 && sections.length > 0 && (
           <>
-            {categories.length === 0 && sections.map((section) => (
+            {sections.map((section) => (
               <div key={section.id} className="space-y-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <span>{section.icon}</span> {section.name}
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <span className="text-base">{section.icon}</span> {section.name}
                 </h3>
                 {section.items.map((item) => {
                   const sel = selections[item.id];

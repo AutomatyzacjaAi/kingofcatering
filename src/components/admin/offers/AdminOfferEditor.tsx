@@ -85,6 +85,8 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientCompany, setClientCompany] = useState("");
+  const [clientNip, setClientNip] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
   const [eventName, setEventName] = useState("");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
@@ -102,6 +104,8 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     setClientEmail(offerData.client_email || "");
     setClientPhone(offerData.client_phone || "");
     setClientCompany(offerData.client_company || "");
+    setClientNip((offerData as any).client_nip || "");
+    setClientAddress((offerData as any).client_address || "");
     setEventName(offerData.event_name || "");
     setDateStart(offerData.event_date_start || "");
     setDateEnd(offerData.event_date_end || "");
@@ -267,9 +271,10 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     // 1. Update offer metadata
     await supabase.from("dedicated_offers").update({
       client_name: clientName, client_email: clientEmail, client_phone: clientPhone,
-      client_company: clientCompany, event_name: eventName,
+      client_company: clientCompany, client_nip: clientNip, client_address: clientAddress,
+      event_name: eventName,
       event_date_start: dateStart || null, event_date_end: dateEnd || null, notes,
-    }).eq("id", offer.id);
+    } as any).eq("id", offer.id);
 
     // 2. Delete old days, sections (cascade)
     await supabase.from("dedicated_offer_days").delete().eq("offer_id", offer.id);
@@ -412,6 +417,8 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
                 <div><Label className="text-xs">Firma</Label><Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} /></div>
                 <div><Label className="text-xs">Email</Label><Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} /></div>
                 <div><Label className="text-xs">Telefon</Label><Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} /></div>
+                <div><Label className="text-xs">NIP</Label><Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" /></div>
+                <div><Label className="text-xs">Adres</Label><Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1" /></div>
               </div>
             </CardContent>
           </Card>
