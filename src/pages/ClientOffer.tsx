@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CalendarDays, MapPin, Clock, Users, Save, Check, Plus, ChevronDown, ChevronUp, Building2, Phone, Mail, User, FileText } from "lucide-react";
+import {
+  CalendarDays, MapPin, Clock, Users, Save, Check, Plus,
+  Building2, Phone, Mail, User, FileText, Coffee, UtensilsCrossed,
+  Wine, Salad, PartyPopper, Sparkles
+} from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface OfferItem {
   id: string;
@@ -64,6 +66,19 @@ interface Selection {
   notes: string;
 }
 
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  "coffee": <Coffee className="w-4 h-4" />,
+  "utensils": <UtensilsCrossed className="w-4 h-4" />,
+  "wine": <Wine className="w-4 h-4" />,
+  "salad": <Salad className="w-4 h-4" />,
+  "party": <PartyPopper className="w-4 h-4" />,
+  "sparkles": <Sparkles className="w-4 h-4" />,
+};
+
+const getCategoryIcon = (icon: string) => {
+  return CATEGORY_ICONS[icon] || <UtensilsCrossed className="w-4 h-4" />;
+};
+
 const ClientOffer = () => {
   const { token } = useParams<{ token: string }>();
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -75,15 +90,22 @@ const ClientOffer = () => {
   const [notFound, setNotFound] = useState(false);
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [contactOpen, setContactOpen] = useState(false);
 
   // Editable client fields
-  const [clientName, setClientName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [clientCompany, setClientCompany] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientNip, setClientNip] = useState("");
   const [clientAddress, setClientAddress] = useState("");
+  const [clientType, setClientType] = useState("firma");
+
+  // Per-day editable fields
+  const [dayLocations, setDayLocations] = useState<Record<string, string>>({});
+  const [dayGuestCounts, setDayGuestCounts] = useState<Record<string, number>>({});
+  const [dayStartTimes, setDayStartTimes] = useState<Record<string, string>>({});
+  const [dayEndTimes, setDayEndTimes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!token) return;
@@ -100,8 +122,10 @@ const ClientOffer = () => {
     if (!offerData) { setNotFound(true); setLoading(false); return; }
     setOffer(offerData as any);
 
-    // Set editable fields
-    setClientName(offerData.client_name || "");
+    const fullName = offerData.client_name || "";
+    const nameParts = fullName.split(" ");
+    setFirstName(nameParts[0] || "");
+    setLastName(nameParts.slice(1).join(" ") || "");
     setClientCompany(offerData.client_company || "");
     setClientEmail(offerData.client_email || "");
     setClientPhone(offerData.client_phone || "");
@@ -118,8 +142,24 @@ const ClientOffer = () => {
       .eq("offer_id", offerData.id)
       .order("sort_order");
 
-    const fetchedDays = daysData || [];
+    const fetchedDays = (daysData || []) as any[];
     setDays(fetchedDays);
+
+    // Init per-day fields
+    const locs: Record<string, string> = {};
+    const guests: Record<string, number> = {};
+    const starts: Record<string, string> = {};
+    const ends: Record<string, string> = {};
+    fetchedDays.forEach((d: any) => {
+      locs[d.id] = d.location || "";
+      guests[d.id] = d.guest_count || 0;
+      starts[d.id] = d.start_time || "";
+      ends[d.id] = d.end_time || "";
+    });
+    setDayLocations(locs);
+    setDayGuestCounts(guests);
+    setDayStartTimes(starts);
+    setDayEndTimes(ends);
 
     const { data: secs } = await supabase
       .from("dedicated_offer_sections")
@@ -168,7 +208,8 @@ const ClientOffer = () => {
     if (!offer) return;
     setSaving(true);
 
-    // Save client data
+    const clientName = `${firstName} ${lastName}`.trim();
+
     await supabase.from("dedicated_offers").update({
       client_name: clientName,
       client_company: clientCompany,
@@ -177,6 +218,16 @@ const ClientOffer = () => {
       client_nip: clientNip,
       client_address: clientAddress,
     } as any).eq("id", offer.id);
+
+    // Save per-day data
+    for (const day of days) {
+      await supabase.from("dedicated_offer_days").update({
+        location: dayLocations[day.id] || "",
+        guest_count: dayGuestCounts[day.id] || 0,
+        start_time: dayStartTimes[day.id] || null,
+        end_time: dayEndTimes[day.id] || null,
+      }).eq("id", day.id);
+    }
 
     // Save selections
     await supabase.from("dedicated_offer_selections").delete().eq("offer_id", offer.id);
@@ -208,21 +259,13 @@ const ClientOffer = () => {
   const activeSectionData = daySections.find((s) => s.id === activeCategoryId);
   const activeDayData = days.find((d) => d.id === activeDay);
 
-  const formatDayLabel = (dateStr: string) => {
+  const formatDayTab = (dateStr: string) => {
     try {
       const date = parseISO(dateStr);
-      return format(date, "EEEE", { locale: pl });
+      return format(date, "EEE. dd.MM", { locale: pl });
     } catch { return dateStr; }
   };
 
-  const formatDayDate = (dateStr: string) => {
-    try {
-      const date = parseISO(dateStr);
-      return format(date, "dd.MM.yyyy", { locale: pl });
-    } catch { return dateStr; }
-  };
-
-  // Count selected items for a given day
   const countSelectedForDay = (dayId: string) => {
     const daySecs = sections.filter((s) => s.day_id === dayId);
     let count = 0;
@@ -234,7 +277,6 @@ const ClientOffer = () => {
     return count;
   };
 
-  // Count selected items for a section
   const countSelectedForSection = (sectionId: string) => {
     const sec = sections.find((s) => s.id === sectionId);
     if (!sec) return 0;
@@ -264,235 +306,255 @@ const ClientOffer = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b border-border px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <CalendarDays className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
               <h1 className="font-bold text-foreground text-base">{offer?.event_name || "Oferta dedykowana"}</h1>
-              <p className="text-xs text-muted-foreground">
-                {offer?.event_date_start && format(parseISO(offer.event_date_start), "dd.MM.yyyy")}
-                {offer?.event_date_end && ` — ${format(parseISO(offer.event_date_end), "dd.MM.yyyy")}`}
-              </p>
             </div>
           </div>
-          <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">
-            OFERTA DEDYKOWANA
-          </Badge>
+          <Badge className="bg-primary/10 text-primary border-primary/30 text-xs">OFERTA</Badge>
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto p-4 space-y-4 pb-28">
+      <div className="max-w-3xl mx-auto p-4 space-y-4 pb-28">
 
-        {/* Editable contact info card */}
-        <Collapsible open={contactOpen} onOpenChange={setContactOpen}>
-          <Card>
-            <CardContent className="p-4">
-              <CollapsibleTrigger className="w-full">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <User className="w-3.5 h-3.5" /> Dane kontaktowe i firma
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    {clientName && <span className="text-xs text-foreground font-medium">{clientName}</span>}
-                    {contactOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </div>
+        {/* ─── DANE KONTAKTOWE ─── */}
+        <Card>
+          <CardContent className="p-5">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+              Dane kontaktowe
+            </h3>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Imię" />
+                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nazwisko" />
+              </div>
+              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="Email" />
+              <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="Telefon" />
+              <Select value={clientType} onValueChange={setClientType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Typ klienta" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="firma">Firma</SelectItem>
+                  <SelectItem value="osoba_prywatna">Osoba prywatna</SelectItem>
+                </SelectContent>
+              </Select>
+              {clientType === "firma" && (
+                <div className="space-y-3">
+                  <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="Nazwa firmy" />
+                  <Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="NIP" />
                 </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div>
-                    <Label className="text-xs flex items-center gap-1.5 mb-1"><User className="w-3 h-3" /> Imię i nazwisko</Label>
-                    <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Jan Kowalski" />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1.5 mb-1"><Building2 className="w-3 h-3" /> Firma</Label>
-                    <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="Nazwa firmy" />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1.5 mb-1"><Mail className="w-3 h-3" /> Email</Label>
-                    <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jan@firma.pl" />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1.5 mb-1"><Phone className="w-3 h-3" /> Telefon</Label>
-                    <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+48 600 000 000" />
-                  </div>
-                  <div>
-                    <Label className="text-xs flex items-center gap-1.5 mb-1"><FileText className="w-3 h-3" /> NIP</Label>
-                    <Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" />
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs flex items-center gap-1.5 mb-1"><MapPin className="w-3 h-3" /> Adres</Label>
-                    <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1, 00-000 Warszawa" />
-                  </div>
+              )}
+              <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="Adres" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ─── INFORMACJE O WYDARZENIU ─── */}
+        <Card>
+          <CardContent className="p-5">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              Informacje o wydarzeniu
+            </h3>
+            <div className="space-y-2">
+              {(offer?.event_date_start || offer?.event_date_end) && (
+                <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2.5">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm text-foreground">
+                    {offer.event_date_start && format(parseISO(offer.event_date_start), "dd.MM.yyyy")}
+                    {offer.event_date_end && ` — ${format(parseISO(offer.event_date_end), "dd.MM.yyyy")}`}
+                  </span>
                 </div>
-              </CollapsibleContent>
-            </CardContent>
-          </Card>
-        </Collapsible>
+              )}
+              {offer?.event_name && (
+                <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2.5">
+                  <span className="text-sm text-foreground">{offer.event_name}</span>
+                  <button className="text-xs text-primary font-medium hover:underline">Zmień</button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Event info */}
-        {offer?.event_name && (
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <CalendarDays className="w-3.5 h-3.5" /> Wydarzenie
-              </h3>
-              <p className="text-sm font-medium text-foreground">{offer.event_name}</p>
-              <p className="text-xs text-muted-foreground">
-                {offer.event_date_start && format(parseISO(offer.event_date_start), "dd MMMM yyyy", { locale: pl })}
-                {offer.event_date_end && ` — ${format(parseISO(offer.event_date_end), "dd MMMM yyyy", { locale: pl })}`}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Day selection - attractive boxes */}
+        {/* ─── DAY TABS ─── */}
         {days.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Wybierz dzień</h3>
-            <div className="grid gap-2">
-              {days.map((day) => {
-                const isActive = activeDay === day.id;
-                const selectedCount = countSelectedForDay(day.id);
-                return (
-                  <button
-                    key={day.id}
-                    onClick={() => { setActiveDay(day.id); setActiveCategory(null); }}
-                    className={`w-full text-left p-3 rounded-xl border transition-all ${
-                      isActive
-                        ? "bg-primary/10 border-primary ring-1 ring-primary/30"
-                        : "bg-card border-border hover:bg-muted/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold ${
-                          isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                        }`}>
-                          {format(parseISO(day.day_date), "dd")}
-                        </div>
-                        <div>
-                          <p className={`text-sm font-semibold capitalize ${isActive ? "text-primary" : "text-foreground"}`}>
-                            {formatDayLabel(day.day_date)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{formatDayDate(day.day_date)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {day.location && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> {day.location}
-                          </span>
-                        )}
-                        {selectedCount > 0 && (
-                          <Badge className="bg-primary/20 text-primary text-[10px]">{selectedCount} wybranych</Badge>
-                        )}
-                      </div>
-                    </div>
-                    {(day.start_time || day.guest_count > 0) && (
-                      <div className="flex gap-3 mt-2 ml-[52px]">
-                        {day.start_time && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {day.start_time}{day.end_time && ` – ${day.end_time}`}
-                          </span>
-                        )}
-                        {day.guest_count > 0 && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Users className="w-3 h-3" /> {day.guest_count} os.
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="flex rounded-xl overflow-hidden border border-border">
+            {days.map((day, i) => {
+              const isActive = activeDay === day.id;
+              return (
+                <button
+                  key={day.id}
+                  onClick={() => { setActiveDay(day.id); setActiveCategory(null); }}
+                  className={`flex-1 py-3 text-sm font-semibold transition-all text-center ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-muted-foreground hover:text-foreground"
+                  } ${i > 0 ? "border-l border-border" : ""}`}
+                >
+                  {formatDayTab(day.day_date)}
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* Category tabs for active day */}
+        {/* ─── PER-DAY DETAILS ─── */}
+        {activeDay && activeDayData && (
+          <Card>
+            <CardContent className="p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Wybór — {formatDayTab(activeDayData.day_date)}
+              </h3>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="Lokalizacja"
+                      value={dayLocations[activeDay] || ""}
+                      onChange={(e) => setDayLocations(prev => ({ ...prev, [activeDay]: e.target.value }))}
+                    />
+                  </div>
+                  <div className="relative">
+                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="Liczba uczestników"
+                      type="number"
+                      value={dayGuestCounts[activeDay] || ""}
+                      onChange={(e) => setDayGuestCounts(prev => ({ ...prev, [activeDay]: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="——:——"
+                      value={dayStartTimes[activeDay] || ""}
+                      onChange={(e) => setDayStartTimes(prev => ({ ...prev, [activeDay]: e.target.value }))}
+                    />
+                  </div>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="——:——"
+                      value={dayEndTimes[activeDay] || ""}
+                      onChange={(e) => setDayEndTimes(prev => ({ ...prev, [activeDay]: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                {/* Category chips for this day */}
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  {categories.map((cat) => {
+                    const count = countSelectedForSection(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          activeCategoryId === cat.id
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {getCategoryIcon(cat.icon)}
+                        <span>{cat.name}</span>
+                        {count > 0 && (
+                          <span className={`ml-0.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center ${
+                            activeCategoryId === cat.id ? "bg-primary-foreground/20" : "bg-primary/20 text-primary"
+                          }`}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <Plus className="w-3 h-3" /> Dodaj kategorię
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ─── KATEGORIE DAŃ – grid of category cards ─── */}
         {activeDay && categories.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Kategorie — {activeDayData && formatDayLabel(activeDayData.day_date)}
-            </h3>
-            <div className="flex gap-2 flex-wrap">
-              {categories.map((cat) => {
-                const count = countSelectedForSection(cat.id);
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
-                      activeCategoryId === cat.id
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-card text-muted-foreground border border-border hover:bg-muted"
-                    }`}
-                  >
-                    <span>{cat.icon}</span> {cat.name}
-                    {count > 0 && (
-                      <span className={`ml-1 w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${
-                        activeCategoryId === cat.id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/20 text-primary"
-                      }`}>
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <Card>
+            <CardContent className="p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Kategorie dań
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {categories.map((cat) => {
+                  const isActive = activeCategoryId === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      {getCategoryIcon(cat.icon)}
+                      <span>{cat.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Items in active category */}
-        {activeSectionData && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <span className="text-base">{activeSectionData.icon}</span> {activeSectionData.name}
-            </h3>
+        {/* ─── ITEMS LIST ─── */}
+        {activeSectionData && activeSectionData.items.length > 0 && (
+          <div className="space-y-1">
             {activeSectionData.items.map((item) => {
               const sel = selections[item.id];
               const isSelected = sel?.selected || false;
 
               return (
-                <Card
+                <div
                   key={item.id}
-                  className={`cursor-pointer transition-all ${
-                    isSelected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/30"
-                  }`}
                   onClick={() => toggleItem(item.id)}
+                  className={`flex items-center justify-between px-4 py-3.5 rounded-xl cursor-pointer transition-all ${
+                    isSelected
+                      ? "bg-primary/10 border border-primary/20"
+                      : "bg-card hover:bg-muted/30 border border-transparent"
+                  }`}
                 >
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                      isSelected ? "bg-primary border-primary" : "border-border"
-                    }`}>
-                      {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground text-sm">{item.name}</p>
-                      {item.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      {isSelected && (
-                        <Input
-                          type="number"
-                          min={1}
-                          value={sel?.quantity || 1}
-                          onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
-                          className="w-16 h-8 text-center text-sm"
-                        />
-                      )}
-                      <span className="text-sm font-semibold text-primary whitespace-nowrap">
-                        {item.price.toFixed(2)} zł
-                      </span>
-                      <span className="text-xs text-muted-foreground">/{item.unit_label}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground text-sm">{item.name}</p>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {isSelected && (
+                      <Input
+                        type="number"
+                        min={1}
+                        value={sel?.quantity || 1}
+                        onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                        className="w-16 h-8 text-center text-sm"
+                      />
+                    )}
+                    <span className="text-sm font-bold text-primary whitespace-nowrap">
+                      {item.price.toFixed(0)} zł
+                    </span>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -502,38 +564,34 @@ const ClientOffer = () => {
         {days.length === 0 && sections.length > 0 && (
           <>
             {sections.map((section) => (
-              <div key={section.id} className="space-y-2">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <span className="text-base">{section.icon}</span> {section.name}
+              <div key={section.id} className="space-y-1">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-2">
+                  {getCategoryIcon(section.icon)} {section.name}
                 </h3>
                 {section.items.map((item) => {
                   const sel = selections[item.id];
                   const isSelected = sel?.selected || false;
                   return (
-                    <Card
+                    <div
                       key={item.id}
-                      className={`cursor-pointer transition-all ${isSelected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/30"}`}
                       onClick={() => toggleItem(item.id)}
+                      className={`flex items-center justify-between px-4 py-3.5 rounded-xl cursor-pointer transition-all ${
+                        isSelected ? "bg-primary/10 border border-primary/20" : "bg-card hover:bg-muted/30 border border-transparent"
+                      }`}
                     >
-                      <CardContent className="p-4 flex items-center gap-4">
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-primary border-primary" : "border-border"}`}>
-                          {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground text-sm">{item.name}</p>
-                          {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          {isSelected && (
-                            <Input type="number" min={1} value={sel?.quantity || 1}
-                              onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
-                              className="w-16 h-8 text-center text-sm" />
-                          )}
-                          <span className="text-sm font-semibold text-primary whitespace-nowrap">{item.price.toFixed(2)} zł</span>
-                          <span className="text-xs text-muted-foreground">/{item.unit_label}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground text-sm">{item.name}</p>
+                        {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {isSelected && (
+                          <Input type="number" min={1} value={sel?.quantity || 1}
+                            onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                            className="w-16 h-8 text-center text-sm" />
+                        )}
+                        <span className="text-sm font-bold text-primary whitespace-nowrap">{item.price.toFixed(0)} zł</span>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -550,7 +608,7 @@ const ClientOffer = () => {
 
       {/* Sticky footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-50">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground">Suma wybranych pozycji:</p>
             <p className="text-xl font-bold text-foreground">{selectedTotal.toFixed(2)} zł</p>
