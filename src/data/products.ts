@@ -402,6 +402,7 @@ export const products: Product[] = [
     category: "zestawy",
     optionGroups: [
       {
+        multiplier: 1,
         id: "dania-glowne",
         name: "Dania główne",
         minSelections: 2,
