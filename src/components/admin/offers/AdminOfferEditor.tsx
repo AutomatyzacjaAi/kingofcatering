@@ -104,6 +104,8 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     setClientEmail(offerData.client_email || "");
     setClientPhone(offerData.client_phone || "");
     setClientCompany(offerData.client_company || "");
+    setClientNip((offerData as any).client_nip || "");
+    setClientAddress((offerData as any).client_address || "");
     setEventName(offerData.event_name || "");
     setDateStart(offerData.event_date_start || "");
     setDateEnd(offerData.event_date_end || "");
