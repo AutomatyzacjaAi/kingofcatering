@@ -3,19 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, GripVertical, Edit } from "lucide-react";
 import { toast } from "sonner";
-
-interface TemplateSection {
-  id: string;
-  name: string;
-  icon: string;
-  sort_order: number;
-  items: TemplateSectionItem[];
-}
+import ProductPickerDialog, { type CatalogItem } from "./ProductPickerDialog";
 
 interface TemplateSectionItem {
   id: string;
@@ -24,6 +18,16 @@ interface TemplateSectionItem {
   price: number;
   unit_label: string;
   sort_order: number;
+  source_type: string | null;
+  source_id: string | null;
+}
+
+interface TemplateSection {
+  id: string;
+  name: string;
+  icon: string;
+  sort_order: number;
+  items: TemplateSectionItem[];
 }
 
 interface Template {
@@ -42,13 +46,11 @@ const OfferTemplatesManager = () => {
   const [formDesc, setFormDesc] = useState("");
   const [formEventType, setFormEventType] = useState("");
   const [sections, setSections] = useState<TemplateSection[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSectionIdx, setPickerSectionIdx] = useState(-1);
 
   const fetchTemplates = async () => {
-    const { data } = await supabase
-      .from("offer_templates")
-      .select("*")
-      .order("name");
-
+    const { data } = await supabase.from("offer_templates").select("*").order("name");
     if (!data) return;
 
     const templatesWithSections: Template[] = [];
@@ -74,30 +76,20 @@ const OfferTemplatesManager = () => {
 
   const openNew = () => {
     setEditTemplate(null);
-    setFormName("");
-    setFormDesc("");
-    setFormEventType("");
+    setFormName(""); setFormDesc(""); setFormEventType("");
     setSections([]);
     setSheetOpen(true);
   };
 
   const openEdit = (t: Template) => {
     setEditTemplate(t);
-    setFormName(t.name);
-    setFormDesc(t.description);
-    setFormEventType(t.event_type);
+    setFormName(t.name); setFormDesc(t.description); setFormEventType(t.event_type);
     setSections(t.sections.map(s => ({ ...s, items: [...s.items] })));
     setSheetOpen(true);
   };
 
   const addSection = () => {
-    setSections([...sections, {
-      id: crypto.randomUUID(),
-      name: "",
-      icon: "🍽️",
-      sort_order: sections.length,
-      items: [],
-    }]);
+    setSections([...sections, { id: crypto.randomUUID(), name: "", icon: "🍽️", sort_order: sections.length, items: [] }]);
   };
 
   const updateSection = (idx: number, field: string, value: string) => {
@@ -106,19 +98,39 @@ const OfferTemplatesManager = () => {
     setSections(updated);
   };
 
-  const removeSection = (idx: number) => {
-    setSections(sections.filter((_, i) => i !== idx));
+  const removeSection = (idx: number) => setSections(sections.filter((_, i) => i !== idx));
+
+  const openPickerForSection = (idx: number) => {
+    setPickerSectionIdx(idx);
+    setPickerOpen(true);
   };
 
-  const addItem = (sectionIdx: number) => {
+  const handlePickerAdd = (items: CatalogItem[]) => {
+    if (pickerSectionIdx < 0) return;
+    const updated = [...sections];
+    const section = updated[pickerSectionIdx];
+    const startOrder = section.items.length;
+    items.forEach((item, i) => {
+      section.items.push({
+        id: crypto.randomUUID(),
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        unit_label: item.unit_label,
+        sort_order: startOrder + i,
+        source_type: item.source_type,
+        source_id: item.source_id,
+      });
+    });
+    setSections(updated);
+  };
+
+  const addManualItem = (sectionIdx: number) => {
     const updated = [...sections];
     updated[sectionIdx].items.push({
-      id: crypto.randomUUID(),
-      name: "",
-      description: "",
-      price: 0,
-      unit_label: "szt.",
-      sort_order: updated[sectionIdx].items.length,
+      id: crypto.randomUUID(), name: "", description: "", price: 0,
+      unit_label: "szt.", sort_order: updated[sectionIdx].items.length,
+      source_type: null, source_id: null,
     });
     setSections(updated);
   };
@@ -145,36 +157,28 @@ const OfferTemplatesManager = () => {
       await supabase.from("offer_templates").update({
         name: formName, description: formDesc, event_type: formEventType,
       }).eq("id", templateId);
-
-      // Delete old sections (cascade deletes items)
       await supabase.from("offer_template_sections").delete().eq("template_id", templateId);
     } else {
       const { data, error } = await supabase
         .from("offer_templates")
         .insert({ name: formName, description: formDesc, event_type: formEventType })
-        .select("id")
-        .single();
+        .select("id").single();
       if (error || !data) { toast.error("Błąd"); return; }
       templateId = data.id;
     }
 
-    // Insert sections and items
     for (let si = 0; si < sections.length; si++) {
       const sec = sections[si];
       const { data: newSec } = await supabase
         .from("offer_template_sections")
         .insert({ template_id: templateId, name: sec.name, icon: sec.icon, sort_order: si })
-        .select("id")
-        .single();
+        .select("id").single();
 
       if (newSec && sec.items.length > 0) {
         const items = sec.items.map((item, ii) => ({
-          section_id: newSec.id,
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          unit_label: item.unit_label,
-          sort_order: ii,
+          section_id: newSec.id, name: item.name, description: item.description,
+          price: item.price, unit_label: item.unit_label, sort_order: ii,
+          source_type: item.source_type, source_id: item.source_id,
         }));
         await supabase.from("offer_template_section_items").insert(items);
       }
@@ -214,12 +218,8 @@ const OfferTemplatesManager = () => {
                 </p>
               </div>
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}>
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
+                <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Edit className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
               </div>
             </div>
           </CardContent>
@@ -257,53 +257,41 @@ const OfferTemplatesManager = () => {
                 <div key={section.id} className="border border-border rounded-lg p-3 mb-3 space-y-3">
                   <div className="flex items-center gap-2">
                     <GripVertical className="w-4 h-4 text-muted-foreground" />
-                    <Input
-                      value={section.icon}
-                      onChange={(e) => updateSection(si, "icon", e.target.value)}
-                      className="w-14 text-center"
-                    />
-                    <Input
-                      value={section.name}
-                      onChange={(e) => updateSection(si, "name", e.target.value)}
-                      placeholder="Nazwa sekcji (np. Przerwa kawowa)"
-                      className="flex-1"
-                    />
+                    <Input value={section.icon} onChange={(e) => updateSection(si, "icon", e.target.value)} className="w-14 text-center" />
+                    <Input value={section.name} onChange={(e) => updateSection(si, "name", e.target.value)} placeholder="Nazwa sekcji" className="flex-1" />
                     <Button variant="ghost" size="icon" onClick={() => removeSection(si)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
 
-                  {/* Items */}
                   <div className="ml-6 space-y-2">
                     {section.items.map((item, ii) => (
                       <div key={item.id} className="flex items-center gap-2">
-                        <Input
-                          value={item.name}
-                          onChange={(e) => updateItem(si, ii, "name", e.target.value)}
-                          placeholder="Nazwa pozycji"
-                          className="flex-1"
-                        />
-                        <Input
-                          type="number"
-                          value={item.price}
-                          onChange={(e) => updateItem(si, ii, "price", Number(e.target.value))}
-                          className="w-24"
-                          placeholder="Cena"
-                        />
-                        <Input
-                          value={item.unit_label}
-                          onChange={(e) => updateItem(si, ii, "unit_label", e.target.value)}
-                          className="w-16"
-                          placeholder="j."
-                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <Input value={item.name} onChange={(e) => updateItem(si, ii, "name", e.target.value)} placeholder="Nazwa pozycji" className="flex-1" />
+                            {item.source_type && (
+                              <Badge variant="outline" className="text-[10px] shrink-0">
+                                {item.source_type === "dish" ? "Danie" : item.source_type === "bundle" ? "Pakiet" : item.source_type === "extra" ? "Dodatek" : item.source_type === "configurable_set" ? "Zestaw" : "Wariant"}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <Input type="number" value={item.price} onChange={(e) => updateItem(si, ii, "price", Number(e.target.value))} className="w-24" placeholder="Cena" step="0.01" />
+                        <Input value={item.unit_label} onChange={(e) => updateItem(si, ii, "unit_label", e.target.value)} className="w-16" placeholder="j." />
                         <Button variant="ghost" size="icon" onClick={() => removeItem(si, ii)}>
                           <Trash2 className="w-3 h-3 text-destructive" />
                         </Button>
                       </div>
                     ))}
-                    <Button variant="ghost" size="sm" onClick={() => addItem(si)} className="text-xs">
-                      <Plus className="w-3 h-3 mr-1" /> Dodaj pozycję
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => openPickerForSection(si)} className="text-xs">
+                        <Plus className="w-3 h-3 mr-1" /> Z katalogu
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => addManualItem(si)} className="text-xs">
+                        <Plus className="w-3 h-3 mr-1" /> Ręcznie
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -315,6 +303,8 @@ const OfferTemplatesManager = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ProductPickerDialog open={pickerOpen} onClose={() => setPickerOpen(false)} onAdd={handlePickerAdd} />
     </div>
   );
 };
