@@ -427,6 +427,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "desery-premium",
         name: "Desery",
         minSelections: 1,
