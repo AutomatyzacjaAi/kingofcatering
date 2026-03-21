@@ -880,6 +880,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   const [groupName, setGroupName] = useState("");
   const [groupMin, setGroupMin] = useState("1");
   const [groupMax, setGroupMax] = useState("3");
+  const [groupMultiplier, setGroupMultiplier] = useState("1");
   const [groupOptions, setGroupOptions] = useState<ConfigGroupOption[]>([]);
 
   // Option: pick from dishes
