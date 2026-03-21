@@ -924,7 +924,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
   const editGroup = (g: ConfigGroup) => {
     setEditingGroupId(g.id); setGroupName(g.name); setGroupMin(g.minSelections.toString());
-    setGroupMax(g.maxSelections.toString()); setGroupOptions([...g.options]); setShowGroupForm(true);
+    setGroupMax(g.maxSelections.toString()); setGroupMultiplier(g.multiplier.toString()); setGroupOptions([...g.options]); setShowGroupForm(true);
   };
 
   const startEdit = (cs: ConfigSet) => {
