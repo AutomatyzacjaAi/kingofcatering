@@ -62,7 +62,7 @@ interface ConfigGroupOption {
 
 interface ConfigGroup {
   id: string; name: string; minSelections: number; maxSelections: number;
-  options: ConfigGroupOption[]; sortOrder: number;
+  multiplier: number; options: ConfigGroupOption[]; sortOrder: number;
 }
 
 interface ConfigSet {

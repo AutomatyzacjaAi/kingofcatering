@@ -325,6 +325,7 @@ export type Database = {
           id: string
           max_selections: number
           min_selections: number
+          multiplier: number
           name: string
           set_id: string
           sort_order: number
@@ -333,6 +334,7 @@ export type Database = {
           id?: string
           max_selections?: number
           min_selections?: number
+          multiplier?: number
           name: string
           set_id: string
           sort_order?: number
@@ -341,6 +343,7 @@ export type Database = {
           id?: string
           max_selections?: number
           min_selections?: number
+          multiplier?: number
           name?: string
           set_id?: string
           sort_order?: number

@@ -61,6 +61,7 @@ export type OptionGroup = {
   name: string;
   minSelections: number;
   maxSelections: number;
+  multiplier: number;
   options: GroupOption[];
 };
 

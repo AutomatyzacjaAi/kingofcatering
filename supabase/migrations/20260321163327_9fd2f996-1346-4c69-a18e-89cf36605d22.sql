@@ -1,0 +1,1 @@
+ALTER TABLE public.config_groups ADD COLUMN multiplier numeric NOT NULL DEFAULT 1;
