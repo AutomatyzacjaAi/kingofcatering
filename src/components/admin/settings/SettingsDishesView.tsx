@@ -62,7 +62,7 @@ interface ConfigGroupOption {
 
 interface ConfigGroup {
   id: string; name: string; minSelections: number; maxSelections: number;
-  options: ConfigGroupOption[]; sortOrder: number;
+  multiplier: number; options: ConfigGroupOption[]; sortOrder: number;
 }
 
 interface ConfigSet {
@@ -880,13 +880,14 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   const [groupName, setGroupName] = useState("");
   const [groupMin, setGroupMin] = useState("1");
   const [groupMax, setGroupMax] = useState("3");
+  const [groupMultiplier, setGroupMultiplier] = useState("1");
   const [groupOptions, setGroupOptions] = useState<ConfigGroupOption[]>([]);
 
   // Option: pick from dishes
   const [showDishPickerForGroup, setShowDishPickerForGroup] = useState(false);
 
   const resetGroupForm = () => {
-    setGroupName(""); setGroupMin("1"); setGroupMax("3"); setGroupOptions([]);
+    setGroupName(""); setGroupMin("1"); setGroupMax("3"); setGroupMultiplier("1"); setGroupOptions([]);
     setShowGroupForm(false); setEditingGroupId(null); setShowDishPickerForGroup(false);
   };
   const resetForm = () => {
@@ -914,7 +915,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
     const g: ConfigGroup = {
       id: editingGroupId || crypto.randomUUID(), name: groupName.trim(),
       minSelections: parseInt(groupMin) || 1, maxSelections: parseInt(groupMax) || 3,
-      options: groupOptions, sortOrder: formGroups.length,
+      multiplier: parseFloat(groupMultiplier) || 1, options: groupOptions, sortOrder: formGroups.length,
     };
     if (editingGroupId) setFormGroups(formGroups.map(fg => fg.id === editingGroupId ? g : fg));
     else setFormGroups([...formGroups, g]);
@@ -923,7 +924,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
   const editGroup = (g: ConfigGroup) => {
     setEditingGroupId(g.id); setGroupName(g.name); setGroupMin(g.minSelections.toString());
-    setGroupMax(g.maxSelections.toString()); setGroupOptions([...g.options]); setShowGroupForm(true);
+    setGroupMax(g.maxSelections.toString()); setGroupMultiplier(g.multiplier.toString()); setGroupOptions([...g.options]); setShowGroupForm(true);
   };
 
   const startEdit = (cs: ConfigSet) => {
@@ -964,7 +965,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
       const g = formGroups[gi];
       const { data: groupData, error: groupErr } = await supabase.from("config_groups").insert({
         set_id: setId!, name: g.name, min_selections: g.minSelections,
-        max_selections: g.maxSelections, sort_order: gi,
+        max_selections: g.maxSelections, multiplier: g.multiplier, sort_order: gi,
       }).select("id").single();
       if (groupErr || !groupData) continue;
 
@@ -1054,7 +1055,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium">{g.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">(wybór: {g.minSelections}–{g.maxSelections})</span>
+                      <span className="text-xs text-muted-foreground ml-2">(wybór: {g.minSelections}–{g.maxSelections}{g.multiplier !== 1 ? `, ×${g.multiplier}` : ""})</span>
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => editGroup(g)} className="p-1 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
@@ -1074,7 +1075,7 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
 
               {showGroupForm && (
                 <div className="p-3 rounded-lg border-2 border-dashed border-primary/30 space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Nazwa grupy</Label>
                       <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="np. Dania główne" className="h-8 text-xs" />
@@ -1086,6 +1087,10 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
                     <div className="space-y-1">
                       <Label className="text-xs">Max. wybór</Label>
                       <Input type="number" value={groupMax} onChange={(e) => setGroupMax(e.target.value)} className="h-8 text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Przelicznik</Label>
+                      <Input type="number" step="0.1" value={groupMultiplier} onChange={(e) => setGroupMultiplier(e.target.value)} className="h-8 text-xs" placeholder="np. 2.5" />
                     </div>
                   </div>
 
@@ -1225,7 +1230,7 @@ const SettingsDishesView = () => {
       minPersons: s.min_persons,
       icon: s.icon ?? "🍽️", categorySlug: s.category_slug,
       groups: ((s.config_groups as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((g: any) => ({
-        id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, sortOrder: g.sort_order,
+        id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, multiplier: g.multiplier ?? 1, sortOrder: g.sort_order,
         options: ((g.config_group_options as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((o: any) => ({
           id: o.id, name: o.name, allergens: (o.allergens as string[]) ?? [], sortOrder: o.sort_order,
           dishId: o.dish_id || null,

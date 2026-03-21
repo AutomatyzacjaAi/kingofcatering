@@ -123,6 +123,7 @@ async function fetchProducts(): Promise<Product[]> {
         name: g.name,
         minSelections: g.min_selections,
         maxSelections: g.max_selections,
+        multiplier: g.multiplier ?? 1,
         options: ((g.config_group_options as any[]) ?? [])
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
           .map((o: any) => ({

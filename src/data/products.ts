@@ -61,6 +61,7 @@ export type OptionGroup = {
   name: string;
   minSelections: number;
   maxSelections: number;
+  multiplier: number;
   options: GroupOption[];
 };
 
@@ -347,6 +348,7 @@ export const products: Product[] = [
     category: "zestawy",
     optionGroups: [
       {
+        multiplier: 2.5,
         id: "miesa",
         name: "Mięsiwa i ryby",
         minSelections: 2,
@@ -361,6 +363,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "dodatki",
         name: "Dodatki",
         minSelections: 2,
@@ -373,6 +376,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "salatki",
         name: "Sałatki",
         minSelections: 1,
@@ -398,6 +402,7 @@ export const products: Product[] = [
     category: "zestawy",
     optionGroups: [
       {
+        multiplier: 1,
         id: "dania-glowne",
         name: "Dania główne",
         minSelections: 2,
@@ -410,6 +415,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "przystawki",
         name: "Przystawki",
         minSelections: 2,
@@ -421,6 +427,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "desery-premium",
         name: "Desery",
         minSelections: 1,
@@ -445,6 +452,7 @@ export const products: Product[] = [
     category: "zestawy",
     optionGroups: [
       {
+        multiplier: 1,
         id: "dania-vege",
         name: "Dania główne",
         minSelections: 2,
@@ -457,6 +465,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "dodatki-vege",
         name: "Dodatki",
         minSelections: 2,
@@ -468,6 +477,7 @@ export const products: Product[] = [
         ],
       },
       {
+        multiplier: 1,
         id: "salatki-vege",
         name: "Sałatki",
         minSelections: 1,
