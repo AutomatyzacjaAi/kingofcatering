@@ -417,6 +417,8 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
                 <div><Label className="text-xs">Firma</Label><Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} /></div>
                 <div><Label className="text-xs">Email</Label><Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} /></div>
                 <div><Label className="text-xs">Telefon</Label><Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} /></div>
+                <div><Label className="text-xs">NIP</Label><Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" /></div>
+                <div><Label className="text-xs">Adres</Label><Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1" /></div>
               </div>
             </CardContent>
           </Card>
