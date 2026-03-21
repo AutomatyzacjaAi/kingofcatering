@@ -271,9 +271,10 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     // 1. Update offer metadata
     await supabase.from("dedicated_offers").update({
       client_name: clientName, client_email: clientEmail, client_phone: clientPhone,
-      client_company: clientCompany, event_name: eventName,
+      client_company: clientCompany, client_nip: clientNip, client_address: clientAddress,
+      event_name: eventName,
       event_date_start: dateStart || null, event_date_end: dateEnd || null, notes,
-    }).eq("id", offer.id);
+    } as any).eq("id", offer.id);
 
     // 2. Delete old days, sections (cascade)
     await supabase.from("dedicated_offer_days").delete().eq("offer_id", offer.id);
