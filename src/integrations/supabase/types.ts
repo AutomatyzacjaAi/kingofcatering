@@ -400,6 +400,47 @@ export type Database = {
         }
         Relationships: []
       }
+      dedicated_offer_days: {
+        Row: {
+          day_date: string
+          end_time: string | null
+          guest_count: number | null
+          id: string
+          location: string | null
+          offer_id: string
+          sort_order: number | null
+          start_time: string | null
+        }
+        Insert: {
+          day_date: string
+          end_time?: string | null
+          guest_count?: number | null
+          id?: string
+          location?: string | null
+          offer_id: string
+          sort_order?: number | null
+          start_time?: string | null
+        }
+        Update: {
+          day_date?: string
+          end_time?: string | null
+          guest_count?: number | null
+          id?: string
+          location?: string | null
+          offer_id?: string
+          sort_order?: number | null
+          start_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dedicated_offer_days_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "dedicated_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dedicated_offer_items: {
         Row: {
           description: string | null
@@ -446,6 +487,7 @@ export type Database = {
       }
       dedicated_offer_sections: {
         Row: {
+          day_id: string | null
           icon: string | null
           id: string
           name: string
@@ -453,6 +495,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          day_id?: string | null
           icon?: string | null
           id?: string
           name: string
@@ -460,6 +503,7 @@ export type Database = {
           sort_order?: number
         }
         Update: {
+          day_id?: string | null
           icon?: string | null
           id?: string
           name?: string
@@ -467,6 +511,13 @@ export type Database = {
           sort_order?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "dedicated_offer_sections_day_id_fkey"
+            columns: ["day_id"]
+            isOneToOne: false
+            referencedRelation: "dedicated_offer_days"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "dedicated_offer_sections_offer_id_fkey"
             columns: ["offer_id"]
