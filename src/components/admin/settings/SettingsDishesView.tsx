@@ -1226,7 +1226,7 @@ const SettingsDishesView = () => {
       minPersons: s.min_persons,
       icon: s.icon ?? "🍽️", categorySlug: s.category_slug,
       groups: ((s.config_groups as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((g: any) => ({
-        id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, sortOrder: g.sort_order,
+        id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, multiplier: g.multiplier ?? 1, sortOrder: g.sort_order,
         options: ((g.config_group_options as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((o: any) => ({
           id: o.id, name: o.name, allergens: (o.allergens as string[]) ?? [], sortOrder: o.sort_order,
           dishId: o.dish_id || null,
