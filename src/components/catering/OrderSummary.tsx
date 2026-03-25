@@ -141,111 +141,20 @@ export function OrderSummary({
 
   const pricePerPerson = order.guestCount > 0 ? totalPrice / order.guestCount : 0;
 
-  const handleSubmitOnline = async () => {
+  const handleSubmitOnline = () => {
     if (!termsAccepted) {
       toast({ title: "Zaakceptuj regulamin", description: "Musisz zaakceptować regulamin przed kontynuacją.", variant: "destructive" });
       return;
     }
-    setIsSubmitting(true);
-    try {
-      // 1. Zapisz zamówienie w bazie
-      const orderNumber = await onSubmit("order");
-
-      // 2. Pobierz orderId z bazy po numerze zamówienia
-      const { data: orderRow } = await supabase
-        .from("orders")
-        .select("id")
-        .eq("order_number", orderNumber as unknown as string)
-        .single();
-
-      if (!orderRow) throw new Error("Nie znaleziono zamówienia");
-
-      // 3. Utwórz line items dla Stripe
-      const stripeLineItems = [
-        ...productLines.map(line => ({
-          name: line.name,
-          quantity: line.quantity,
-          unitPrice: line.price / line.quantity,
-        })),
-        ...extrasLines.map(line => ({
-          name: line.name,
-          quantity: line.quantity,
-          unitPrice: line.price / line.quantity,
-        })),
-      ];
-
-      if (order.deliveryPrice > 0) {
-        stripeLineItems.push({
-          name: "Dostawa",
-          quantity: 1,
-          unitPrice: order.deliveryPrice,
-        });
-      }
-
-      // 4. Wywołaj edge function do tworzenia Stripe Checkout Session
-      // ============================================================
-      // WAŻNE: Aby to zadziałało, musisz:
-      // 1. Dodać STRIPE_SECRET_KEY do Supabase Secrets
-      // 2. Deploy edge function: create-stripe-checkout
-      // ============================================================
-      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
-        "create-stripe-checkout",
-        {
-          body: {
-            orderId: orderRow.id,
-            orderNumber: orderNumber as unknown as string,
-            amount: totalPrice,
-            customerEmail: order.contactEmail,
-            customerName: order.contactName,
-            lineItems: stripeLineItems,
-            successUrl: `${window.location.origin}?payment=success&order=${orderNumber}`,
-            cancelUrl: `${window.location.origin}?payment=cancelled&order=${orderNumber}`,
-          },
-        }
-      );
-
-      if (checkoutError) throw checkoutError;
-
-      if (checkoutData?.error === "stripe_not_configured") {
-        // Stripe nie jest jeszcze skonfigurowany — fallback na potwierdzenie
-        toast({ 
-          title: "Płatności online niedostępne", 
-          description: "Zamówienie zostało zapisane. Skontaktujemy się w sprawie płatności.", 
-        });
-        setIsSubmitted(true);
-        return;
-      }
-
-      if (checkoutData?.url) {
-        // Przekieruj do Stripe Checkout
-        window.location.href = checkoutData.url;
-      } else {
-        throw new Error(checkoutData?.message || "Nie udało się utworzyć sesji płatności");
-      }
-    } catch (err) {
-      console.error("Stripe checkout error:", err);
-      toast({ title: "Błąd", description: "Nie udało się uruchomić płatności. Zamówienie zostało zapisane.", variant: "destructive" });
-      setIsSubmitted(true);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsSubmitted(true);
   };
 
-  const handleSubmitOffer = async () => {
+  const handleSubmitOffer = () => {
     if (!termsAccepted) {
       toast({ title: "Zaakceptuj regulamin", description: "Musisz zaakceptować regulamin przed wysłaniem.", variant: "destructive" });
       return;
     }
-    setIsSubmitting(true);
-    try {
-      await onSubmit("offer");
-      setIsSubmitted(true);
-      toast({ title: "Zapytanie wysłane! 🎉", description: "Skontaktujemy się w ciągu 24h." });
-    } catch {
-      toast({ title: "Błąd", description: "Nie udało się wysłać zapytania.", variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsSubmitted(true);
   };
 
   if (isSubmitted) {
@@ -254,8 +163,8 @@ export function OrderSummary({
         <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
           <PartyPopper className="w-10 h-10 text-primary" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground">Dziękujemy!</h1>
-        <p className="text-muted-foreground">Twoje zamówienie zostało wysłane. Odezwiemy się w ciągu 24h.</p>
+        <h1 className="text-2xl font-bold text-foreground">Dziękujemy bardzo za zainteresowanie!</h1>
+        <p className="text-muted-foreground">To jest formularz testowy.</p>
         <Button variant="outline" onClick={() => { onResetOrder(); setIsSubmitted(false); }}>Nowe zamówienie</Button>
       </div>
     );
