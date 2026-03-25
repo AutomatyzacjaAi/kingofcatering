@@ -1,0 +1,1 @@
+DELETE FROM event_types WHERE id = '8b2a24b8-b926-4dc3-816c-5298b13e2919';

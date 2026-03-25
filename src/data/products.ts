@@ -76,6 +76,7 @@ export type Product = SimpleProduct | ExpandableProduct | ConfigurableProduct;
 export type EventType = {
   id: string;
   name: string;
+  icon?: string;
 };
 
 export type Category = {
