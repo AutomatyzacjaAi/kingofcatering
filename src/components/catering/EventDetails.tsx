@@ -151,6 +151,7 @@ export function EventDetails({
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {eventTypes.map((type) => {
               const isSelected = eventType === type.id;
+              const IconComponent = type.icon && (icons as any)[type.icon] ? (icons as any)[type.icon] : CalendarDays;
               
               return (
                 <button
@@ -169,10 +170,10 @@ export function EventDetails({
                       "w-12 h-12 rounded-full flex items-center justify-center transition-colors",
                       isSelected 
                         ? "bg-primary text-primary-foreground" 
-                        : "bg-muted text-muted-foreground"
+                        : "bg-muted text-foreground"
                     )}
                   >
-                    <CalendarDays className="w-5 h-5" strokeWidth={1.5} />
+                    <IconComponent className="w-5 h-5" strokeWidth={1.5} />
                   </div>
                   <span 
                     className={cn(
