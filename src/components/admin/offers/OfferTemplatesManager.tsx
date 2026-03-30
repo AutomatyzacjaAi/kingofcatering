@@ -36,6 +36,7 @@ interface Template {
   name: string;
   description: string;
   event_type: string;
+  contact_section_type: string;
   sections: TemplateSection[];
 }
 
