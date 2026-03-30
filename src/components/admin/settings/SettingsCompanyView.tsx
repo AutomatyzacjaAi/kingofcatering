@@ -296,6 +296,40 @@ const SettingsCompanyView = () => {
           </CardContent>
         </Card>
 
+        {/* Brand color */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Kolor marki</CardTitle>
+            <CardDescription>Główny kolor przycisków i akcentów w formularzu i panelu klienta</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-lg [&::-webkit-color-swatch]:border-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-32 font-mono text-sm uppercase"
+                  maxLength={7}
+                />
+                <p className="text-xs text-muted-foreground">Kolor HEX, np. #FF5500</p>
+              </div>
+              <div
+                className="ml-4 px-6 py-2 rounded-lg text-sm font-medium"
+                style={{ backgroundColor: primaryColor, color: isLightColor(primaryColor) ? '#111' : '#fff' }}
+              >
+                Podgląd przycisku
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Button className="w-full sm:w-auto" onClick={handleSave} disabled={saving}>
           {saving ? "Zapisywanie..." : "Zapisz zmiany"}
         </Button>
