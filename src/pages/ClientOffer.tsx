@@ -264,14 +264,29 @@ const ClientOffer = () => {
 
     const clientName = `${firstName} ${lastName}`.trim();
 
-    await supabase.from("dedicated_offers").update({
+    const updatePayload: any = {
       client_name: clientName,
       client_company: clientCompany,
       client_email: clientEmail,
       client_phone: clientPhone,
       client_nip: clientNip,
       client_address: clientAddress,
-    } as any).eq("id", offer.id);
+    };
+
+    if (offer.contact_section_type === "wedding") {
+      Object.assign(updatePayload, {
+        groom_first_name: groomFirstName, groom_last_name: groomLastName,
+        groom_phone: groomPhone, groom_email: groomEmail,
+        bride_first_name: brideFirstName, bride_last_name: brideLastName,
+        bride_phone: bridePhone, bride_email: brideEmail,
+        wedding_date: weddingDate, coordinator, venue, arrival_time: arrivalTime,
+        guests_adults: guestsAdults, guests_children_3_12: guestsChildren312,
+        guests_children_under_2: guestsChildrenUnder2, guests_subcontractors: guestsSubcontractors,
+        menu_standard: menuStandard, menu_vegetarian: menuVegetarian, menu_children: menuChildren,
+      });
+    }
+
+    await supabase.from("dedicated_offers").update(updatePayload).eq("id", offer.id);
 
     for (const day of days) {
       await supabase.from("dedicated_offer_days").update({
