@@ -1563,6 +1563,9 @@ const SettingsDishesView = () => {
           <TabsTrigger value="extras" className="gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />Dodatki
           </TabsTrigger>
+          <TabsTrigger value="extras-sets" className="gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />Zestawy dodatków
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
