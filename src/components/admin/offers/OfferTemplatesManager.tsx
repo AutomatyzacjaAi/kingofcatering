@@ -159,13 +159,13 @@ const OfferTemplatesManager = () => {
     if (editTemplate) {
       templateId = editTemplate.id;
       await supabase.from("offer_templates").update({
-        name: formName, description: formDesc, event_type: formEventType,
-      }).eq("id", templateId);
+        name: formName, description: formDesc, event_type: formEventType, contact_section_type: formContactType,
+      } as any).eq("id", templateId);
       await supabase.from("offer_template_sections").delete().eq("template_id", templateId);
     } else {
       const { data, error } = await supabase
         .from("offer_templates")
-        .insert({ name: formName, description: formDesc, event_type: formEventType })
+        .insert({ name: formName, description: formDesc, event_type: formEventType, contact_section_type: formContactType } as any)
         .select("id").single();
       if (error || !data) { toast.error("Błąd"); return; }
       templateId = data.id;
