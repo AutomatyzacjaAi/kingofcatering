@@ -1510,6 +1510,19 @@ const SettingsDishesView = () => {
       })),
     })));
 
+    // Load extras sets
+    const { data: esSetsData } = await supabase.from("extras_sets").select("*, extras_set_items(*)").order("sort_order");
+    setExtrasSets((esSetsData ?? []).map((s: any) => ({
+      id: s.id, name: s.name, description: s.description ?? "",
+      extrasCategoryId: s.extras_category_id || null,
+      minSelections: s.min_selections ?? 1, maxSelections: s.max_selections ?? 3,
+      price: Number(s.price ?? 0), priceOnSite: s.price_on_site != null ? Number(s.price_on_site) : null,
+      sortOrder: s.sort_order ?? 0,
+      items: ((s.extras_set_items as any[]) ?? []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((i: any) => ({
+        id: i.id, extraId: i.extra_id, name: i.name || "", sortOrder: i.sort_order ?? 0,
+      })),
+    })));
+
     setLoading(false);
   }, []);
 
