@@ -1415,6 +1415,7 @@ const SettingsDishesView = () => {
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [configSets, setConfigSets] = useState<ConfigSet[]>([]);
+  const [platters, setPlatters] = useState<Platter[]>([]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
