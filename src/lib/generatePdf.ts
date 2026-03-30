@@ -549,7 +549,7 @@ const addDayHeader = (doc: jsPDF, label: string, extra: string, y: number): numb
 };
 
 // ===== SUMMARY PDF (multiple orders) =====
-export type SummaryDocType = "zamowienia" | "lista-zakupow" | "lista-dan" | "food-cost";
+export type SummaryDocType = "zamowienia" | "lista-zakupow" | "lista-dan";
 
 export async function generateSummaryPdf(orders: PdfOrder[], docType: SummaryDocType, dateRange?: string) {
   const doc = await setupDoc("Podsumowanie");
