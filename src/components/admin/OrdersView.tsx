@@ -813,7 +813,7 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }:
 };
 
 // ===== DYNAMIC PRODUCT CATALOG =====
-type CatalogProduct = { id: string; name: string; unit: string; defaultPrice: number; type: OrderItem["type"]; variants?: { id: string; name: string; price: number }[]; optionGroups?: { id: string; name: string; minSelections: number; maxSelections: number; options: { id: string; name: string }[] }[] };
+type CatalogProduct = { id: string; name: string; unit: string; defaultPrice: number; type: OrderItem["type"]; variants?: { id: string; name: string; price: number }[]; optionGroups?: { id: string; name: string; minSelections: number; maxSelections: number; multiplier: number; options: { id: string; name: string }[] }[] };
 
 function useCatalogProducts() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
@@ -835,7 +835,7 @@ function useCatalogProducts() {
       }
       for (const s of setsRes.data ?? []) {
         const optionGroups = ((s.config_groups as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((g: any) => ({
-          id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections,
+          id: g.id, name: g.name, minSelections: g.min_selections, maxSelections: g.max_selections, multiplier: Number(g.multiplier) || 1,
           options: ((g.config_group_options as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((o: any) => ({ id: o.id, name: o.name })),
         }));
         items.push({ id: s.id, name: s.name, unit: "os.", defaultPrice: Number(s.price_per_person), type: "configurable", optionGroups });
@@ -906,9 +906,10 @@ const SubItemSelector = ({ product, onConfirm, onCancel }: {
       const subs: OrderItem["subItems"] = [];
       for (const g of product.optionGroups!) {
         const ids = selectedOptions[g.id] || [];
+        const mult = g.multiplier || 1;
         for (const id of ids) {
           const opt = g.options.find(o => o.id === id);
-          if (opt) subs!.push({ name: `${g.name}: ${opt.name}`, quantity: 1, unit: "szt." });
+          if (opt) subs!.push({ name: `${g.name}: ${opt.name}`, quantity: mult, unit: `×${mult}` });
         }
       }
       onConfirm(subs);
@@ -919,7 +920,7 @@ const SubItemSelector = ({ product, onConfirm, onCancel }: {
         <p className="text-sm font-semibold text-foreground">Konfiguruj: {product.name}</p>
         {product.optionGroups.map(g => (
           <div key={g.id}>
-            <p className="text-xs font-medium text-muted-foreground mb-1">{g.name} (min {g.minSelections}, max {g.maxSelections})</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1">{g.name} (min {g.minSelections}, max {g.maxSelections}{g.multiplier && g.multiplier !== 1 ? `, przelicznik ×${g.multiplier}` : ""})</p>
             <div className="flex flex-wrap gap-1.5">
               {g.options.map(o => {
                 const isSelected = (selectedOptions[g.id] || []).includes(o.id);
@@ -2142,8 +2143,8 @@ const OrdersView = () => {
             item.subItems.map((sub, si) => ({
               order_item_id: insertedItem.id,
               name: sub.name,
-              quantity: sub.quantity,
-              unit: sub.unit,
+              quantity: item.type === "configurable" ? Math.round(sub.quantity * item.quantity) : sub.quantity,
+              unit: sub.unit === `×${sub.quantity}` ? "szt." : sub.unit,
               food_cost_per_unit: sub.foodCostPerUnit || 0,
               sort_order: si,
             }))
