@@ -126,6 +126,7 @@ const SettingsCompanyView = () => {
       logo_url: logoUrl,
       favicon_url: faviconUrl,
       privacy_policy_url: privacyPolicyUrl || null,
+      primary_color: primaryColor,
     };
 
     let error;
