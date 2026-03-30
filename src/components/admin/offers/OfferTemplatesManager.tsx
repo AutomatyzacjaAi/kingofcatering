@@ -79,7 +79,7 @@ const OfferTemplatesManager = () => {
 
   const openNew = () => {
     setEditTemplate(null);
-    setFormName(""); setFormDesc(""); setFormEventType("");
+    setFormName(""); setFormDesc(""); setFormEventType(""); setFormContactType("corporate");
     setSections([]);
     setSheetOpen(true);
   };
