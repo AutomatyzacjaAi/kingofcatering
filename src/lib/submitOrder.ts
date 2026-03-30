@@ -111,11 +111,15 @@ export async function submitOrder(
     }
   }
 
+  // Track configurable items that need sub-items
+  const configurableItemsToInsert: { sortIdx: number; product: Product; data: { quantity: number; options: Record<string, string[]> } }[] = [];
+
   for (const [productId, data] of Object.entries(order.configurableData)) {
     if (data.quantity > 0) {
       const product = products.find((p) => p.id === productId);
       if (product && product.type === "configurable") {
         const price = getConfigurablePrice(product, ct);
+        configurableItemsToInsert.push({ sortIdx: sortOrder, product, data });
         orderItems.push({
           order_id: orderId, name: product.name, quantity: data.quantity,
           price_per_unit: price, total: price * data.quantity,
