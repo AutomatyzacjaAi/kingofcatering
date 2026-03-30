@@ -47,6 +47,7 @@ const OfferTemplatesManager = () => {
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formEventType, setFormEventType] = useState("");
+  const [formContactType, setFormContactType] = useState("corporate");
   const [sections, setSections] = useState<TemplateSection[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSectionIdx, setPickerSectionIdx] = useState(-1);
