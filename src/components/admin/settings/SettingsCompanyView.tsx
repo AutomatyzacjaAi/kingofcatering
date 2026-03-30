@@ -8,6 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Upload, X, Image } from "lucide-react";
 
+function isLightColor(hex: string): boolean {
+  try {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+  } catch {
+    return false;
+  }
+}
+
 const SettingsCompanyView = () => {
   const [settingsId, setSettingsId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("");
