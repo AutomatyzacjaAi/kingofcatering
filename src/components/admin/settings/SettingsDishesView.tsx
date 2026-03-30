@@ -1608,6 +1608,9 @@ const SettingsDishesView = () => {
         <TabsContent value="extras-sets">
           <ExtrasSetsTab extrasSets={extrasSets} extras={extras} extrasCategories={extrasCategories} reload={loadAll} />
         </TabsContent>
+        <TabsContent value="menus">
+          <MenusTab menus={menus} dishes={dishes} reload={loadAll} />
+        </TabsContent>
       </Tabs>
     </div>
   );
