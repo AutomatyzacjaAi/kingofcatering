@@ -40,7 +40,6 @@ interface Menu {
   price: number;
   priceOnSite: number | null;
   isConfigurable: boolean;
-  icon: string;
   sortOrder: number;
   groups: MenuGroup[];
 }
