@@ -1529,12 +1529,15 @@ const SettingsDishesView = () => {
       </div>
 
       <Tabs defaultValue="dishes">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex-wrap">
           <TabsTrigger value="ingredients" className="gap-1.5">
             <Apple className="w-3.5 h-3.5" />Składniki
           </TabsTrigger>
           <TabsTrigger value="dishes" className="gap-1.5">
             <CookingPot className="w-3.5 h-3.5" />Dania
+          </TabsTrigger>
+          <TabsTrigger value="platters" className="gap-1.5">
+            <UtensilsCrossed className="w-3.5 h-3.5" />Patery
           </TabsTrigger>
           <TabsTrigger value="bundles" className="gap-1.5">
             <Package className="w-3.5 h-3.5" />Pakiety
@@ -1552,6 +1555,9 @@ const SettingsDishesView = () => {
         </TabsContent>
         <TabsContent value="dishes">
           <DishesTab dishes={dishes} ingredients={ingredients} categories={categories} reload={loadAll} />
+        </TabsContent>
+        <TabsContent value="platters">
+          <PlattersTab platters={platters} dishes={dishes} categories={categories} reload={loadAll} />
         </TabsContent>
         <TabsContent value="bundles">
           <BundlesTab bundles={bundles} dishes={dishes} categories={categories} reload={loadAll} />
