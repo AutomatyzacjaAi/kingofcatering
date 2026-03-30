@@ -474,15 +474,63 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
         <div className="space-y-4">
           <Card>
             <CardContent className="p-4 space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dane kontaktowe</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-xs">Imię i nazwisko</Label><Input value={clientName} onChange={(e) => setClientName(e.target.value)} /></div>
-                <div><Label className="text-xs">Firma</Label><Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} /></div>
-                <div><Label className="text-xs">Email</Label><Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} /></div>
-                <div><Label className="text-xs">Telefon</Label><Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} /></div>
-                <div><Label className="text-xs">NIP</Label><Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" /></div>
-                <div><Label className="text-xs">Adres</Label><Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1" /></div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dane kontaktowe</h3>
+                <Select value={contactType} onValueChange={setContactType}>
+                  <SelectTrigger className="w-[180px] h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="corporate">🏢 Firmowy</SelectItem>
+                    <SelectItem value="wedding">🤵 Wesele</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {contactType === "corporate" ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label className="text-xs">Imię i nazwisko</Label><Input value={clientName} onChange={(e) => setClientName(e.target.value)} /></div>
+                  <div><Label className="text-xs">Firma</Label><Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} /></div>
+                  <div><Label className="text-xs">Email</Label><Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} /></div>
+                  <div><Label className="text-xs">Telefon</Label><Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} /></div>
+                  <div><Label className="text-xs">NIP</Label><Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" /></div>
+                  <div><Label className="text-xs">Adres</Label><Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1" /></div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground">Pan Młody</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label className="text-xs">Imię</Label><Input value={groomFirstName} onChange={(e) => setGroomFirstName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Nazwisko</Label><Input value={groomLastName} onChange={(e) => setGroomLastName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Telefon</Label><Input value={groomPhone} onChange={(e) => setGroomPhone(e.target.value)} /></div>
+                    <div><Label className="text-xs">Email</Label><Input value={groomEmail} onChange={(e) => setGroomEmail(e.target.value)} /></div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">Pani Młoda</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label className="text-xs">Imię</Label><Input value={brideFirstName} onChange={(e) => setBrideFirstName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Nazwisko</Label><Input value={brideLastName} onChange={(e) => setBrideLastName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Telefon</Label><Input value={bridePhone} onChange={(e) => setBridePhone(e.target.value)} /></div>
+                    <div><Label className="text-xs">Email</Label><Input value={brideEmail} onChange={(e) => setBrideEmail(e.target.value)} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label className="text-xs">Data ślubu</Label><Input type="date" value={weddingDate} onChange={(e) => setWeddingDate(e.target.value)} /></div>
+                    <div><Label className="text-xs">Koordynator</Label><Input value={coordinator} onChange={(e) => setCoordinator(e.target.value)} /></div>
+                    <div><Label className="text-xs">Adres / Miejsce</Label><Input value={venue} onChange={(e) => setVenue(e.target.value)} /></div>
+                    <div><Label className="text-xs">Godzina przybycia</Label><Input type="time" value={arrivalTime} onChange={(e) => setArrivalTime(e.target.value)} /></div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">Liczba gości</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div><Label className="text-[10px]">Dorośli</Label><Input type="number" value={guestsAdults} onChange={(e) => setGuestsAdults(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Dzieci 3-12</Label><Input type="number" value={guestsChildren312} onChange={(e) => setGuestsChildren312(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Dzieci &lt;2</Label><Input type="number" value={guestsChildrenUnder2} onChange={(e) => setGuestsChildrenUnder2(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Podwyk.</Label><Input type="number" value={guestsSubcontractors} onChange={(e) => setGuestsSubcontractors(Number(e.target.value))} /></div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">Menu kuchnia</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div><Label className="text-[10px]">Standardowe</Label><Input type="number" value={menuStandard} onChange={(e) => setMenuStandard(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Wegetariańskie</Label><Input type="number" value={menuVegetarian} onChange={(e) => setMenuVegetarian(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Dzieci</Label><Input type="number" value={menuChildren} onChange={(e) => setMenuChildren(Number(e.target.value))} /></div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
