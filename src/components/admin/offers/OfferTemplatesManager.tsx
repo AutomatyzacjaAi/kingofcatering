@@ -87,6 +87,7 @@ const OfferTemplatesManager = () => {
   const openEdit = (t: Template) => {
     setEditTemplate(t);
     setFormName(t.name); setFormDesc(t.description); setFormEventType(t.event_type);
+    setFormContactType(t.contact_section_type || "corporate");
     setSections(t.sections.map(s => ({ ...s, items: [...s.items] })));
     setSheetOpen(true);
   };
