@@ -171,6 +171,107 @@ const getTableFinalY = (doc: jsPDF, fallback: number): number => {
   return (doc as any).lastAutoTable?.finalY || fallback;
 };
 
+const EXTRA_TYPES = new Set(["extra", "service", "waiter", "packaging"]);
+
+const splitItems = (items: PdfOrder["items"]) => {
+  const products = items.filter(i => !EXTRA_TYPES.has(i.type || ""));
+  const extras = items.filter(i => EXTRA_TYPES.has(i.type || ""));
+  return { products, extras };
+};
+
+const ORDER_COL_STYLES = {
+  0: { cellWidth: 80 },
+  1: { halign: "center" as const, cellWidth: 25 },
+  2: { halign: "right" as const, cellWidth: 35 },
+  3: { halign: "right" as const, cellWidth: 40 },
+};
+
+const toRow = (item: PdfOrder["items"][0]) => [
+  item.name.toUpperCase(),
+  String(item.quantity),
+  `${fmtNum(item.pricePerUnit)} PLN`,
+  `${fmtNum(item.total)} PLN`,
+];
+
+const renderOrderTables = (
+  doc: jsPDF, order: PdfOrder, startY: number,
+): number => {
+  const { products, extras } = splitItems(order.items);
+  let y = startY;
+
+  // Products table
+  if (products.length > 0) {
+    autoTable(doc, {
+      startY: y,
+      head: [["PRODUKT", "ILOŚĆ", "CENA JEDN.", "WARTOŚĆ NETTO"]],
+      body: products.map(toRow),
+      ...TABLE_STYLES,
+      columnStyles: ORDER_COL_STYLES,
+    });
+    y = getTableFinalY(doc, y + 30) + 4;
+  }
+
+  // Extras table
+  if (extras.length > 0) {
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text("DODATKI I USŁUGI", PAGE_LEFT, y + 2);
+    doc.setTextColor(0, 0, 0);
+    y += 5;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["DODATEK / USŁUGA", "ILOŚĆ", "CENA JEDN.", "WARTOŚĆ NETTO"]],
+      body: extras.map(toRow),
+      ...TABLE_STYLES,
+      columnStyles: ORDER_COL_STYLES,
+    });
+    y = getTableFinalY(doc, y + 30) + 4;
+  }
+
+  // Delivery + discount + total
+  const footerRows: string[][] = [];
+  if (order.deliveryCost > 0) {
+    footerRows.push(["OPŁATA TRANSPORTOWA", "1", `${fmtNum(order.deliveryCost)} PLN`, `${fmtNum(order.deliveryCost)} PLN`]);
+  }
+  if (order.discount && order.discount > 0) {
+    footerRows.push(["RABAT", "", "", `-${fmtNum(order.discount)} PLN`]);
+  }
+
+  if (footerRows.length > 0) {
+    autoTable(doc, {
+      startY: y,
+      body: footerRows,
+      foot: [["", "", "RAZEM DO ZAPŁATY:", order.amount]],
+      ...TABLE_STYLES,
+      columnStyles: ORDER_COL_STYLES,
+      didParseCell: (data: any) => {
+        if (data.section === "foot") {
+          data.cell.styles.lineWidth = { top: 0.8, right: 0.3, bottom: 0.3, left: 0.3 };
+        }
+      },
+    });
+    y = getTableFinalY(doc, y + 20) + 4;
+  } else {
+    // Just total line
+    autoTable(doc, {
+      startY: y,
+      body: [],
+      foot: [["", "", "RAZEM DO ZAPŁATY:", order.amount]],
+      ...TABLE_STYLES,
+      columnStyles: ORDER_COL_STYLES,
+      didParseCell: (data: any) => {
+        if (data.section === "foot") {
+          data.cell.styles.lineWidth = { top: 0.8, right: 0.3, bottom: 0.3, left: 0.3 };
+        }
+      },
+    });
+    y = getTableFinalY(doc, y + 10) + 4;
+  }
+
+  return y;
+};
+
 // ===== SINGLE ORDER OFFER PDF =====
 export async function generateOfferPdf(order: PdfOrder, companyName?: string) {
   const doc = await setupDoc("Oferta");
