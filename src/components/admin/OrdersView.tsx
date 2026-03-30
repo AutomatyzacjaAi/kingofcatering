@@ -2060,6 +2060,29 @@ const OrdersView = () => {
     toast.success("Klient powiązany z zamówieniem");
   };
 
+  const deleteOrder = async (order: Order) => {
+    if (!confirm(`Czy na pewno chcesz usunąć zamówienie ${order.id}?`)) return;
+    try {
+      if (order.dbId) {
+        // Delete sub-items, items, food cost extras, then order
+        const { data: items } = await supabase.from("order_items").select("id").eq("order_id", order.dbId);
+        if (items && items.length > 0) {
+          const itemIds = items.map(i => i.id);
+          await supabase.from("order_item_sub_items").delete().in("order_item_id", itemIds);
+          await supabase.from("order_items").delete().eq("order_id", order.dbId);
+        }
+        await supabase.from("order_food_cost_extras").delete().eq("order_id", order.dbId);
+        const { error } = await supabase.from("orders").delete().eq("id", order.dbId);
+        if (error) throw error;
+      }
+      setOrders(prev => prev.filter(o => o.id !== order.id));
+      toast.success("Zamówienie usunięte");
+    } catch (err) {
+      console.error("Error deleting order:", err);
+      toast.error("Błąd podczas usuwania zamówienia");
+    }
+  };
+
   const updateOrderField = (orderId: string, field: Partial<Order>) => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...field } : o));
   };
