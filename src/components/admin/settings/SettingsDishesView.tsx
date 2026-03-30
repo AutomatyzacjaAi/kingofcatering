@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ExtrasTab as ExtrasTabComponent } from "./ExtrasTab";
+import { ExtrasSetsTab } from "./ExtrasSetsTab";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1416,6 +1417,7 @@ const SettingsDishesView = () => {
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [configSets, setConfigSets] = useState<ConfigSet[]>([]);
   const [platters, setPlatters] = useState<Platter[]>([]);
+  const [extrasSets, setExtrasSets] = useState<any[]>([]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -1508,6 +1510,19 @@ const SettingsDishesView = () => {
       })),
     })));
 
+    // Load extras sets
+    const { data: esSetsData } = await supabase.from("extras_sets").select("*, extras_set_items(*)").order("sort_order");
+    setExtrasSets((esSetsData ?? []).map((s: any) => ({
+      id: s.id, name: s.name, description: s.description ?? "",
+      extrasCategoryId: s.extras_category_id || null,
+      minSelections: s.min_selections ?? 1, maxSelections: s.max_selections ?? 3,
+      price: Number(s.price ?? 0), priceOnSite: s.price_on_site != null ? Number(s.price_on_site) : null,
+      sortOrder: s.sort_order ?? 0,
+      items: ((s.extras_set_items as any[]) ?? []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((i: any) => ({
+        id: i.id, extraId: i.extra_id, name: i.name || "", sortOrder: i.sort_order ?? 0,
+      })),
+    })));
+
     setLoading(false);
   }, []);
 
@@ -1548,6 +1563,9 @@ const SettingsDishesView = () => {
           <TabsTrigger value="extras" className="gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />Dodatki
           </TabsTrigger>
+          <TabsTrigger value="extras-sets" className="gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />Zestawy dodatków
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
@@ -1567,6 +1585,9 @@ const SettingsDishesView = () => {
         </TabsContent>
         <TabsContent value="extras">
           <ExtrasTabComponent extras={extras} extrasCategories={extrasCategories} reload={loadAll} />
+        </TabsContent>
+        <TabsContent value="extras-sets">
+          <ExtrasSetsTab extrasSets={extrasSets} extras={extras} extrasCategories={extrasCategories} reload={loadAll} />
         </TabsContent>
       </Tabs>
     </div>
