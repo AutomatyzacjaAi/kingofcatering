@@ -92,6 +92,28 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [notes, setNotes] = useState("");
+  const [contactType, setContactType] = useState("corporate");
+
+  // Wedding-specific fields
+  const [groomFirstName, setGroomFirstName] = useState("");
+  const [groomLastName, setGroomLastName] = useState("");
+  const [groomPhone, setGroomPhone] = useState("");
+  const [groomEmail, setGroomEmail] = useState("");
+  const [brideFirstName, setBrideFirstName] = useState("");
+  const [brideLastName, setBrideLastName] = useState("");
+  const [bridePhone, setBridePhone] = useState("");
+  const [brideEmail, setBrideEmail] = useState("");
+  const [weddingDate, setWeddingDate] = useState("");
+  const [coordinator, setCoordinator] = useState("");
+  const [venue, setVenue] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("");
+  const [guestsAdults, setGuestsAdults] = useState(0);
+  const [guestsChildren312, setGuestsChildren312] = useState(0);
+  const [guestsChildrenUnder2, setGuestsChildrenUnder2] = useState(0);
+  const [guestsSubcontractors, setGuestsSubcontractors] = useState(0);
+  const [menuStandard, setMenuStandard] = useState(0);
+  const [menuVegetarian, setMenuVegetarian] = useState(0);
+  const [menuChildren, setMenuChildren] = useState(0);
 
   useEffect(() => { fetchOffer(); }, [offerId]);
 
