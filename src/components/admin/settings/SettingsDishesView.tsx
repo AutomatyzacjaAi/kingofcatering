@@ -1173,6 +1173,238 @@ const ConfigSetsTab = ({ configSets, dishes, categories, reload }: { configSets:
   );
 };
 
+// ===== PLATTERS TAB =====
+const PlattersTab = ({ platters, dishes, categories, reload }: { platters: Platter[]; dishes: Dish[]; categories: CategoryOption[]; reload: () => void }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const [formName, setFormName] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formImage, setFormImage] = useState<string | null>(null);
+  const [formPriceNetto, setFormPriceNetto] = useState("");
+  const [formVat, setFormVat] = useState(8);
+  const [formPriceBrutto, setFormPriceBrutto] = useState("");
+  const [formPriceOnSite, setFormPriceOnSite] = useState("");
+  const [formMinQty, setFormMinQty] = useState("1");
+  const [formCategorySlug, setFormCategorySlug] = useState<string | null>(null);
+  const [formItems, setFormItems] = useState<PlatterItem[]>([]);
+  const [showDishPicker, setShowDishPicker] = useState(false);
+
+  const calcBrutto = (n: number, v: number) => +(n * (1 + v / 100)).toFixed(2);
+  const calcNetto = (b: number, v: number) => +(b / (1 + v / 100)).toFixed(2);
+  const handleNettoChange = (val: string) => { setFormPriceNetto(val); const n = parseFloat(val); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, formVat).toString()); };
+  const handleBruttoChange = (val: string) => { setFormPriceBrutto(val); const b = parseFloat(val); if (!isNaN(b)) setFormPriceNetto(calcNetto(b, formVat).toString()); };
+  const handleVatChange = (val: string) => { const vat = parseInt(val); setFormVat(vat); const n = parseFloat(formPriceNetto); if (!isNaN(n)) setFormPriceBrutto(calcBrutto(n, vat).toString()); };
+
+  const resetForm = () => {
+    setFormName(""); setFormDesc(""); setFormImage(null); setFormPriceNetto("");
+    setFormVat(8); setFormPriceBrutto(""); setFormPriceOnSite(""); setFormMinQty("1");
+    setFormCategorySlug(null); setFormItems([]); setShowForm(false); setEditingId(null);
+    setShowDishPicker(false);
+  };
+
+  const addDishToPlatter = (dish: Dish) => {
+    const item: PlatterItem = {
+      id: crypto.randomUUID(), dishId: dish.id, dishName: dish.name,
+      multiplier: 1, sortOrder: formItems.length,
+    };
+    setFormItems([...formItems, item]);
+    setShowDishPicker(false);
+  };
+
+  const startEdit = (p: Platter) => {
+    setEditingId(p.id); setFormName(p.name); setFormDesc(p.description);
+    setFormImage(p.image); setFormPriceNetto(p.priceNetto.toString()); setFormVat(p.vatRate);
+    setFormPriceBrutto(p.priceBrutto.toString()); setFormPriceOnSite(p.priceOnSite?.toString() ?? "");
+    setFormMinQty(p.minQuantity.toString()); setFormCategorySlug(p.categorySlug);
+    setFormItems([...p.items]); setShowForm(true);
+  };
+
+  const save = async () => {
+    if (!formName.trim()) { toast.error("Podaj nazwę"); return; }
+    setSaving(true);
+    const payload = {
+      name: formName.trim(), description: formDesc.trim(), image_url: formImage,
+      price_netto: parseFloat(formPriceNetto) || 0, vat_rate: formVat,
+      price_brutto: parseFloat(formPriceBrutto) || 0,
+      price_on_site: formPriceOnSite ? parseFloat(formPriceOnSite) : null,
+      min_quantity: parseInt(formMinQty) || 1, category_slug: formCategorySlug,
+    };
+
+    let platterId = editingId;
+    if (editingId) {
+      const { error } = await supabase.from("platters").update(payload).eq("id", editingId);
+      if (error) { toast.error("Błąd: " + error.message); setSaving(false); return; }
+    } else {
+      const { data, error } = await supabase.from("platters").insert(payload).select("id").single();
+      if (error || !data) { toast.error("Błąd: " + (error?.message ?? "")); setSaving(false); return; }
+      platterId = data.id;
+    }
+
+    // Replace items
+    await supabase.from("platter_items").delete().eq("platter_id", platterId!);
+    if (formItems.length > 0) {
+      const itemsPayload = formItems.map((item, i) => ({
+        platter_id: platterId!, dish_id: item.dishId, name: item.dishName,
+        multiplier: item.multiplier, sort_order: i,
+      }));
+      await supabase.from("platter_items").insert(itemsPayload);
+    }
+
+    setSaving(false);
+    toast.success(editingId ? "Patera zaktualizowana" : "Patera dodana");
+    resetForm(); reload();
+  };
+
+  const remove = async (id: string) => {
+    await supabase.from("platter_items").delete().eq("platter_id", id);
+    const { error } = await supabase.from("platters").delete().eq("id", id);
+    if (error) toast.error("Błąd: " + error.message);
+    else { toast.success("Usunięto"); reload(); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">Patery — składają się z dań z przelicznikiem ilości</p>
+        <Button size="sm" onClick={() => { resetForm(); setShowForm(true); }}>
+          <Plus className="w-4 h-4 mr-1" />Dodaj paterę
+        </Button>
+      </div>
+
+      {showForm && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">{editingId ? "Edytuj paterę" : "Nowa patera"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <ImageUpload image={formImage} onChange={setFormImage} />
+              <div className="flex-1 space-y-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Nazwa</Label>
+                  <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="np. Patera serów europejskich" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Opis</Label>
+                  <Input value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <CategorySelect value={formCategorySlug} onChange={setFormCategorySlug} categories={categories} />
+
+            <div className="grid grid-cols-5 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Cena netto</Label>
+                <Input type="number" step="0.01" value={formPriceNetto} onChange={(e) => handleNettoChange(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">VAT</Label>
+                <Select value={formVat.toString()} onValueChange={handleVatChange}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{VAT_RATES.map((r) => <SelectItem key={r} value={r.toString()}>{r}%</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena brutto</Label>
+                <Input type="number" step="0.01" value={formPriceBrutto} onChange={(e) => handleBruttoChange(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cena sala</Label>
+                <Input type="number" step="0.01" value={formPriceOnSite} onChange={(e) => setFormPriceOnSite(e.target.value)} placeholder="—" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Min. ilość</Label>
+                <Input type="number" value={formMinQty} onChange={(e) => setFormMinQty(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Platter items (dishes with multiplier) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">Zawartość patery ({formItems.length} dań)</Label>
+                <Button type="button" size="sm" variant="outline" onClick={() => setShowDishPicker(!showDishPicker)} className="text-xs">
+                  <Plus className="w-3.5 h-3.5 mr-1" />Dodaj danie
+                </Button>
+              </div>
+
+              {formItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 px-3 py-2 rounded-md bg-muted/30">
+                  <span className="text-sm font-medium flex-1">{item.dishName}</span>
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-[10px] text-muted-foreground">×</Label>
+                    <Input type="number" step="0.1" min="0.1" value={item.multiplier}
+                      onChange={(e) => setFormItems(formItems.map(fi => fi.id === item.id ? {...fi, multiplier: parseFloat(e.target.value) || 1} : fi))}
+                      className="h-7 w-16 text-xs text-center" />
+                  </div>
+                  <button onClick={() => setFormItems(formItems.filter(fi => fi.id !== item.id))}
+                    className="p-1 text-muted-foreground hover:text-destructive"><X className="w-3.5 h-3.5" /></button>
+                </div>
+              ))}
+
+              {formItems.length === 0 && !showDishPicker && (
+                <p className="text-xs text-muted-foreground text-center py-3">Dodaj dania do patery — każde z przelicznikiem ilości</p>
+              )}
+
+              {showDishPicker && (
+                <div className="p-3 rounded-lg border-2 border-dashed border-primary/30">
+                  <Label className="text-xs mb-2 block">Wybierz danie:</Label>
+                  <DishPicker dishes={dishes} selectedDishId={null} onSelect={addDishToPlatter} />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" onClick={save} disabled={!formName.trim() || saving}>
+                <Check className="w-4 h-4 mr-1" />{saving ? "Zapisuję..." : editingId ? "Zapisz" : "Dodaj paterę"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={resetForm}>Anuluj</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-2">
+        {platters.map((p) => (
+          <Card key={p.id} className="group hover:shadow-sm transition-shadow">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {p.image ? <img src={p.image} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <UtensilsCrossed className="w-5 h-5 text-primary" />}
+                  <div>
+                    <p className="text-sm font-medium">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">{p.items.length} dań{p.categorySlug ? ` · ${p.categorySlug}` : ""}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-primary">{p.priceBrutto.toFixed(2)} zł</span>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => startEdit(p)} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => remove(p.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                </div>
+              </div>
+              {/* Show items preview */}
+              {p.items.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {p.items.map(item => (
+                    <Badge key={item.id} variant="outline" className="text-[10px] px-1.5 py-0">
+                      {item.dishName} ×{item.multiplier}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+        {platters.length === 0 && !showForm && <p className="text-sm text-muted-foreground text-center py-6">Brak pater</p>}
+      </div>
+    </div>
+  );
+};
+
 // ===== MAIN =====
 const SettingsDishesView = () => {
   const [loading, setLoading] = useState(true);
