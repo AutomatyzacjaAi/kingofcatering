@@ -78,7 +78,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
     setEditingId(m.id);
     setFormName(m.name); setFormDesc(m.description);
     setFormPrice(m.price); setFormPriceOnSite(m.priceOnSite);
-    setFormConfigurable(m.isConfigurable); setFormIcon(m.icon);
+    setFormConfigurable(m.isConfigurable);
     setFormGroups(m.groups.map(g => ({
       ...g,
       items: g.items.map(i => ({ ...i })),
