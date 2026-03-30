@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ExtrasTab as ExtrasTabComponent } from "./ExtrasTab";
 import { ExtrasSetsTab } from "./ExtrasSetsTab";
+import { MenusTab } from "./MenusTab";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1418,6 +1419,7 @@ const SettingsDishesView = () => {
   const [configSets, setConfigSets] = useState<ConfigSet[]>([]);
   const [platters, setPlatters] = useState<Platter[]>([]);
   const [extrasSets, setExtrasSets] = useState<any[]>([]);
+  const [menus, setMenus] = useState<any[]>([]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -1523,6 +1525,20 @@ const SettingsDishesView = () => {
       })),
     })));
 
+    // Load menus
+    const { data: menusData } = await supabase.from("menus" as any).select("*, menu_groups(*, menu_group_items(*))").order("sort_order");
+    setMenus((menusData ?? []).map((m: any) => ({
+      id: m.id, name: m.name, description: m.description ?? "",
+      price: Number(m.price ?? 0), priceOnSite: m.price_on_site != null ? Number(m.price_on_site) : null,
+      isConfigurable: m.is_configurable ?? false, icon: m.icon ?? "📋", sortOrder: m.sort_order ?? 0,
+      groups: ((m.menu_groups as any[]) ?? []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((g: any) => ({
+        id: g.id, name: g.name, minSelections: g.min_selections ?? 1, maxSelections: g.max_selections ?? 1, sortOrder: g.sort_order ?? 0,
+        items: ((g.menu_group_items as any[]) ?? []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((i: any) => ({
+          id: i.id, dishId: i.dish_id, name: i.name, sortOrder: i.sort_order ?? 0,
+        })),
+      })),
+    })));
+
     setLoading(false);
   }, []);
 
@@ -1566,6 +1582,9 @@ const SettingsDishesView = () => {
           <TabsTrigger value="extras-sets" className="gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />Zestawy dodatków
           </TabsTrigger>
+          <TabsTrigger value="menus" className="gap-1.5">
+            <CookingPot className="w-3.5 h-3.5" />Menu
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingredients">
@@ -1588,6 +1607,9 @@ const SettingsDishesView = () => {
         </TabsContent>
         <TabsContent value="extras-sets">
           <ExtrasSetsTab extrasSets={extrasSets} extras={extras} extrasCategories={extrasCategories} reload={loadAll} />
+        </TabsContent>
+        <TabsContent value="menus">
+          <MenusTab menus={menus} dishes={dishes} reload={loadAll} />
         </TabsContent>
       </Tabs>
     </div>

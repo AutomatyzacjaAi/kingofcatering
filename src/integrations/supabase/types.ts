@@ -1313,6 +1313,130 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_group_items: {
+        Row: {
+          dish_id: string | null
+          group_id: string
+          id: string
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          dish_id?: string | null
+          group_id: string
+          id?: string
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          dish_id?: string | null
+          group_id?: string
+          id?: string
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_group_items_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_group_items_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "menu_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_groups: {
+        Row: {
+          id: string
+          max_selections: number | null
+          menu_id: string
+          min_selections: number | null
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          id?: string
+          max_selections?: number | null
+          menu_id: string
+          min_selections?: number | null
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          id?: string
+          max_selections?: number | null
+          menu_id?: string
+          min_selections?: number | null
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_groups_menu_id_fkey"
+            columns: ["menu_id"]
+            isOneToOne: false
+            referencedRelation: "menus"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menus: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_configurable: boolean
+          name: string
+          price: number
+          price_on_site: number | null
+          sort_order: number | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_configurable?: boolean
+          name: string
+          price?: number
+          price_on_site?: number | null
+          sort_order?: number | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_configurable?: boolean
+          name?: string
+          price?: number
+          price_on_site?: number | null
+          sort_order?: number | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menus_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offer_template_section_items: {
         Row: {
           description: string | null
