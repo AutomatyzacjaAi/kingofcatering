@@ -114,13 +114,16 @@ const DedicatedOffersView = () => {
     if (!formClientName.trim()) { toast.error("Podaj imię klienta"); return; }
 
     const token = generateToken();
-    const payload = {
+    const selectedTemplate = templates.find(t => t.id === formTemplateId);
+    const contactType = selectedTemplate?.contact_section_type || "corporate";
+    const payload: any = {
       template_id: formTemplateId || null,
       client_name: formClientName, client_email: formClientEmail,
       client_phone: formClientPhone, client_company: formClientCompany,
       event_name: formEventName,
       event_date_start: formDateStart || null, event_date_end: formDateEnd || null,
       notes: formNotes, token, status: "draft",
+      contact_section_type: contactType,
     };
 
     const { data: newOffer, error } = await supabase
