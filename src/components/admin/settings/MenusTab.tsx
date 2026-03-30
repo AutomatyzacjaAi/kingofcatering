@@ -218,15 +218,9 @@ export function MenusTab({ menus, dishes, reload }: Props) {
               <button onClick={resetForm}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Nazwa</Label>
-                <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="np. Menu nr 1" className="h-8 text-sm" />
-              </div>
-              <div>
-                <Label className="text-xs">Ikona</Label>
-                <Input value={formIcon} onChange={e => setFormIcon(e.target.value)} className="h-8 text-sm w-20" />
-              </div>
+            <div>
+              <Label className="text-xs">Nazwa</Label>
+              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="np. Menu nr 1" className="h-8 text-sm" />
             </div>
 
             <div>
