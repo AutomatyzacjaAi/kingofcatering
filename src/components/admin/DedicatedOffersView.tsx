@@ -176,6 +176,114 @@ const DedicatedOffersView = () => {
     fetchData();
   };
 
+  const convertToOrder = async (offer: DedicatedOffer) => {
+    if (!confirm(`Przekonwertować ofertę dla "${offer.client_name}" na zamówienie?`)) return;
+
+    try {
+      // Fetch offer sections & items
+      const { data: sections } = await supabase
+        .from("dedicated_offer_sections")
+        .select("*, dedicated_offer_items(*)")
+        .eq("offer_id", offer.id)
+        .order("sort_order");
+
+      // Fetch selections (what client picked)
+      const { data: selections } = await supabase
+        .from("dedicated_offer_selections")
+        .select("*")
+        .eq("offer_id", offer.id);
+
+      const selMap: Record<string, { selected: boolean; quantity: number }> = {};
+      selections?.forEach(s => { selMap[s.item_id] = { selected: s.selected, quantity: s.quantity }; });
+
+      // Fetch days for guest count
+      const { data: days } = await supabase
+        .from("dedicated_offer_days")
+        .select("*")
+        .eq("offer_id", offer.id)
+        .order("sort_order");
+
+      const totalGuests = days?.reduce((s, d) => s + (d.guest_count || 0), 0) || 0;
+
+      // Build order items from selected offer items
+      const orderItems: { name: string; quantity: number; price_per_unit: number; total: number; unit: string; item_type: string; sort_order: number }[] = [];
+      let sortOrder = 0;
+      let totalAmount = 0;
+
+      sections?.forEach(section => {
+        const items = (section as any).dedicated_offer_items || [];
+        items.forEach((item: any) => {
+          const sel = selMap[item.id];
+          // Include if selected or if no selections exist (include all)
+          const qty = sel ? sel.quantity : 1;
+          const isSelected = sel ? sel.selected : (selections?.length === 0);
+          if (!isSelected && selections?.length) return;
+          if (qty <= 0) return;
+
+          const itemTotal = item.price * qty;
+          totalAmount += itemTotal;
+          orderItems.push({
+            name: item.name,
+            quantity: qty,
+            price_per_unit: item.price,
+            total: itemTotal,
+            unit: item.unit_label || "szt.",
+            item_type: item.source_type || "simple",
+            sort_order: sortOrder++,
+          });
+        });
+      });
+
+      // Try to match client by email
+      let clientId: string | null = null;
+      if (offer.client_email) {
+        const { data: existing } = await supabase
+          .from("clients").select("id").eq("email", offer.client_email).limit(1).maybeSingle();
+        if (existing) clientId = existing.id;
+      }
+
+      const now = new Date();
+      const orderNumber = `KC-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
+
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          order_number: orderNumber,
+          status: "Nowe zamówienie",
+          amount: totalAmount,
+          client_id: clientId,
+          client_name: offer.client_name,
+          client_email: offer.client_email || "",
+          client_phone: offer.client_phone || "",
+          event_date: offer.event_date_start || null,
+          event_type: offer.event_name || "",
+          guest_count: totalGuests,
+          notes: offer.notes || "",
+          delivery_address: "",
+        })
+        .select("id")
+        .single();
+
+      if (orderError || !orderData) throw orderError || new Error("Brak danych zamówienia");
+
+      // Insert order items
+      if (orderItems.length > 0) {
+        await supabase.from("order_items").insert(
+          orderItems.map(item => ({ ...item, order_id: orderData.id }))
+        );
+      }
+
+      // Update offer status to mark as converted
+      await supabase.from("dedicated_offers").update({ status: "accepted" }).eq("id", offer.id);
+
+      toast.success(`Zamówienie ${orderNumber} utworzone z oferty`);
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Błąd konwersji: " + (err?.message || "Nieznany błąd"));
+    }
+  };
+
   const copyLink = (token: string) => {
     const url = `${window.location.origin}/offer/${token}`;
     navigator.clipboard.writeText(url);
