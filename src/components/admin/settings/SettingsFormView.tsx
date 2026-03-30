@@ -101,11 +101,12 @@ const SettingsFormView = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [catsRes, evtsRes, mappingsRes, exCatsRes] = await Promise.all([
+      const [catsRes, evtsRes, mappingsRes, exCatsRes, exMappingsRes] = await Promise.all([
         supabase.from("product_categories").select("*").order("sort_order", { ascending: true }),
         supabase.from("event_types").select("*").order("sort_order", { ascending: true }),
         supabase.from("event_category_mappings").select("*"),
         supabase.from("extras_categories").select("*").order("sort_order", { ascending: true }),
+        supabase.from("event_extras_category_mappings").select("*"),
       ]);
 
       if (catsRes.data) {
@@ -130,10 +131,17 @@ const SettingsFormView = () => {
           mappingsByEvent[m.event_type_id].push(m.category_id);
         });
 
+        const exMappingsByEvent: Record<string, string[]> = {};
+        ((exMappingsRes.data as any[]) || []).forEach((m: any) => {
+          if (!exMappingsByEvent[m.event_type_id]) exMappingsByEvent[m.event_type_id] = [];
+          exMappingsByEvent[m.event_type_id].push(m.extras_category_id);
+        });
+
         setEvents(evtsRes.data.map((e) => ({
           id: e.id, name: e.name,
           icon: (e.icon as LucideIconName) || "CalendarDays",
           allowedCategoryIds: mappingsByEvent[e.id] || [],
+          allowedExtrasCategoryIds: exMappingsByEvent[e.id] || [],
         })));
       }
 
