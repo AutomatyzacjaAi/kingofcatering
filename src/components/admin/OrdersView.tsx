@@ -2143,8 +2143,8 @@ const OrdersView = () => {
             item.subItems.map((sub, si) => ({
               order_item_id: insertedItem.id,
               name: sub.name,
-              quantity: sub.quantity,
-              unit: sub.unit,
+              quantity: item.type === "configurable" ? Math.round(sub.quantity * item.quantity) : sub.quantity,
+              unit: sub.unit === `×${sub.quantity}` ? "szt." : sub.unit,
               food_cost_per_unit: sub.foodCostPerUnit || 0,
               sort_order: si,
             }))
