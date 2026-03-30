@@ -910,6 +910,39 @@ export type Database = {
           },
         ]
       }
+      event_extras_category_mappings: {
+        Row: {
+          event_type_id: string
+          extras_category_id: string
+          id: string
+        }
+        Insert: {
+          event_type_id: string
+          extras_category_id: string
+          id?: string
+        }
+        Update: {
+          event_type_id?: string
+          extras_category_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_extras_category_mappings_event_type_id_fkey"
+            columns: ["event_type_id"]
+            isOneToOne: false
+            referencedRelation: "event_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_extras_category_mappings_extras_category_id_fkey"
+            columns: ["extras_category_id"]
+            isOneToOne: false
+            referencedRelation: "extras_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_types: {
         Row: {
           created_at: string
@@ -1081,6 +1114,105 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "extras_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extras_set_items: {
+        Row: {
+          extra_id: string | null
+          id: string
+          name: string | null
+          set_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          extra_id?: string | null
+          id?: string
+          name?: string | null
+          set_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          extra_id?: string | null
+          id?: string
+          name?: string | null
+          set_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extras_set_items_extra_id_fkey"
+            columns: ["extra_id"]
+            isOneToOne: false
+            referencedRelation: "extras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extras_set_items_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "extras_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extras_sets: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          extras_category_id: string | null
+          id: string
+          max_selections: number | null
+          min_selections: number | null
+          name: string
+          price: number | null
+          price_on_site: number | null
+          sort_order: number | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          extras_category_id?: string | null
+          id?: string
+          max_selections?: number | null
+          min_selections?: number | null
+          name: string
+          price?: number | null
+          price_on_site?: number | null
+          sort_order?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          extras_category_id?: string | null
+          id?: string
+          max_selections?: number | null
+          min_selections?: number | null
+          name?: string
+          price?: number | null
+          price_on_site?: number | null
+          sort_order?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extras_sets_extras_category_id_fkey"
+            columns: ["extras_category_id"]
+            isOneToOne: false
+            referencedRelation: "extras_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extras_sets_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1478,6 +1610,113 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      platter_items: {
+        Row: {
+          dish_id: string | null
+          id: string
+          multiplier: number | null
+          name: string | null
+          platter_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          dish_id?: string | null
+          id?: string
+          multiplier?: number | null
+          name?: string | null
+          platter_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          dish_id?: string | null
+          id?: string
+          multiplier?: number | null
+          name?: string | null
+          platter_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platter_items_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platter_items_platter_id_fkey"
+            columns: ["platter_id"]
+            isOneToOne: false
+            referencedRelation: "platters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platters: {
+        Row: {
+          category_slug: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          image_url: string | null
+          long_description: string | null
+          min_quantity: number | null
+          name: string
+          price_brutto: number | null
+          price_netto: number | null
+          price_on_site: number | null
+          tenant_id: string | null
+          unit_label: string | null
+          updated_at: string | null
+          vat_rate: number | null
+        }
+        Insert: {
+          category_slug?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          long_description?: string | null
+          min_quantity?: number | null
+          name: string
+          price_brutto?: number | null
+          price_netto?: number | null
+          price_on_site?: number | null
+          tenant_id?: string | null
+          unit_label?: string | null
+          updated_at?: string | null
+          vat_rate?: number | null
+        }
+        Update: {
+          category_slug?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          long_description?: string | null
+          min_quantity?: number | null
+          name?: string
+          price_brutto?: number | null
+          price_netto?: number | null
+          price_on_site?: number | null
+          tenant_id?: string | null
+          unit_label?: string | null
+          updated_at?: string | null
+          vat_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platters_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_categories: {
         Row: {

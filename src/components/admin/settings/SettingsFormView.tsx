@@ -32,6 +32,7 @@ interface EventType {
   name: string;
   icon: LucideIconName;
   allowedCategoryIds: string[];
+  allowedExtrasCategoryIds: string[];
 }
 
 const popularIcons: LucideIconName[] = [
@@ -100,11 +101,12 @@ const SettingsFormView = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [catsRes, evtsRes, mappingsRes, exCatsRes] = await Promise.all([
+      const [catsRes, evtsRes, mappingsRes, exCatsRes, exMappingsRes] = await Promise.all([
         supabase.from("product_categories").select("*").order("sort_order", { ascending: true }),
         supabase.from("event_types").select("*").order("sort_order", { ascending: true }),
         supabase.from("event_category_mappings").select("*"),
         supabase.from("extras_categories").select("*").order("sort_order", { ascending: true }),
+        supabase.from("event_extras_category_mappings").select("*"),
       ]);
 
       if (catsRes.data) {
@@ -129,10 +131,17 @@ const SettingsFormView = () => {
           mappingsByEvent[m.event_type_id].push(m.category_id);
         });
 
+        const exMappingsByEvent: Record<string, string[]> = {};
+        ((exMappingsRes.data as any[]) || []).forEach((m: any) => {
+          if (!exMappingsByEvent[m.event_type_id]) exMappingsByEvent[m.event_type_id] = [];
+          exMappingsByEvent[m.event_type_id].push(m.extras_category_id);
+        });
+
         setEvents(evtsRes.data.map((e) => ({
           id: e.id, name: e.name,
           icon: (e.icon as LucideIconName) || "CalendarDays",
           allowedCategoryIds: mappingsByEvent[e.id] || [],
+          allowedExtrasCategoryIds: exMappingsByEvent[e.id] || [],
         })));
       }
 
@@ -209,6 +218,35 @@ const SettingsFormView = () => {
         allowedCategoryIds: has
           ? e.allowedCategoryIds.filter((cid) => cid !== categoryId)
           : [...e.allowedCategoryIds, categoryId],
+      };
+    }));
+  };
+
+  const toggleExtrasCategoryForEvent = async (eventId: string, extrasCategoryId: string) => {
+    const event = events.find((e) => e.id === eventId);
+    if (!event) return;
+
+    const has = event.allowedExtrasCategoryIds.includes(extrasCategoryId);
+
+    if (has) {
+      await supabase
+        .from("event_extras_category_mappings")
+        .delete()
+        .eq("event_type_id", eventId)
+        .eq("extras_category_id", extrasCategoryId);
+    } else {
+      await supabase
+        .from("event_extras_category_mappings")
+        .insert({ event_type_id: eventId, extras_category_id: extrasCategoryId });
+    }
+
+    setEvents(events.map((e) => {
+      if (e.id !== eventId) return e;
+      return {
+        ...e,
+        allowedExtrasCategoryIds: has
+          ? e.allowedExtrasCategoryIds.filter((cid) => cid !== extrasCategoryId)
+          : [...e.allowedExtrasCategoryIds, extrasCategoryId],
       };
     }));
   };
@@ -444,6 +482,55 @@ const SettingsFormView = () => {
                           </label>
                         );
                       })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Event → extras category mappings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Kategorie dodatków dla rodzajów wydarzeń</CardTitle>
+            <CardDescription>Określ, które kategorie dodatków (usług) są widoczne dla danego typu wydarzenia</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {events.map((event) => {
+                const EventIcon = icons[event.icon];
+                return (
+                  <div key={event.id} className="p-4 rounded-lg border border-border">
+                    <div className="flex items-center gap-3 mb-3">
+                      <EventIcon className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">{event.name}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {extrasCategories.map((cat) => {
+                        const isChecked = event.allowedExtrasCategoryIds.includes(cat.id);
+                        return (
+                          <label
+                            key={cat.id}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors text-xs font-medium",
+                              isChecked
+                                ? "bg-accent border-primary/30 text-accent-foreground"
+                                : "bg-muted/20 border-border text-muted-foreground hover:bg-muted/40"
+                            )}
+                          >
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => toggleExtrasCategoryForEvent(event.id, cat.id)}
+                              className="w-3.5 h-3.5"
+                            />
+                            {cat.name}
+                          </label>
+                        );
+                      })}
+                      {extrasCategories.length === 0 && (
+                        <p className="text-xs text-muted-foreground">Brak kategorii dodatków — dodaj je powyżej</p>
+                      )}
                     </div>
                   </div>
                 );
