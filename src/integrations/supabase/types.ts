@@ -1358,6 +1358,7 @@ export type Database = {
           max_selections: number | null
           menu_id: string
           min_selections: number | null
+          multiplier: number
           name: string
           sort_order: number | null
         }
@@ -1366,6 +1367,7 @@ export type Database = {
           max_selections?: number | null
           menu_id: string
           min_selections?: number | null
+          multiplier?: number
           name: string
           sort_order?: number | null
         }
@@ -1374,6 +1376,7 @@ export type Database = {
           max_selections?: number | null
           menu_id?: string
           min_selections?: number | null
+          multiplier?: number
           name?: string
           sort_order?: number | null
         }
