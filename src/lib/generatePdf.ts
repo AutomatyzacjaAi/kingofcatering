@@ -207,6 +207,23 @@ const toRow = (item: PdfOrder["items"][0]) => [
   `${fmtNum(item.total)} PLN`,
 ];
 
+/** Build rows for an item, including indented sub-item rows */
+const toRowsWithSubs = (item: PdfOrder["items"][0]): { content: string[][]; } => {
+  const rows: string[][] = [];
+  rows.push(toRow(item));
+  if (item.subItems && item.subItems.length > 0) {
+    item.subItems.forEach(sub => {
+      rows.push([
+        `    ↳ ${sub.name}`,
+        String(sub.quantity) + " " + sub.unit,
+        "",
+        "",
+      ]);
+    });
+  }
+  return { content: rows };
+};
+
 const renderOrderTables = (
   doc: jsPDF, order: PdfOrder, startY: number,
 ): number => {
@@ -215,12 +232,27 @@ const renderOrderTables = (
 
   // Products table
   if (products.length > 0) {
+    const bodyRows: string[][] = [];
+    products.forEach(item => {
+      const { content } = toRowsWithSubs(item);
+      bodyRows.push(...content);
+    });
     autoTable(doc, {
       startY: y,
       head: [["PRODUKT", "ILOŚĆ", "CENA JEDN.", "WARTOŚĆ NETTO"]],
-      body: products.map(toRow),
+      body: bodyRows,
       ...TABLE_STYLES,
       columnStyles: ORDER_COL_STYLES,
+      didParseCell: (data: any) => {
+        if (data.section === "body" && data.column.index === 0) {
+          const text = data.cell.raw as string;
+          if (text && text.startsWith("    ↳")) {
+            data.cell.styles.textColor = [100, 100, 100];
+            data.cell.styles.fontSize = 8;
+            data.cell.styles.fontStyle = "italic";
+          }
+        }
+      },
     });
     y = getTableFinalY(doc, y + 30) + 4;
   }
@@ -233,12 +265,27 @@ const renderOrderTables = (
     doc.setTextColor(0, 0, 0);
     y += 5;
 
+    const extrasBodyRows: string[][] = [];
+    extras.forEach(item => {
+      const { content } = toRowsWithSubs(item);
+      extrasBodyRows.push(...content);
+    });
     autoTable(doc, {
       startY: y,
       head: [["DODATEK / USŁUGA", "ILOŚĆ", "CENA JEDN.", "WARTOŚĆ NETTO"]],
-      body: extras.map(toRow),
+      body: extrasBodyRows,
       ...TABLE_STYLES,
       columnStyles: ORDER_COL_STYLES,
+      didParseCell: (data: any) => {
+        if (data.section === "body" && data.column.index === 0) {
+          const text = data.cell.raw as string;
+          if (text && text.startsWith("    ↳")) {
+            data.cell.styles.textColor = [100, 100, 100];
+            data.cell.styles.fontSize = 8;
+            data.cell.styles.fontStyle = "italic";
+          }
+        }
+      },
     });
     y = getTableFinalY(doc, y + 30) + 4;
   }

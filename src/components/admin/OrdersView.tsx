@@ -372,12 +372,22 @@ const OrderDocumentView = ({ order, docType, onBack }: { order: Order; docType: 
               </TableHeader>
               <TableBody>
                 {order.items.map((item, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{fmtNum(item.pricePerUnit)} zł</TableCell>
-                    <TableCell className="text-right font-semibold">{fmtNum(item.total)} zł</TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{fmtNum(item.pricePerUnit)} zł</TableCell>
+                      <TableCell className="text-right font-semibold">{fmtNum(item.total)} zł</TableCell>
+                    </TableRow>
+                    {item.subItems && item.subItems.length > 0 && item.subItems.map((sub, si) => (
+                      <TableRow key={`${i}-sub-${si}`} className="hover:bg-transparent">
+                        <TableCell className="pl-8 text-muted-foreground text-sm">↳ {sub.name}</TableCell>
+                        <TableCell className="text-center text-muted-foreground text-sm">{sub.quantity} {sub.unit}</TableCell>
+                        <TableCell />
+                        <TableCell />
+                      </TableRow>
+                    ))}
+                  </>
                 ))}
                 {order.deliveryCost > 0 && (
                   <TableRow>
@@ -757,12 +767,22 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }:
             </TableHeader>
             <TableBody>
               {order.items.map((item, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{item.pricePerUnit.toFixed(2)} zł</TableCell>
-                  <TableCell className="text-right font-semibold">{item.total.toFixed(2)} zł</TableCell>
-                </TableRow>
+                <>
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-center">{item.quantity} {item.unit}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{item.pricePerUnit.toFixed(2)} zł</TableCell>
+                    <TableCell className="text-right font-semibold">{item.total.toFixed(2)} zł</TableCell>
+                  </TableRow>
+                  {item.subItems && item.subItems.length > 0 && item.subItems.map((sub, si) => (
+                    <TableRow key={`${i}-sub-${si}`} className="hover:bg-transparent">
+                      <TableCell className="pl-8 text-muted-foreground text-sm">↳ {sub.name}</TableCell>
+                      <TableCell className="text-center text-muted-foreground text-sm">{sub.quantity} {sub.unit}</TableCell>
+                      <TableCell />
+                      <TableCell />
+                    </TableRow>
+                  ))}
+                </>
               ))}
               <TableRow className="hover:bg-transparent border-t-2">
                 <TableCell colSpan={3} className="text-right font-semibold text-foreground">
