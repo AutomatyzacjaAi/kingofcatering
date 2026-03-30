@@ -265,12 +265,27 @@ const renderOrderTables = (
     doc.setTextColor(0, 0, 0);
     y += 5;
 
+    const extrasBodyRows: string[][] = [];
+    extras.forEach(item => {
+      const { content } = toRowsWithSubs(item);
+      extrasBodyRows.push(...content);
+    });
     autoTable(doc, {
       startY: y,
       head: [["DODATEK / USŁUGA", "ILOŚĆ", "CENA JEDN.", "WARTOŚĆ NETTO"]],
-      body: extras.map(toRow),
+      body: extrasBodyRows,
       ...TABLE_STYLES,
       columnStyles: ORDER_COL_STYLES,
+      didParseCell: (data: any) => {
+        if (data.section === "body" && data.column.index === 0) {
+          const text = data.cell.raw as string;
+          if (text && text.startsWith("    ↳")) {
+            data.cell.styles.textColor = [100, 100, 100];
+            data.cell.styles.fontSize = 8;
+            data.cell.styles.fontStyle = "italic";
+          }
+        }
+      },
     });
     y = getTableFinalY(doc, y + 30) + 4;
   }
