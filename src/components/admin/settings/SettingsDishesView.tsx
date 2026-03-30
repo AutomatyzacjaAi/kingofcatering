@@ -65,6 +65,17 @@ interface ConfigGroup {
   multiplier: number; options: ConfigGroupOption[]; sortOrder: number;
 }
 
+interface PlatterItem {
+  id: string; dishId: string | null; dishName: string; multiplier: number; sortOrder: number;
+}
+
+interface Platter {
+  id: string; name: string; description: string; longDescription: string;
+  image: string | null; priceNetto: number; vatRate: number; priceBrutto: number;
+  priceOnSite: number | null; unitLabel: string; minQuantity: number; icon: string;
+  categorySlug: string | null; items: PlatterItem[];
+}
+
 interface ConfigSet {
   id: string; name: string; description: string; longDescription: string;
   image: string | null; pricePerPerson: number; pricePerPersonOnSite: number | null; minPersons: number;
