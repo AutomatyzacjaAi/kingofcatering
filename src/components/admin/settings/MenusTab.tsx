@@ -270,6 +270,10 @@ export function MenusTab({ menus, dishes, reload }: Props) {
                         </div>
                       </>
                     )}
+                    <div className="flex items-center gap-1">
+                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Mnożnik</Label>
+                      <Input type="number" step="0.1" value={group.multiplier} onChange={e => updateGroup(gi, { multiplier: Number(e.target.value) })} className="h-7 w-16 text-xs" />
+                    </div>
                     <button onClick={() => removeGroup(gi)} className="p-1 text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
