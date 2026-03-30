@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2, Save, GripVertical, ExternalLink, Copy, CalendarDays, MapPin, Clock, Users, Check } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO, eachDayOfInterval } from "date-fns";
