@@ -72,7 +72,7 @@ const DedicatedOffersView = () => {
   const fetchData = async () => {
     const [offersRes, templatesRes] = await Promise.all([
       supabase.from("dedicated_offers").select("*").order("created_at", { ascending: false }),
-      supabase.from("offer_templates").select("id, name").order("name"),
+      supabase.from("offer_templates").select("id, name, contact_section_type").order("name"),
     ]);
     if (offersRes.data) setOffers(offersRes.data);
     if (templatesRes.data) setTemplates(templatesRes.data);
