@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Pencil, Search, X, Loader2, GripVertical, ChevronDown, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 
@@ -28,6 +27,7 @@ interface MenuGroup {
   name: string;
   minSelections: number;
   maxSelections: number;
+  multiplier: number;
   sortOrder: number;
   items: MenuGroupItem[];
 }
@@ -39,7 +39,6 @@ interface Menu {
   price: number;
   priceOnSite: number | null;
   isConfigurable: boolean;
-  icon: string;
   sortOrder: number;
   groups: MenuGroup[];
 }
@@ -63,14 +62,13 @@ export function MenusTab({ menus, dishes, reload }: Props) {
   const [formPrice, setFormPrice] = useState(0);
   const [formPriceOnSite, setFormPriceOnSite] = useState<number | null>(null);
   const [formConfigurable, setFormConfigurable] = useState(false);
-  const [formIcon, setFormIcon] = useState("📋");
   const [formGroups, setFormGroups] = useState<MenuGroup[]>([]);
 
   const filtered = menus.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
 
   const resetForm = () => {
     setFormName(""); setFormDesc(""); setFormPrice(0); setFormPriceOnSite(null);
-    setFormConfigurable(false); setFormIcon("📋");
+    setFormConfigurable(false);
     setFormGroups([]);
     setEditingId(null); setShowForm(false);
   };
@@ -79,7 +77,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
     setEditingId(m.id);
     setFormName(m.name); setFormDesc(m.description);
     setFormPrice(m.price); setFormPriceOnSite(m.priceOnSite);
-    setFormConfigurable(m.isConfigurable); setFormIcon(m.icon);
+    setFormConfigurable(m.isConfigurable);
     setFormGroups(m.groups.map(g => ({
       ...g,
       items: g.items.map(i => ({ ...i })),
@@ -93,6 +91,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
       name: "",
       minSelections: 1,
       maxSelections: 1,
+      multiplier: 1,
       sortOrder: formGroups.length,
       items: [],
     }]);
@@ -142,7 +141,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
         await supabase.from("menus" as any).update({
           name: formName, description: formDesc,
           price: formPrice, price_on_site: formPriceOnSite,
-          is_configurable: formConfigurable, icon: formIcon,
+          is_configurable: formConfigurable,
         } as any).eq("id", editingId);
 
         // Delete old groups (cascade deletes items)
@@ -151,7 +150,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
         const { data, error } = await supabase.from("menus" as any).insert({
           name: formName, description: formDesc,
           price: formPrice, price_on_site: formPriceOnSite,
-          is_configurable: formConfigurable, icon: formIcon,
+          is_configurable: formConfigurable,
         } as any).select("id").single();
         if (error || !data) { toast.error("Błąd zapisu"); setSaving(false); return; }
         menuId = (data as any).id;
@@ -165,6 +164,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
           name: g.name,
           min_selections: formConfigurable ? g.minSelections : g.items.length,
           max_selections: formConfigurable ? g.maxSelections : g.items.length,
+          multiplier: g.multiplier,
           sort_order: gi,
         } as any).select("id").single();
 
@@ -217,15 +217,9 @@ export function MenusTab({ menus, dishes, reload }: Props) {
               <button onClick={resetForm}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Nazwa</Label>
-                <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="np. Menu nr 1" className="h-8 text-sm" />
-              </div>
-              <div>
-                <Label className="text-xs">Ikona</Label>
-                <Input value={formIcon} onChange={e => setFormIcon(e.target.value)} className="h-8 text-sm w-20" />
-              </div>
+            <div>
+              <Label className="text-xs">Nazwa</Label>
+              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="np. Menu nr 1" className="h-8 text-sm" />
             </div>
 
             <div>
@@ -275,6 +269,10 @@ export function MenusTab({ menus, dishes, reload }: Props) {
                         </div>
                       </>
                     )}
+                    <div className="flex items-center gap-1">
+                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Mnożnik</Label>
+                      <Input type="number" step="0.1" value={group.multiplier} onChange={e => updateGroup(gi, { multiplier: Number(e.target.value) })} className="h-7 w-16 text-xs" />
+                    </div>
                     <button onClick={() => removeGroup(gi)} className="p-1 text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -329,7 +327,6 @@ export function MenusTab({ menus, dishes, reload }: Props) {
                 <button onClick={() => setExpandedId(expandedId === m.id ? null : m.id)} className="p-0.5 text-muted-foreground">
                   {expandedId === m.id ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
-                <span className="text-lg">{m.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{m.name}</span>
@@ -363,6 +360,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
                     <div key={g.id}>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {g.name}
+                        {g.multiplier !== 1 && <span className="ml-1 font-normal">(×{g.multiplier})</span>}
                         {m.isConfigurable && <span className="ml-1 font-normal">({g.minSelections}–{g.maxSelections} wyborów)</span>}
                       </p>
                       <div className="ml-3 space-y-0.5 mt-1">
