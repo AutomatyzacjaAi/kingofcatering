@@ -248,8 +248,7 @@ const renderOrderTables = (
           const text = data.cell.raw as string;
           if (text && text.startsWith("    ↳")) {
             data.cell.styles.textColor = [100, 100, 100];
-            data.cell.styles.fontSize = 8;
-            data.cell.styles.fontStyle = "italic";
+            data.cell.styles.fontSize = 9;
           }
         }
       },
@@ -281,8 +280,7 @@ const renderOrderTables = (
           const text = data.cell.raw as string;
           if (text && text.startsWith("    ↳")) {
             data.cell.styles.textColor = [100, 100, 100];
-            data.cell.styles.fontSize = 8;
-            data.cell.styles.fontStyle = "italic";
+            data.cell.styles.fontSize = 9;
           }
         }
       },
