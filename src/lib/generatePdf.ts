@@ -232,12 +232,27 @@ const renderOrderTables = (
 
   // Products table
   if (products.length > 0) {
+    const bodyRows: string[][] = [];
+    products.forEach(item => {
+      const { content } = toRowsWithSubs(item);
+      bodyRows.push(...content);
+    });
     autoTable(doc, {
       startY: y,
       head: [["PRODUKT", "ILOŚĆ", "CENA JEDN.", "WARTOŚĆ NETTO"]],
-      body: products.map(toRow),
+      body: bodyRows,
       ...TABLE_STYLES,
       columnStyles: ORDER_COL_STYLES,
+      didParseCell: (data: any) => {
+        if (data.section === "body" && data.column.index === 0) {
+          const text = data.cell.raw as string;
+          if (text && text.startsWith("    ↳")) {
+            data.cell.styles.textColor = [100, 100, 100];
+            data.cell.styles.fontSize = 8;
+            data.cell.styles.fontStyle = "italic";
+          }
+        }
+      },
     });
     y = getTableFinalY(doc, y + 30) + 4;
   }
