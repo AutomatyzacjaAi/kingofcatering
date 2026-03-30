@@ -57,6 +57,7 @@ interface Offer {
   event_date_end: string | null;
   status: string;
   notes: string;
+  contact_section_type: string;
 }
 
 interface Selection {
