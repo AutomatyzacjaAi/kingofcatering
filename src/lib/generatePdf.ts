@@ -146,24 +146,28 @@ const addStyledHeader = async (doc: jsPDF, title: string) => {
 type InfoLine = { label: string; value: string };
 
 const addInfoBlock = (doc: jsPDF, lines: InfoLine[], startY: number): number => {
-  let y = startY;
-  // Black left border
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(1.5);
-  const blockHeight = lines.length * 5.5;
-  doc.line(PAGE_LEFT, y - 1, PAGE_LEFT, y + blockHeight - 2);
-  doc.setLineWidth(0.2);
+  const tableBody = lines.map(line => [line.label.toUpperCase(), line.value.toUpperCase()]);
 
-  doc.setFontSize(9);
-  lines.forEach(line => {
-    doc.setFont("Roboto", "normal");
-    doc.setTextColor(0, 0, 0);
-    const labelW = doc.getTextWidth(line.label + ": ");
-    doc.text(line.label.toUpperCase() + ": ", PAGE_LEFT + 5, y);
-    doc.text(line.value.toUpperCase(), PAGE_LEFT + 5 + labelW, y);
-    y += 5.5;
+  autoTable(doc, {
+    startY,
+    body: tableBody,
+    theme: "plain" as const,
+    styles: {
+      fontSize: 9,
+      cellPadding: { top: 1.5, bottom: 1.5, left: 3, right: 3 },
+      font: "Roboto" as const,
+      textColor: [0, 0, 0] as [number, number, number],
+    },
+    columnStyles: {
+      0: { cellWidth: 35, fontStyle: "bold" as const, textColor: [80, 80, 80] as [number, number, number] },
+      1: { cellWidth: 145 },
+    },
+    tableLineColor: [0, 0, 0] as [number, number, number],
+    tableLineWidth: 0.3,
+    margin: { left: PAGE_LEFT, right: PAGE_LEFT },
   });
-  return y + 2;
+
+  return (doc as any).lastAutoTable?.finalY + 6 || startY + lines.length * 6 + 6;
 };
 
 const addFooterDate = (doc: jsPDF, y: number) => {
