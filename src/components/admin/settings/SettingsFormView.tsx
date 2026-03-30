@@ -32,6 +32,7 @@ interface EventType {
   name: string;
   icon: LucideIconName;
   allowedCategoryIds: string[];
+  allowedExtrasCategoryIds: string[];
 }
 
 const popularIcons: LucideIconName[] = [
