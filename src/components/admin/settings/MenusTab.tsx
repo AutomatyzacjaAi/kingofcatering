@@ -151,7 +151,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
         const { data, error } = await supabase.from("menus" as any).insert({
           name: formName, description: formDesc,
           price: formPrice, price_on_site: formPriceOnSite,
-          is_configurable: formConfigurable, icon: formIcon,
+          is_configurable: formConfigurable,
         } as any).select("id").single();
         if (error || !data) { toast.error("Błąd zapisu"); setSaving(false); return; }
         menuId = (data as any).id;
