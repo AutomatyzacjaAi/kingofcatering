@@ -169,8 +169,51 @@ export async function submitOrder(
   }
 
   if (orderItems.length > 0) {
-    const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+    const { data: insertedItems, error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems)
+      .select("id, sort_order");
     if (itemsError) throw itemsError;
+
+    // Insert sub-items for configurable sets
+    if (insertedItems && configurableItemsToInsert.length > 0) {
+      const subItemsToInsert: {
+        order_item_id: string;
+        name: string;
+        quantity: number;
+        unit: string;
+        sort_order: number;
+      }[] = [];
+
+      for (const cfg of configurableItemsToInsert) {
+        const product = cfg.product as import("@/data/products").ConfigurableProduct;
+        const insertedItem = insertedItems.find(ii => ii.sort_order === cfg.sortIdx);
+        if (!insertedItem) continue;
+
+        let subSort = 0;
+        for (const group of product.optionGroups) {
+          const selectedOptionIds = cfg.data.options[group.id] || [];
+          for (const optionId of selectedOptionIds) {
+            const option = group.options.find(o => o.id === optionId);
+            if (option) {
+              const subQty = Math.round(cfg.data.quantity * group.multiplier);
+              subItemsToInsert.push({
+                order_item_id: insertedItem.id,
+                name: option.name,
+                quantity: subQty,
+                unit: "szt.",
+                sort_order: subSort++,
+              });
+            }
+          }
+        }
+      }
+
+      if (subItemsToInsert.length > 0) {
+        const { error: subError } = await supabase.from("order_item_sub_items").insert(subItemsToInsert);
+        if (subError) throw subError;
+      }
+    }
   }
 
   return orderNumber;
