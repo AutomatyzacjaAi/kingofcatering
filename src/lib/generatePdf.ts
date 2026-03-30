@@ -560,7 +560,6 @@ export async function generateSummaryPdf(orders: PdfOrder[], docType: SummaryDoc
     "zamowienia": "Lista zamówień",
     "lista-zakupow": "Lista zakupów - podsumowanie",
     "lista-dan": "Lista dań - podsumowanie",
-    "food-cost": "Food cost - podsumowanie",
   };
 
   await addStyledHeader(doc, titleMap[docType]);
