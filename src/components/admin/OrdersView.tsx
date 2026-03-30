@@ -813,7 +813,7 @@ const OrderDetailView = ({ order, onBack, onEdit, onGenerateDoc, onLinkClient }:
 };
 
 // ===== DYNAMIC PRODUCT CATALOG =====
-type CatalogProduct = { id: string; name: string; unit: string; defaultPrice: number; type: OrderItem["type"]; variants?: { id: string; name: string; price: number }[]; optionGroups?: { id: string; name: string; minSelections: number; maxSelections: number; options: { id: string; name: string }[] }[] };
+type CatalogProduct = { id: string; name: string; unit: string; defaultPrice: number; type: OrderItem["type"]; variants?: { id: string; name: string; price: number }[]; optionGroups?: { id: string; name: string; minSelections: number; maxSelections: number; multiplier: number; options: { id: string; name: string }[] }[] };
 
 function useCatalogProducts() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
