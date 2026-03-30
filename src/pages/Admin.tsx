@@ -6,6 +6,7 @@ import OrdersView from "@/components/admin/OrdersView";
 import ClientsView from "@/components/admin/ClientsView";
 import DedicatedOffersView from "@/components/admin/DedicatedOffersView";
 import ReportsView from "@/components/admin/ReportsView";
+import TenantsView from "@/components/admin/TenantsView";
 import SettingsCompanyView from "@/components/admin/settings/SettingsCompanyView";
 import SettingsOrdersView from "@/components/admin/settings/SettingsOrdersView";
 import SettingsEventsView from "@/components/admin/settings/SettingsEventsView";
@@ -24,12 +25,13 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} onLogout={logout} />
+      <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} onLogout={logout} isSuperAdmin={true} />
       <main className="flex-1 p-8 overflow-auto">
         {activeSection === "orders" && <OrdersView />}
         {activeSection === "clients" && <ClientsView />}
         {activeSection === "dedicated-offers" && <DedicatedOffersView />}
         {activeSection === "reports" && <ReportsView />}
+        {activeSection === "tenants" && <TenantsView />}
         {activeSection === "settings-company" && <SettingsCompanyView />}
         {activeSection === "settings-orders" && <SettingsOrdersView />}
         {activeSection === "settings-events" && <SettingsEventsView />}

@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import ClientOffer from "./pages/ClientOffer";
+import TenantLogin from "./pages/TenantLogin";
+import TenantAdmin from "./pages/TenantAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/offer/:token" element={<ClientOffer />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/t/:slug/login" element={<TenantLogin />} />
+          <Route path="/t/:slug/admin" element={<TenantAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

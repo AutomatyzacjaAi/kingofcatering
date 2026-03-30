@@ -3,12 +3,13 @@ import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, Shoppin
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AdminSection = "orders" | "clients" | "dedicated-offers" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
+export type AdminSection = "orders" | "clients" | "dedicated-offers" | "reports" | "tenants" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
   onSectionChange: (section: AdminSection) => void;
   onLogout?: () => void;
+  isSuperAdmin?: boolean;
 }
 
 const mainNavItems: { id: "orders" | "clients" | "dedicated-offers" | "reports"; icon: typeof ClipboardList; label: string }[] = [
@@ -28,7 +29,7 @@ const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: strin
   { id: "settings-delivery", icon: Truck, label: "Strefy dostaw" },
 ];
 
-const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebarProps) => {
+const AdminSidebar = ({ activeSection, onSectionChange, onLogout, isSuperAdmin = false }: AdminSidebarProps) => {
   const isSettingsActive = activeSection.startsWith("settings-");
   const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
   const [companyName, setCompanyName] = useState("Panel Admin");
@@ -95,6 +96,22 @@ const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebar
             {item.label}
           </button>
         ))}
+
+        {/* Super admin: Tenants */}
+        {isSuperAdmin && (
+          <button
+            onClick={() => onSectionChange("tenants")}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              activeSection === "tenants"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <Building2 className="w-4 h-4" />
+            Firmy
+          </button>
+        )}
 
         {/* Settings with accordion */}
         <button
