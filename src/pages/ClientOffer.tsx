@@ -160,7 +160,8 @@ const ClientOffer = () => {
       .single();
 
     if (!offerData) { setNotFound(true); setLoading(false); return; }
-    setOffer(offerData as any);
+    const od = offerData as any;
+    setOffer(od);
 
     const fullName = offerData.client_name || "";
     const nameParts = fullName.split(" ");
@@ -169,8 +170,29 @@ const ClientOffer = () => {
     setClientCompany(offerData.client_company || "");
     setClientEmail(offerData.client_email || "");
     setClientPhone(offerData.client_phone || "");
-    setClientNip((offerData as any).client_nip || "");
-    setClientAddress((offerData as any).client_address || "");
+    setClientNip(od.client_nip || "");
+    setClientAddress(od.client_address || "");
+
+    // Wedding fields
+    setGroomFirstName(od.groom_first_name || "");
+    setGroomLastName(od.groom_last_name || "");
+    setGroomPhone(od.groom_phone || "");
+    setGroomEmail(od.groom_email || "");
+    setBrideFirstName(od.bride_first_name || "");
+    setBrideLastName(od.bride_last_name || "");
+    setBridePhone(od.bride_phone || "");
+    setBrideEmail(od.bride_email || "");
+    setWeddingDate(od.wedding_date || "");
+    setCoordinator(od.coordinator || "");
+    setVenue(od.venue || "");
+    setArrivalTime(od.arrival_time || "");
+    setGuestsAdults(od.guests_adults || 0);
+    setGuestsChildren312(od.guests_children_3_12 || 0);
+    setGuestsChildrenUnder2(od.guests_children_under_2 || 0);
+    setGuestsSubcontractors(od.guests_subcontractors || 0);
+    setMenuStandard(od.menu_standard || 0);
+    setMenuVegetarian(od.menu_vegetarian || 0);
+    setMenuChildren(od.menu_children || 0);
 
     if (offerData.status === "draft" || offerData.status === "sent") {
       await supabase.from("dedicated_offers").update({ status: "viewed" }).eq("id", offerData.id);
