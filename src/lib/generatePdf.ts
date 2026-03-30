@@ -34,15 +34,27 @@ export interface PdfOrder {
 let fontBase64: string | null = null;
 let fontBoldBase64: string | null = null;
 
+async function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
 async function loadFont(): Promise<string> {
   if (fontBase64) return fontBase64;
   const response = await fetch("/fonts/Roboto-Regular.ttf");
   const buffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  fontBase64 = btoa(binary);
+  fontBase64 = await arrayBufferToBase64(buffer);
   return fontBase64;
+}
+
+async function loadBoldFont(): Promise<string> {
+  if (fontBoldBase64) return fontBoldBase64;
+  const response = await fetch("/fonts/Roboto-Bold.ttf");
+  const buffer = await response.arrayBuffer();
+  fontBoldBase64 = await arrayBufferToBase64(buffer);
+  return fontBoldBase64;
 }
 
 // ===== Logo loading =====
