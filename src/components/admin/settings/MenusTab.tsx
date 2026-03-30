@@ -28,6 +28,7 @@ interface MenuGroup {
   name: string;
   minSelections: number;
   maxSelections: number;
+  multiplier: number;
   sortOrder: number;
   items: MenuGroupItem[];
 }

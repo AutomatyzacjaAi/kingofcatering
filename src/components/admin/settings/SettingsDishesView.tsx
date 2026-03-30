@@ -1532,7 +1532,7 @@ const SettingsDishesView = () => {
       price: Number(m.price ?? 0), priceOnSite: m.price_on_site != null ? Number(m.price_on_site) : null,
       isConfigurable: m.is_configurable ?? false, icon: m.icon ?? "📋", sortOrder: m.sort_order ?? 0,
       groups: ((m.menu_groups as any[]) ?? []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((g: any) => ({
-        id: g.id, name: g.name, minSelections: g.min_selections ?? 1, maxSelections: g.max_selections ?? 1, sortOrder: g.sort_order ?? 0,
+        id: g.id, name: g.name, minSelections: g.min_selections ?? 1, maxSelections: g.max_selections ?? 1, multiplier: Number(g.multiplier ?? 1), sortOrder: g.sort_order ?? 0,
         items: ((g.menu_group_items as any[]) ?? []).sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((i: any) => ({
           id: i.id, dishId: i.dish_id, name: i.name, sortOrder: i.sort_order ?? 0,
         })),
