@@ -41,6 +41,7 @@ const SettingsCompanyView = () => {
         setLogoUrl((data as any).logo_url || null);
         setFaviconUrl((data as any).favicon_url || null);
         setPrivacyPolicyUrl((data as any).privacy_policy_url || "");
+        setPrimaryColor((data as any).primary_color || "#000000");
       } else if (error && error.code === "PGRST116") {
         // No row yet — will insert on save
       }
