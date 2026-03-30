@@ -142,7 +142,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
         await supabase.from("menus" as any).update({
           name: formName, description: formDesc,
           price: formPrice, price_on_site: formPriceOnSite,
-          is_configurable: formConfigurable, icon: formIcon,
+          is_configurable: formConfigurable,
         } as any).eq("id", editingId);
 
         // Delete old groups (cascade deletes items)
