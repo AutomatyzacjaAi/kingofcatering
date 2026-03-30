@@ -122,7 +122,7 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     const { data: offerData } = await supabase.from("dedicated_offers").select("*").eq("id", offerId).single();
     if (!offerData) { setLoading(false); return; }
 
-    setOffer(offerData);
+    setOffer(offerData as any);
     setClientName(offerData.client_name);
     setClientEmail(offerData.client_email || "");
     setClientPhone(offerData.client_phone || "");
@@ -133,6 +133,29 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     setDateStart(offerData.event_date_start || "");
     setDateEnd(offerData.event_date_end || "");
     setNotes(offerData.notes || "");
+    setContactType((offerData as any).contact_section_type || "corporate");
+
+    // Wedding fields
+    const od = offerData as any;
+    setGroomFirstName(od.groom_first_name || "");
+    setGroomLastName(od.groom_last_name || "");
+    setGroomPhone(od.groom_phone || "");
+    setGroomEmail(od.groom_email || "");
+    setBrideFirstName(od.bride_first_name || "");
+    setBrideLastName(od.bride_last_name || "");
+    setBridePhone(od.bride_phone || "");
+    setBrideEmail(od.bride_email || "");
+    setWeddingDate(od.wedding_date || "");
+    setCoordinator(od.coordinator || "");
+    setVenue(od.venue || "");
+    setArrivalTime(od.arrival_time || "");
+    setGuestsAdults(od.guests_adults || 0);
+    setGuestsChildren312(od.guests_children_3_12 || 0);
+    setGuestsChildrenUnder2(od.guests_children_under_2 || 0);
+    setGuestsSubcontractors(od.guests_subcontractors || 0);
+    setMenuStandard(od.menu_standard || 0);
+    setMenuVegetarian(od.menu_vegetarian || 0);
+    setMenuChildren(od.menu_children || 0);
 
     const { data: daysData } = await supabase
       .from("dedicated_offer_days")
