@@ -1419,6 +1419,7 @@ const SettingsDishesView = () => {
   const [configSets, setConfigSets] = useState<ConfigSet[]>([]);
   const [platters, setPlatters] = useState<Platter[]>([]);
   const [extrasSets, setExtrasSets] = useState<any[]>([]);
+  const [menus, setMenus] = useState<any[]>([]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
