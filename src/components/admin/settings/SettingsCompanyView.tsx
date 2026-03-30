@@ -8,6 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Upload, X, Image } from "lucide-react";
 
+function isLightColor(hex: string): boolean {
+  try {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+  } catch {
+    return false;
+  }
+}
+
 const SettingsCompanyView = () => {
   const [settingsId, setSettingsId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("");
@@ -19,6 +30,7 @@ const SettingsCompanyView = () => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#000000");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -40,6 +52,7 @@ const SettingsCompanyView = () => {
         setLogoUrl((data as any).logo_url || null);
         setFaviconUrl((data as any).favicon_url || null);
         setPrivacyPolicyUrl((data as any).privacy_policy_url || "");
+        setPrimaryColor((data as any).primary_color || "#000000");
       } else if (error && error.code === "PGRST116") {
         // No row yet — will insert on save
       }
@@ -124,6 +137,7 @@ const SettingsCompanyView = () => {
       logo_url: logoUrl,
       favicon_url: faviconUrl,
       privacy_policy_url: privacyPolicyUrl || null,
+      primary_color: primaryColor,
     };
 
     let error;
@@ -293,6 +307,40 @@ const SettingsCompanyView = () => {
           </CardContent>
         </Card>
 
+        {/* Brand color */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Kolor marki</CardTitle>
+            <CardDescription>Główny kolor przycisków i akcentów w formularzu i panelu klienta</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-12 h-12 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-lg [&::-webkit-color-swatch]:border-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <Input
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  className="w-32 font-mono text-sm uppercase"
+                  maxLength={7}
+                />
+                <p className="text-xs text-muted-foreground">Kolor HEX, np. #FF5500</p>
+              </div>
+              <div
+                className="ml-4 px-6 py-2 rounded-lg text-sm font-medium"
+                style={{ backgroundColor: primaryColor, color: isLightColor(primaryColor) ? '#111' : '#fff' }}
+              >
+                Podgląd przycisku
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Button className="w-full sm:w-auto" onClick={handleSave} disabled={saving}>
           {saving ? "Zapisywanie..." : "Zapisz zmiany"}
         </Button>
