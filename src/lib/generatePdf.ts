@@ -100,9 +100,11 @@ async function loadLogo(): Promise<typeof cachedLogoData> {
 
 async function setupDoc(title: string): Promise<jsPDF> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const base64 = await loadFont();
+  const [base64, boldBase64] = await Promise.all([loadFont(), loadBoldFont()]);
   doc.addFileToVFS("Roboto-Regular.ttf", base64);
   doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+  doc.addFileToVFS("Roboto-Bold.ttf", boldBase64);
+  doc.addFont("Roboto-Bold.ttf", "Roboto", "bold");
   doc.setFont("Roboto", "normal");
   return doc;
 }
