@@ -362,6 +362,12 @@ const DedicatedOffersView = () => {
                           <SelectItem value="rejected">Odrzucona</SelectItem>
                         </SelectContent>
                       </Select>
+                      {offer.status === "accepted" && (
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => convertToOrder(offer)}>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          Zamówienie
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => copyLink(offer.token)}>
                         <Copy className="w-4 h-4" />
                       </Button>
