@@ -3,7 +3,7 @@ import { ClipboardList, Users, Settings, LogOut, ChevronDown, Building2, Shoppin
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AdminSection = "orders" | "clients" | "dedicated-offers" | "reports" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
+export type AdminSection = "orders" | "clients" | "dedicated-offers" | "reports" | "tenants" | "settings-company" | "settings-orders" | "settings-events" | "settings-calendar" | "settings-dishes" | "settings-form" | "settings-delivery";
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
