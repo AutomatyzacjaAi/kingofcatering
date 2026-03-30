@@ -542,55 +542,172 @@ const ClientOffer = () => {
         {/* ─── Contact form ─── */}
         <div className="mt-6 bg-white border border-neutral-200 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-neutral-100">
-            <h3 className="font-semibold text-neutral-900 text-[15px]">Dane kontaktowe</h3>
+            <h3 className="font-semibold text-neutral-900 text-[15px]">
+              {offer?.contact_section_type === "wedding" ? "Dane podstawowe" : "Dane kontaktowe"}
+            </h3>
           </div>
           <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
-                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jan" className="border-neutral-200" />
-              </div>
-              <div>
-                <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Kowalski" className="border-neutral-200" />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Email</Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jan@firma.pl" className="border-neutral-200" />
-            </div>
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
-              <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+48 000 000 000" className="border-neutral-200" />
-            </div>
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Typ klienta</Label>
-              <Select value={clientType} onValueChange={setClientType}>
-                <SelectTrigger className="border-neutral-200">
-                  <SelectValue placeholder="Wybierz typ klienta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="firma">Firma</SelectItem>
-                  <SelectItem value="osoba_prywatna">Osoba prywatna</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {clientType === "firma" && (
+            {offer?.contact_section_type === "wedding" ? (
+              /* ─── Wedding contact form ─── */
               <>
-                <div>
-                  <Label className="text-xs text-neutral-500 mb-1.5">Nazwa firmy</Label>
-                  <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} className="border-neutral-200" />
+                <p className="text-sm font-semibold text-neutral-700">Pan Młody</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
+                    <Input value={groomFirstName} onChange={(e) => setGroomFirstName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
+                    <Input value={groomLastName} onChange={(e) => setGroomLastName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
+                    <Input value={groomPhone} onChange={(e) => setGroomPhone(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">E-mail</Label>
+                    <Input value={groomEmail} onChange={(e) => setGroomEmail(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+
+                <p className="text-sm font-semibold text-neutral-700 pt-2">Pani Młoda</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
+                    <Input value={brideFirstName} onChange={(e) => setBrideFirstName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
+                    <Input value={brideLastName} onChange={(e) => setBrideLastName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
+                    <Input value={bridePhone} onChange={(e) => setBridePhone(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">E-mail</Label>
+                    <Input value={brideEmail} onChange={(e) => setBrideEmail(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Adres / Miejsce</Label>
+                    <Input value={venue} onChange={(e) => setVenue(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Data ślubu</Label>
+                    <Input type="date" value={weddingDate} onChange={(e) => setWeddingDate(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Koordynator</Label>
+                    <Input value={coordinator} onChange={(e) => setCoordinator(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Godzina przybycia</Label>
+                    <Input type="time" value={arrivalTime} onChange={(e) => setArrivalTime(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+
+                <p className="text-sm font-semibold text-neutral-700 pt-2">Liczba gości do rozliczenia</p>
+                <div className="grid grid-cols-4 gap-3">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Osoby dorosłe</Label>
+                    <Input type="number" value={guestsAdults} onChange={(e) => setGuestsAdults(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Dzieci (3–12 lat)</Label>
+                    <Input type="number" value={guestsChildren312} onChange={(e) => setGuestsChildren312(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Dzieci do lat dwóch</Label>
+                    <Input type="number" value={guestsChildrenUnder2} onChange={(e) => setGuestsChildrenUnder2(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Podwykonawcy</Label>
+                    <Input type="number" value={guestsSubcontractors} onChange={(e) => setGuestsSubcontractors(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-neutral-900">
+                  Razem (do rozliczenia): {guestsAdults + guestsChildren312 + guestsChildrenUnder2 + guestsSubcontractors}
+                </p>
+
+                <p className="text-sm font-semibold text-neutral-700 pt-2">Menu kuchnia uwzględniające diety</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Podstawowe menu</Label>
+                    <Input type="number" value={menuStandard} onChange={(e) => setMenuStandard(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Wegetarianie / Weganie</Label>
+                    <Input type="number" value={menuVegetarian} onChange={(e) => setMenuVegetarian(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Dzieci</Label>
+                    <Input type="number" value={menuChildren} onChange={(e) => setMenuChildren(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-neutral-900">
+                  Razem: {menuStandard + menuVegetarian + menuChildren}
+                </p>
+              </>
+            ) : (
+              /* ─── Corporate contact form ─── */
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jan" className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Kowalski" className="border-neutral-200" />
+                  </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-neutral-500 mb-1.5">NIP</Label>
-                  <Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} className="border-neutral-200" />
+                  <Label className="text-xs text-neutral-500 mb-1.5">Email</Label>
+                  <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jan@firma.pl" className="border-neutral-200" />
+                </div>
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
+                  <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+48 000 000 000" className="border-neutral-200" />
+                </div>
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1.5">Typ klienta</Label>
+                  <Select value={clientType} onValueChange={setClientType}>
+                    <SelectTrigger className="border-neutral-200">
+                      <SelectValue placeholder="Wybierz typ klienta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="firma">Firma</SelectItem>
+                      <SelectItem value="osoba_prywatna">Osoba prywatna</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {clientType === "firma" && (
+                  <>
+                    <div>
+                      <Label className="text-xs text-neutral-500 mb-1.5">Nazwa firmy</Label>
+                      <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} className="border-neutral-200" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-neutral-500 mb-1.5">NIP</Label>
+                      <Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} className="border-neutral-200" />
+                    </div>
+                  </>
+                )}
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1.5">Adres</Label>
+                  <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} className="border-neutral-200" />
                 </div>
               </>
             )}
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Adres</Label>
-              <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} className="border-neutral-200" />
-            </div>
           </div>
         </div>
 
