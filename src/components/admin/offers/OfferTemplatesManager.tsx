@@ -253,6 +253,18 @@ const OfferTemplatesManager = () => {
               <Label>Typ wydarzenia</Label>
               <Input value={formEventType} onChange={(e) => setFormEventType(e.target.value)} placeholder="np. Konferencja" />
             </div>
+            <div>
+              <Label>Typ sekcji kontaktowej</Label>
+              <Select value={formContactType} onValueChange={setFormContactType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="corporate">🏢 Firmowy / Konferencja</SelectItem>
+                  <SelectItem value="wedding">🤵 Wesele / Impreza okolicznościowa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="border-t border-border pt-4">
               <div className="flex items-center justify-between mb-3">
