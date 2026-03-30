@@ -63,7 +63,6 @@ export function MenusTab({ menus, dishes, reload }: Props) {
   const [formPrice, setFormPrice] = useState(0);
   const [formPriceOnSite, setFormPriceOnSite] = useState<number | null>(null);
   const [formConfigurable, setFormConfigurable] = useState(false);
-  const [formIcon, setFormIcon] = useState("📋");
   const [formGroups, setFormGroups] = useState<MenuGroup[]>([]);
 
   const filtered = menus.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
