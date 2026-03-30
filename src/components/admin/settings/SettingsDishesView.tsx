@@ -1494,6 +1494,20 @@ const SettingsDishesView = () => {
       foodCost: Number(e.food_cost ?? 0),
     })));
 
+    // Load platters
+    const { data: platterData } = await supabase.from("platters").select("*, platter_items(*)").order("created_at");
+    setPlatters((platterData ?? []).map((p: any) => ({
+      id: p.id, name: p.name, description: p.description ?? "", longDescription: p.long_description ?? "",
+      image: p.image_url, priceNetto: Number(p.price_netto), vatRate: p.vat_rate, priceBrutto: Number(p.price_brutto),
+      priceOnSite: p.price_on_site != null ? Number(p.price_on_site) : null,
+      unitLabel: p.unit_label ?? "szt.", minQuantity: p.min_quantity ?? 1,
+      icon: p.icon ?? "🍽️", categorySlug: p.category_slug,
+      items: ((p.platter_items as any[]) ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((item: any) => ({
+        id: item.id, dishId: item.dish_id, dishName: item.name || "",
+        multiplier: Number(item.multiplier ?? 1), sortOrder: item.sort_order,
+      })),
+    })));
+
     setLoading(false);
   }, []);
 
