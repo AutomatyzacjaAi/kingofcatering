@@ -315,12 +315,28 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     setSaving(true);
 
     // 1. Update offer metadata
-    await supabase.from("dedicated_offers").update({
+    const updatePayload: any = {
       client_name: clientName, client_email: clientEmail, client_phone: clientPhone,
       client_company: clientCompany, client_nip: clientNip, client_address: clientAddress,
       event_name: eventName,
       event_date_start: dateStart || null, event_date_end: dateEnd || null, notes,
-    } as any).eq("id", offer.id);
+      contact_section_type: contactType,
+    };
+
+    if (contactType === "wedding") {
+      Object.assign(updatePayload, {
+        groom_first_name: groomFirstName, groom_last_name: groomLastName,
+        groom_phone: groomPhone, groom_email: groomEmail,
+        bride_first_name: brideFirstName, bride_last_name: brideLastName,
+        bride_phone: bridePhone, bride_email: brideEmail,
+        wedding_date: weddingDate, coordinator, venue, arrival_time: arrivalTime,
+        guests_adults: guestsAdults, guests_children_3_12: guestsChildren312,
+        guests_children_under_2: guestsChildrenUnder2, guests_subcontractors: guestsSubcontractors,
+        menu_standard: menuStandard, menu_vegetarian: menuVegetarian, menu_children: menuChildren,
+      });
+    }
+
+    await supabase.from("dedicated_offers").update(updatePayload).eq("id", offer.id);
 
     // 2. Delete old days, sections (cascade)
     await supabase.from("dedicated_offer_days").delete().eq("offer_id", offer.id);
