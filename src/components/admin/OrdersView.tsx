@@ -2222,11 +2222,8 @@ const OrdersView = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((order) => {
-              const productItems = order.items.filter(i => i.type !== "extra" && i.type !== "service");
-              const extraItems = order.items.filter(i => i.type === "extra" || i.type === "service");
-              return (
-              <TableRow key={order.id} className="cursor-pointer align-top" onClick={() => openDetail(order)}>
+            {filtered.map((order) => (
+              <TableRow key={order.id} className="cursor-pointer" onClick={() => openDetail(order)}>
                 <TableCell className="font-mono text-sm text-muted-foreground">{order.id}</TableCell>
                 <TableCell>
                   <div>
@@ -2241,33 +2238,6 @@ const OrdersView = () => {
                   />
                 </TableCell>
                 <TableCell className="text-muted-foreground">{order.date}</TableCell>
-                <TableCell>
-                  <div className="space-y-1.5">
-                    {productItems.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Produkty</p>
-                        {productItems.map((item, idx) => (
-                          <p key={idx} className="text-xs text-foreground leading-relaxed">
-                            {item.name} <span className="text-muted-foreground">×{item.quantity}</span>
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                    {extraItems.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Dodatki</p>
-                        {extraItems.map((item, idx) => (
-                          <p key={idx} className="text-xs text-foreground leading-relaxed">
-                            {item.name} <span className="text-muted-foreground">×{item.quantity}</span>
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                    {order.items.length === 0 && (
-                      <p className="text-xs text-muted-foreground italic">Brak pozycji</p>
-                    )}
-                  </div>
-                </TableCell>
                 <TableCell>
                   <InlineAmountInput
                     value={order.amountNum}
@@ -2294,8 +2264,7 @@ const OrdersView = () => {
                   </div>
                 </TableCell>
               </TableRow>
-              );
-            })}
+            ))}
           </TableBody>
         </Table>
       </div>
