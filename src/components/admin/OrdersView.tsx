@@ -906,9 +906,10 @@ const SubItemSelector = ({ product, onConfirm, onCancel }: {
       const subs: OrderItem["subItems"] = [];
       for (const g of product.optionGroups!) {
         const ids = selectedOptions[g.id] || [];
+        const mult = g.multiplier || 1;
         for (const id of ids) {
           const opt = g.options.find(o => o.id === id);
-          if (opt) subs!.push({ name: `${g.name}: ${opt.name}`, quantity: 1, unit: "szt." });
+          if (opt) subs!.push({ name: `${g.name}: ${opt.name}`, quantity: mult, unit: `×${mult}` });
         }
       }
       onConfirm(subs);
