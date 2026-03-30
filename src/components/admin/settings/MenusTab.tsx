@@ -361,6 +361,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
                     <div key={g.id}>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {g.name}
+                        {g.multiplier !== 1 && <span className="ml-1 font-normal">(×{g.multiplier})</span>}
                         {m.isConfigurable && <span className="ml-1 font-normal">({g.minSelections}–{g.maxSelections} wyborów)</span>}
                       </p>
                       <div className="ml-3 space-y-0.5 mt-1">
