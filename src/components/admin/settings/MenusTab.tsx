@@ -165,6 +165,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
           name: g.name,
           min_selections: formConfigurable ? g.minSelections : g.items.length,
           max_selections: formConfigurable ? g.maxSelections : g.items.length,
+          multiplier: g.multiplier,
           sort_order: gi,
         } as any).select("id").single();
 
