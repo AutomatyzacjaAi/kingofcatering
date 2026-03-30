@@ -57,6 +57,7 @@ interface Offer {
   event_date_end: string | null;
   status: string;
   notes: string;
+  contact_section_type: string;
 }
 
 interface Selection {
@@ -110,6 +111,27 @@ const ClientOffer = () => {
   const [clientAddress, setClientAddress] = useState("");
   const [clientType, setClientType] = useState("firma");
 
+  // Wedding fields
+  const [groomFirstName, setGroomFirstName] = useState("");
+  const [groomLastName, setGroomLastName] = useState("");
+  const [groomPhone, setGroomPhone] = useState("");
+  const [groomEmail, setGroomEmail] = useState("");
+  const [brideFirstName, setBrideFirstName] = useState("");
+  const [brideLastName, setBrideLastName] = useState("");
+  const [bridePhone, setBridePhone] = useState("");
+  const [brideEmail, setBrideEmail] = useState("");
+  const [weddingDate, setWeddingDate] = useState("");
+  const [coordinator, setCoordinator] = useState("");
+  const [venue, setVenue] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("");
+  const [guestsAdults, setGuestsAdults] = useState(0);
+  const [guestsChildren312, setGuestsChildren312] = useState(0);
+  const [guestsChildrenUnder2, setGuestsChildrenUnder2] = useState(0);
+  const [guestsSubcontractors, setGuestsSubcontractors] = useState(0);
+  const [menuStandard, setMenuStandard] = useState(0);
+  const [menuVegetarian, setMenuVegetarian] = useState(0);
+  const [menuChildren, setMenuChildren] = useState(0);
+
   // Per-day editable
   const [dayLocations, setDayLocations] = useState<Record<string, string>>({});
   const [dayGuestCounts, setDayGuestCounts] = useState<Record<string, number>>({});
@@ -138,7 +160,8 @@ const ClientOffer = () => {
       .single();
 
     if (!offerData) { setNotFound(true); setLoading(false); return; }
-    setOffer(offerData as any);
+    const od = offerData as any;
+    setOffer(od);
 
     const fullName = offerData.client_name || "";
     const nameParts = fullName.split(" ");
@@ -147,8 +170,29 @@ const ClientOffer = () => {
     setClientCompany(offerData.client_company || "");
     setClientEmail(offerData.client_email || "");
     setClientPhone(offerData.client_phone || "");
-    setClientNip((offerData as any).client_nip || "");
-    setClientAddress((offerData as any).client_address || "");
+    setClientNip(od.client_nip || "");
+    setClientAddress(od.client_address || "");
+
+    // Wedding fields
+    setGroomFirstName(od.groom_first_name || "");
+    setGroomLastName(od.groom_last_name || "");
+    setGroomPhone(od.groom_phone || "");
+    setGroomEmail(od.groom_email || "");
+    setBrideFirstName(od.bride_first_name || "");
+    setBrideLastName(od.bride_last_name || "");
+    setBridePhone(od.bride_phone || "");
+    setBrideEmail(od.bride_email || "");
+    setWeddingDate(od.wedding_date || "");
+    setCoordinator(od.coordinator || "");
+    setVenue(od.venue || "");
+    setArrivalTime(od.arrival_time || "");
+    setGuestsAdults(od.guests_adults || 0);
+    setGuestsChildren312(od.guests_children_3_12 || 0);
+    setGuestsChildrenUnder2(od.guests_children_under_2 || 0);
+    setGuestsSubcontractors(od.guests_subcontractors || 0);
+    setMenuStandard(od.menu_standard || 0);
+    setMenuVegetarian(od.menu_vegetarian || 0);
+    setMenuChildren(od.menu_children || 0);
 
     if (offerData.status === "draft" || offerData.status === "sent") {
       await supabase.from("dedicated_offers").update({ status: "viewed" }).eq("id", offerData.id);
@@ -220,14 +264,29 @@ const ClientOffer = () => {
 
     const clientName = `${firstName} ${lastName}`.trim();
 
-    await supabase.from("dedicated_offers").update({
+    const updatePayload: any = {
       client_name: clientName,
       client_company: clientCompany,
       client_email: clientEmail,
       client_phone: clientPhone,
       client_nip: clientNip,
       client_address: clientAddress,
-    } as any).eq("id", offer.id);
+    };
+
+    if (offer.contact_section_type === "wedding") {
+      Object.assign(updatePayload, {
+        groom_first_name: groomFirstName, groom_last_name: groomLastName,
+        groom_phone: groomPhone, groom_email: groomEmail,
+        bride_first_name: brideFirstName, bride_last_name: brideLastName,
+        bride_phone: bridePhone, bride_email: brideEmail,
+        wedding_date: weddingDate, coordinator, venue, arrival_time: arrivalTime,
+        guests_adults: guestsAdults, guests_children_3_12: guestsChildren312,
+        guests_children_under_2: guestsChildrenUnder2, guests_subcontractors: guestsSubcontractors,
+        menu_standard: menuStandard, menu_vegetarian: menuVegetarian, menu_children: menuChildren,
+      });
+    }
+
+    await supabase.from("dedicated_offers").update(updatePayload).eq("id", offer.id);
 
     for (const day of days) {
       await supabase.from("dedicated_offer_days").update({
@@ -483,55 +542,172 @@ const ClientOffer = () => {
         {/* ─── Contact form ─── */}
         <div className="mt-6 bg-white border border-neutral-200 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-neutral-100">
-            <h3 className="font-semibold text-neutral-900 text-[15px]">Dane kontaktowe</h3>
+            <h3 className="font-semibold text-neutral-900 text-[15px]">
+              {offer?.contact_section_type === "wedding" ? "Dane podstawowe" : "Dane kontaktowe"}
+            </h3>
           </div>
           <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
-                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jan" className="border-neutral-200" />
-              </div>
-              <div>
-                <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Kowalski" className="border-neutral-200" />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Email</Label>
-              <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jan@firma.pl" className="border-neutral-200" />
-            </div>
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
-              <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+48 000 000 000" className="border-neutral-200" />
-            </div>
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Typ klienta</Label>
-              <Select value={clientType} onValueChange={setClientType}>
-                <SelectTrigger className="border-neutral-200">
-                  <SelectValue placeholder="Wybierz typ klienta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="firma">Firma</SelectItem>
-                  <SelectItem value="osoba_prywatna">Osoba prywatna</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {clientType === "firma" && (
+            {offer?.contact_section_type === "wedding" ? (
+              /* ─── Wedding contact form ─── */
               <>
-                <div>
-                  <Label className="text-xs text-neutral-500 mb-1.5">Nazwa firmy</Label>
-                  <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} className="border-neutral-200" />
+                <p className="text-sm font-semibold text-neutral-700">Pan Młody</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
+                    <Input value={groomFirstName} onChange={(e) => setGroomFirstName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
+                    <Input value={groomLastName} onChange={(e) => setGroomLastName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
+                    <Input value={groomPhone} onChange={(e) => setGroomPhone(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">E-mail</Label>
+                    <Input value={groomEmail} onChange={(e) => setGroomEmail(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+
+                <p className="text-sm font-semibold text-neutral-700 pt-2">Pani Młoda</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
+                    <Input value={brideFirstName} onChange={(e) => setBrideFirstName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
+                    <Input value={brideLastName} onChange={(e) => setBrideLastName(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
+                    <Input value={bridePhone} onChange={(e) => setBridePhone(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">E-mail</Label>
+                    <Input value={brideEmail} onChange={(e) => setBrideEmail(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Adres / Miejsce</Label>
+                    <Input value={venue} onChange={(e) => setVenue(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Data ślubu</Label>
+                    <Input type="date" value={weddingDate} onChange={(e) => setWeddingDate(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Koordynator</Label>
+                    <Input value={coordinator} onChange={(e) => setCoordinator(e.target.value)} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Godzina przybycia</Label>
+                    <Input type="time" value={arrivalTime} onChange={(e) => setArrivalTime(e.target.value)} className="border-neutral-200" />
+                  </div>
+                </div>
+
+                <p className="text-sm font-semibold text-neutral-700 pt-2">Liczba gości do rozliczenia</p>
+                <div className="grid grid-cols-4 gap-3">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Osoby dorosłe</Label>
+                    <Input type="number" value={guestsAdults} onChange={(e) => setGuestsAdults(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Dzieci (3–12 lat)</Label>
+                    <Input type="number" value={guestsChildren312} onChange={(e) => setGuestsChildren312(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Dzieci do lat dwóch</Label>
+                    <Input type="number" value={guestsChildrenUnder2} onChange={(e) => setGuestsChildrenUnder2(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Podwykonawcy</Label>
+                    <Input type="number" value={guestsSubcontractors} onChange={(e) => setGuestsSubcontractors(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-neutral-900">
+                  Razem (do rozliczenia): {guestsAdults + guestsChildren312 + guestsChildrenUnder2 + guestsSubcontractors}
+                </p>
+
+                <p className="text-sm font-semibold text-neutral-700 pt-2">Menu kuchnia uwzględniające diety</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Podstawowe menu</Label>
+                    <Input type="number" value={menuStandard} onChange={(e) => setMenuStandard(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Wegetarianie / Weganie</Label>
+                    <Input type="number" value={menuVegetarian} onChange={(e) => setMenuVegetarian(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Dzieci</Label>
+                    <Input type="number" value={menuChildren} onChange={(e) => setMenuChildren(Number(e.target.value))} className="border-neutral-200" />
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-neutral-900">
+                  Razem: {menuStandard + menuVegetarian + menuChildren}
+                </p>
+              </>
+            ) : (
+              /* ─── Corporate contact form ─── */
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Imię</Label>
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Jan" className="border-neutral-200" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-neutral-500 mb-1.5">Nazwisko</Label>
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Kowalski" className="border-neutral-200" />
+                  </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-neutral-500 mb-1.5">NIP</Label>
-                  <Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} className="border-neutral-200" />
+                  <Label className="text-xs text-neutral-500 mb-1.5">Email</Label>
+                  <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="jan@firma.pl" className="border-neutral-200" />
+                </div>
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1.5">Telefon</Label>
+                  <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+48 000 000 000" className="border-neutral-200" />
+                </div>
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1.5">Typ klienta</Label>
+                  <Select value={clientType} onValueChange={setClientType}>
+                    <SelectTrigger className="border-neutral-200">
+                      <SelectValue placeholder="Wybierz typ klienta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="firma">Firma</SelectItem>
+                      <SelectItem value="osoba_prywatna">Osoba prywatna</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {clientType === "firma" && (
+                  <>
+                    <div>
+                      <Label className="text-xs text-neutral-500 mb-1.5">Nazwa firmy</Label>
+                      <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} className="border-neutral-200" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-neutral-500 mb-1.5">NIP</Label>
+                      <Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} className="border-neutral-200" />
+                    </div>
+                  </>
+                )}
+                <div>
+                  <Label className="text-xs text-neutral-500 mb-1.5">Adres</Label>
+                  <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} className="border-neutral-200" />
                 </div>
               </>
             )}
-            <div>
-              <Label className="text-xs text-neutral-500 mb-1.5">Adres</Label>
-              <Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} className="border-neutral-200" />
-            </div>
           </div>
         </div>
 

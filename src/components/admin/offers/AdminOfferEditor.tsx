@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2, Save, GripVertical, ExternalLink, Copy, CalendarDays, MapPin, Clock, Users, Check } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO, eachDayOfInterval } from "date-fns";
@@ -54,6 +55,7 @@ interface OfferData {
   event_date_end: string | null;
   status: string;
   notes: string;
+  contact_section_type: string;
 }
 
 interface Selection {
@@ -91,6 +93,28 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [notes, setNotes] = useState("");
+  const [contactType, setContactType] = useState("corporate");
+
+  // Wedding-specific fields
+  const [groomFirstName, setGroomFirstName] = useState("");
+  const [groomLastName, setGroomLastName] = useState("");
+  const [groomPhone, setGroomPhone] = useState("");
+  const [groomEmail, setGroomEmail] = useState("");
+  const [brideFirstName, setBrideFirstName] = useState("");
+  const [brideLastName, setBrideLastName] = useState("");
+  const [bridePhone, setBridePhone] = useState("");
+  const [brideEmail, setBrideEmail] = useState("");
+  const [weddingDate, setWeddingDate] = useState("");
+  const [coordinator, setCoordinator] = useState("");
+  const [venue, setVenue] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("");
+  const [guestsAdults, setGuestsAdults] = useState(0);
+  const [guestsChildren312, setGuestsChildren312] = useState(0);
+  const [guestsChildrenUnder2, setGuestsChildrenUnder2] = useState(0);
+  const [guestsSubcontractors, setGuestsSubcontractors] = useState(0);
+  const [menuStandard, setMenuStandard] = useState(0);
+  const [menuVegetarian, setMenuVegetarian] = useState(0);
+  const [menuChildren, setMenuChildren] = useState(0);
 
   useEffect(() => { fetchOffer(); }, [offerId]);
 
@@ -99,7 +123,7 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     const { data: offerData } = await supabase.from("dedicated_offers").select("*").eq("id", offerId).single();
     if (!offerData) { setLoading(false); return; }
 
-    setOffer(offerData);
+    setOffer(offerData as any);
     setClientName(offerData.client_name);
     setClientEmail(offerData.client_email || "");
     setClientPhone(offerData.client_phone || "");
@@ -110,6 +134,29 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     setDateStart(offerData.event_date_start || "");
     setDateEnd(offerData.event_date_end || "");
     setNotes(offerData.notes || "");
+    setContactType((offerData as any).contact_section_type || "corporate");
+
+    // Wedding fields
+    const od = offerData as any;
+    setGroomFirstName(od.groom_first_name || "");
+    setGroomLastName(od.groom_last_name || "");
+    setGroomPhone(od.groom_phone || "");
+    setGroomEmail(od.groom_email || "");
+    setBrideFirstName(od.bride_first_name || "");
+    setBrideLastName(od.bride_last_name || "");
+    setBridePhone(od.bride_phone || "");
+    setBrideEmail(od.bride_email || "");
+    setWeddingDate(od.wedding_date || "");
+    setCoordinator(od.coordinator || "");
+    setVenue(od.venue || "");
+    setArrivalTime(od.arrival_time || "");
+    setGuestsAdults(od.guests_adults || 0);
+    setGuestsChildren312(od.guests_children_3_12 || 0);
+    setGuestsChildrenUnder2(od.guests_children_under_2 || 0);
+    setGuestsSubcontractors(od.guests_subcontractors || 0);
+    setMenuStandard(od.menu_standard || 0);
+    setMenuVegetarian(od.menu_vegetarian || 0);
+    setMenuChildren(od.menu_children || 0);
 
     const { data: daysData } = await supabase
       .from("dedicated_offer_days")
@@ -269,12 +316,28 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
     setSaving(true);
 
     // 1. Update offer metadata
-    await supabase.from("dedicated_offers").update({
+    const updatePayload: any = {
       client_name: clientName, client_email: clientEmail, client_phone: clientPhone,
       client_company: clientCompany, client_nip: clientNip, client_address: clientAddress,
       event_name: eventName,
       event_date_start: dateStart || null, event_date_end: dateEnd || null, notes,
-    } as any).eq("id", offer.id);
+      contact_section_type: contactType,
+    };
+
+    if (contactType === "wedding") {
+      Object.assign(updatePayload, {
+        groom_first_name: groomFirstName, groom_last_name: groomLastName,
+        groom_phone: groomPhone, groom_email: groomEmail,
+        bride_first_name: brideFirstName, bride_last_name: brideLastName,
+        bride_phone: bridePhone, bride_email: brideEmail,
+        wedding_date: weddingDate, coordinator, venue, arrival_time: arrivalTime,
+        guests_adults: guestsAdults, guests_children_3_12: guestsChildren312,
+        guests_children_under_2: guestsChildrenUnder2, guests_subcontractors: guestsSubcontractors,
+        menu_standard: menuStandard, menu_vegetarian: menuVegetarian, menu_children: menuChildren,
+      });
+    }
+
+    await supabase.from("dedicated_offers").update(updatePayload).eq("id", offer.id);
 
     // 2. Delete old days, sections (cascade)
     await supabase.from("dedicated_offer_days").delete().eq("offer_id", offer.id);
@@ -411,15 +474,63 @@ const AdminOfferEditor = ({ offerId, onBack }: Props) => {
         <div className="space-y-4">
           <Card>
             <CardContent className="p-4 space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dane kontaktowe</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-xs">Imię i nazwisko</Label><Input value={clientName} onChange={(e) => setClientName(e.target.value)} /></div>
-                <div><Label className="text-xs">Firma</Label><Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} /></div>
-                <div><Label className="text-xs">Email</Label><Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} /></div>
-                <div><Label className="text-xs">Telefon</Label><Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} /></div>
-                <div><Label className="text-xs">NIP</Label><Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" /></div>
-                <div><Label className="text-xs">Adres</Label><Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1" /></div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dane kontaktowe</h3>
+                <Select value={contactType} onValueChange={setContactType}>
+                  <SelectTrigger className="w-[180px] h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="corporate">🏢 Firmowy</SelectItem>
+                    <SelectItem value="wedding">🤵 Wesele</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {contactType === "corporate" ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label className="text-xs">Imię i nazwisko</Label><Input value={clientName} onChange={(e) => setClientName(e.target.value)} /></div>
+                  <div><Label className="text-xs">Firma</Label><Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} /></div>
+                  <div><Label className="text-xs">Email</Label><Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} /></div>
+                  <div><Label className="text-xs">Telefon</Label><Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} /></div>
+                  <div><Label className="text-xs">NIP</Label><Input value={clientNip} onChange={(e) => setClientNip(e.target.value)} placeholder="000-000-00-00" /></div>
+                  <div><Label className="text-xs">Adres</Label><Input value={clientAddress} onChange={(e) => setClientAddress(e.target.value)} placeholder="ul. Przykładowa 1" /></div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground">Pan Młody</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label className="text-xs">Imię</Label><Input value={groomFirstName} onChange={(e) => setGroomFirstName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Nazwisko</Label><Input value={groomLastName} onChange={(e) => setGroomLastName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Telefon</Label><Input value={groomPhone} onChange={(e) => setGroomPhone(e.target.value)} /></div>
+                    <div><Label className="text-xs">Email</Label><Input value={groomEmail} onChange={(e) => setGroomEmail(e.target.value)} /></div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">Pani Młoda</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label className="text-xs">Imię</Label><Input value={brideFirstName} onChange={(e) => setBrideFirstName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Nazwisko</Label><Input value={brideLastName} onChange={(e) => setBrideLastName(e.target.value)} /></div>
+                    <div><Label className="text-xs">Telefon</Label><Input value={bridePhone} onChange={(e) => setBridePhone(e.target.value)} /></div>
+                    <div><Label className="text-xs">Email</Label><Input value={brideEmail} onChange={(e) => setBrideEmail(e.target.value)} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label className="text-xs">Data ślubu</Label><Input type="date" value={weddingDate} onChange={(e) => setWeddingDate(e.target.value)} /></div>
+                    <div><Label className="text-xs">Koordynator</Label><Input value={coordinator} onChange={(e) => setCoordinator(e.target.value)} /></div>
+                    <div><Label className="text-xs">Adres / Miejsce</Label><Input value={venue} onChange={(e) => setVenue(e.target.value)} /></div>
+                    <div><Label className="text-xs">Godzina przybycia</Label><Input type="time" value={arrivalTime} onChange={(e) => setArrivalTime(e.target.value)} /></div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">Liczba gości</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div><Label className="text-[10px]">Dorośli</Label><Input type="number" value={guestsAdults} onChange={(e) => setGuestsAdults(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Dzieci 3-12</Label><Input type="number" value={guestsChildren312} onChange={(e) => setGuestsChildren312(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Dzieci &lt;2</Label><Input type="number" value={guestsChildrenUnder2} onChange={(e) => setGuestsChildrenUnder2(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Podwyk.</Label><Input type="number" value={guestsSubcontractors} onChange={(e) => setGuestsSubcontractors(Number(e.target.value))} /></div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground">Menu kuchnia</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div><Label className="text-[10px]">Standardowe</Label><Input type="number" value={menuStandard} onChange={(e) => setMenuStandard(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Wegetariańskie</Label><Input type="number" value={menuVegetarian} onChange={(e) => setMenuVegetarian(Number(e.target.value))} /></div>
+                    <div><Label className="text-[10px]">Dzieci</Label><Input type="number" value={menuChildren} onChange={(e) => setMenuChildren(Number(e.target.value))} /></div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

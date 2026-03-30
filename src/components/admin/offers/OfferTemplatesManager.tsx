@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, Edit } from "lucide-react";
 import { toast } from "sonner";
 import ProductPickerDialog, { type CatalogItem } from "./ProductPickerDialog";
@@ -35,6 +36,7 @@ interface Template {
   name: string;
   description: string;
   event_type: string;
+  contact_section_type: string;
   sections: TemplateSection[];
 }
 
@@ -45,6 +47,7 @@ const OfferTemplatesManager = () => {
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formEventType, setFormEventType] = useState("");
+  const [formContactType, setFormContactType] = useState("corporate");
   const [sections, setSections] = useState<TemplateSection[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSectionIdx, setPickerSectionIdx] = useState(-1);
@@ -76,7 +79,7 @@ const OfferTemplatesManager = () => {
 
   const openNew = () => {
     setEditTemplate(null);
-    setFormName(""); setFormDesc(""); setFormEventType("");
+    setFormName(""); setFormDesc(""); setFormEventType(""); setFormContactType("corporate");
     setSections([]);
     setSheetOpen(true);
   };
@@ -84,6 +87,7 @@ const OfferTemplatesManager = () => {
   const openEdit = (t: Template) => {
     setEditTemplate(t);
     setFormName(t.name); setFormDesc(t.description); setFormEventType(t.event_type);
+    setFormContactType(t.contact_section_type || "corporate");
     setSections(t.sections.map(s => ({ ...s, items: [...s.items] })));
     setSheetOpen(true);
   };
@@ -155,13 +159,13 @@ const OfferTemplatesManager = () => {
     if (editTemplate) {
       templateId = editTemplate.id;
       await supabase.from("offer_templates").update({
-        name: formName, description: formDesc, event_type: formEventType,
-      }).eq("id", templateId);
+        name: formName, description: formDesc, event_type: formEventType, contact_section_type: formContactType,
+      } as any).eq("id", templateId);
       await supabase.from("offer_template_sections").delete().eq("template_id", templateId);
     } else {
       const { data, error } = await supabase
         .from("offer_templates")
-        .insert({ name: formName, description: formDesc, event_type: formEventType })
+        .insert({ name: formName, description: formDesc, event_type: formEventType, contact_section_type: formContactType } as any)
         .select("id").single();
       if (error || !data) { toast.error("Błąd"); return; }
       templateId = data.id;
@@ -213,9 +217,14 @@ const OfferTemplatesManager = () => {
               <div>
                 <p className="font-semibold text-foreground">{t.name}</p>
                 {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t.sections.length} sekcji · {t.sections.reduce((s, sec) => s + sec.items.length, 0)} pozycji
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="text-[10px]">
+                    {t.contact_section_type === "wedding" ? "🤵 Wesele" : "🏢 Firmowy"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {t.sections.length} sekcji · {t.sections.reduce((s, sec) => s + sec.items.length, 0)} pozycji
+                  </span>
+                </div>
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Edit className="w-4 h-4" /></Button>
@@ -243,6 +252,18 @@ const OfferTemplatesManager = () => {
             <div>
               <Label>Typ wydarzenia</Label>
               <Input value={formEventType} onChange={(e) => setFormEventType(e.target.value)} placeholder="np. Konferencja" />
+            </div>
+            <div>
+              <Label>Typ sekcji kontaktowej</Label>
+              <Select value={formContactType} onValueChange={setFormContactType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="corporate">🏢 Firmowy / Konferencja</SelectItem>
+                  <SelectItem value="wedding">🤵 Wesele / Impreza okolicznościowa</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="border-t border-border pt-4">

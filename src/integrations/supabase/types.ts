@@ -635,61 +635,121 @@ export type Database = {
       }
       dedicated_offers: {
         Row: {
+          arrival_time: string | null
+          bride_email: string | null
+          bride_first_name: string | null
+          bride_last_name: string | null
+          bride_phone: string | null
           client_address: string | null
           client_company: string | null
           client_email: string | null
           client_name: string
           client_nip: string | null
           client_phone: string | null
+          contact_section_type: string
+          coordinator: string | null
           created_at: string
           event_date_end: string | null
           event_date_start: string | null
           event_name: string | null
+          groom_email: string | null
+          groom_first_name: string | null
+          groom_last_name: string | null
+          groom_phone: string | null
+          guests_adults: number | null
+          guests_children_3_12: number | null
+          guests_children_under_2: number | null
+          guests_subcontractors: number | null
           id: string
+          menu_children: number | null
+          menu_standard: number | null
+          menu_vegetarian: number | null
           notes: string | null
           status: string
           template_id: string | null
           tenant_id: string | null
           token: string
           updated_at: string
+          venue: string | null
+          wedding_date: string | null
         }
         Insert: {
+          arrival_time?: string | null
+          bride_email?: string | null
+          bride_first_name?: string | null
+          bride_last_name?: string | null
+          bride_phone?: string | null
           client_address?: string | null
           client_company?: string | null
           client_email?: string | null
           client_name?: string
           client_nip?: string | null
           client_phone?: string | null
+          contact_section_type?: string
+          coordinator?: string | null
           created_at?: string
           event_date_end?: string | null
           event_date_start?: string | null
           event_name?: string | null
+          groom_email?: string | null
+          groom_first_name?: string | null
+          groom_last_name?: string | null
+          groom_phone?: string | null
+          guests_adults?: number | null
+          guests_children_3_12?: number | null
+          guests_children_under_2?: number | null
+          guests_subcontractors?: number | null
           id?: string
+          menu_children?: number | null
+          menu_standard?: number | null
+          menu_vegetarian?: number | null
           notes?: string | null
           status?: string
           template_id?: string | null
           tenant_id?: string | null
           token: string
           updated_at?: string
+          venue?: string | null
+          wedding_date?: string | null
         }
         Update: {
+          arrival_time?: string | null
+          bride_email?: string | null
+          bride_first_name?: string | null
+          bride_last_name?: string | null
+          bride_phone?: string | null
           client_address?: string | null
           client_company?: string | null
           client_email?: string | null
           client_name?: string
           client_nip?: string | null
           client_phone?: string | null
+          contact_section_type?: string
+          coordinator?: string | null
           created_at?: string
           event_date_end?: string | null
           event_date_start?: string | null
           event_name?: string | null
+          groom_email?: string | null
+          groom_first_name?: string | null
+          groom_last_name?: string | null
+          groom_phone?: string | null
+          guests_adults?: number | null
+          guests_children_3_12?: number | null
+          guests_children_under_2?: number | null
+          guests_subcontractors?: number | null
           id?: string
+          menu_children?: number | null
+          menu_standard?: number | null
+          menu_vegetarian?: number | null
           notes?: string | null
           status?: string
           template_id?: string | null
           tenant_id?: string | null
           token?: string
           updated_at?: string
+          venue?: string | null
+          wedding_date?: string | null
         }
         Relationships: [
           {
@@ -1331,6 +1391,7 @@ export type Database = {
       }
       offer_templates: {
         Row: {
+          contact_section_type: string
           created_at: string
           description: string | null
           event_type: string | null
@@ -1340,6 +1401,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          contact_section_type?: string
           created_at?: string
           description?: string | null
           event_type?: string | null
@@ -1349,6 +1411,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          contact_section_type?: string
           created_at?: string
           description?: string | null
           event_type?: string | null
