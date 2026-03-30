@@ -29,7 +29,7 @@ const settingsSubItems: { id: AdminSection; icon: typeof Building2; label: strin
   { id: "settings-delivery", icon: Truck, label: "Strefy dostaw" },
 ];
 
-const AdminSidebar = ({ activeSection, onSectionChange, onLogout }: AdminSidebarProps) => {
+const AdminSidebar = ({ activeSection, onSectionChange, onLogout, isSuperAdmin = false }: AdminSidebarProps) => {
   const isSettingsActive = activeSection.startsWith("settings-");
   const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
   const [companyName, setCompanyName] = useState("Panel Admin");
