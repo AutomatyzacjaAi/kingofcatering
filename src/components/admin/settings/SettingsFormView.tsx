@@ -489,6 +489,55 @@ const SettingsFormView = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Event → extras category mappings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Kategorie dodatków dla rodzajów wydarzeń</CardTitle>
+            <CardDescription>Określ, które kategorie dodatków (usług) są widoczne dla danego typu wydarzenia</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {events.map((event) => {
+                const EventIcon = icons[event.icon];
+                return (
+                  <div key={event.id} className="p-4 rounded-lg border border-border">
+                    <div className="flex items-center gap-3 mb-3">
+                      <EventIcon className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">{event.name}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {extrasCategories.map((cat) => {
+                        const isChecked = event.allowedExtrasCategoryIds.includes(cat.id);
+                        return (
+                          <label
+                            key={cat.id}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors text-xs font-medium",
+                              isChecked
+                                ? "bg-accent border-primary/30 text-accent-foreground"
+                                : "bg-muted/20 border-border text-muted-foreground hover:bg-muted/40"
+                            )}
+                          >
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => toggleExtrasCategoryForEvent(event.id, cat.id)}
+                              className="w-3.5 h-3.5"
+                            />
+                            {cat.name}
+                          </label>
+                        );
+                      })}
+                      {extrasCategories.length === 0 && (
+                        <p className="text-xs text-muted-foreground">Brak kategorii dodatków — dodaj je powyżej</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
