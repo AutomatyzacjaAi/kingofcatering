@@ -217,9 +217,14 @@ const OfferTemplatesManager = () => {
               <div>
                 <p className="font-semibold text-foreground">{t.name}</p>
                 {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t.sections.length} sekcji · {t.sections.reduce((s, sec) => s + sec.items.length, 0)} pozycji
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="text-[10px]">
+                    {t.contact_section_type === "wedding" ? "🤵 Wesele" : "🏢 Firmowy"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {t.sections.length} sekcji · {t.sections.reduce((s, sec) => s + sec.items.length, 0)} pozycji
+                  </span>
+                </div>
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Edit className="w-4 h-4" /></Button>
