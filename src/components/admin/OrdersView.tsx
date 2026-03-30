@@ -2216,7 +2216,6 @@ const OrdersView = () => {
               <TableHead className="font-semibold text-foreground">Klient</TableHead>
               <TableHead className="font-semibold text-foreground">Wydarzenie</TableHead>
               <TableHead className="font-semibold text-foreground">Data</TableHead>
-              <TableHead className="font-semibold text-foreground">Pozycje</TableHead>
               <TableHead className="font-semibold text-foreground">Kwota</TableHead>
               <TableHead className="font-semibold text-foreground">Status</TableHead>
               <TableHead className="font-semibold text-foreground text-right">Akcje</TableHead>
