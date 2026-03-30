@@ -920,7 +920,7 @@ const SubItemSelector = ({ product, onConfirm, onCancel }: {
         <p className="text-sm font-semibold text-foreground">Konfiguruj: {product.name}</p>
         {product.optionGroups.map(g => (
           <div key={g.id}>
-            <p className="text-xs font-medium text-muted-foreground mb-1">{g.name} (min {g.minSelections}, max {g.maxSelections})</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1">{g.name} (min {g.minSelections}, max {g.maxSelections}{g.multiplier && g.multiplier !== 1 ? `, przelicznik ×${g.multiplier}` : ""})</p>
             <div className="flex flex-wrap gap-1.5">
               {g.options.map(o => {
                 const isSelected = (selectedOptions[g.id] || []).includes(o.id);
