@@ -9,6 +9,7 @@ interface AdminSidebarProps {
   activeSection: AdminSection;
   onSectionChange: (section: AdminSection) => void;
   onLogout?: () => void;
+  isSuperAdmin?: boolean;
 }
 
 const mainNavItems: { id: "orders" | "clients" | "dedicated-offers" | "reports"; icon: typeof ClipboardList; label: string }[] = [
