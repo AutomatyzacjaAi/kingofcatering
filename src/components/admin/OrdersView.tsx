@@ -1214,7 +1214,6 @@ const summaryDocLabels: Record<SummaryDocType, { label: string; Icon: LucideIcon
   "zamowienia": { label: "Lista zamówień", Icon: FileText },
   "lista-zakupow": { label: "Lista zakupów", Icon: ShoppingCart },
   "lista-dan": { label: "Lista dań", Icon: CookingPot },
-  "food-cost": { label: "Food cost", Icon: Calculator },
 };
 
 const parseSimpleDate = (dateStr: string): Date | null => {
