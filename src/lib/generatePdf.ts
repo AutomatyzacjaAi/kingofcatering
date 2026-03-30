@@ -286,55 +286,17 @@ export async function generateOfferPdf(order: PdfOrder, companyName?: string) {
 
   let y = addInfoBlock(doc, infoLines, 28);
 
-  const rows = order.items.map(item => [
-    item.name.toUpperCase(),
-    String(item.quantity),
-    `${fmtNum(item.pricePerUnit)} PLN`,
-    `${fmtNum(item.total)} PLN`,
-  ]);
-
-  if (order.deliveryCost > 0) {
-    rows.push(["OPŁATA TRANSPORTOWA", "1", `${fmtNum(order.deliveryCost)} PLN`, `${fmtNum(order.deliveryCost)} PLN`]);
-  }
-
-  if (order.discount && order.discount > 0) {
-    rows.push(["RABAT", "", "", `-${fmtNum(order.discount)} PLN`]);
-  }
-
-  autoTable(doc, {
-    startY: y,
-    head: [["OPIS USŁUGI", "ILOŚĆ", "CENA JEDN.", "WARTOŚĆ NETTO"]],
-    body: rows,
-    foot: [["", "", "RAZEM DO ZAPŁATY:", `${order.amount}`]],
-    ...TABLE_STYLES,
-    footStyles: {
-      ...TABLE_STYLES.footStyles,
-    },
-    columnStyles: {
-      0: { cellWidth: 80 },
-      1: { halign: "center" as const, cellWidth: 25 },
-      2: { halign: "right" as const, cellWidth: 35 },
-      3: { halign: "right" as const, cellWidth: 40 },
-    },
-    didParseCell: (data: any) => {
-      // Make total row bold with thick top border
-      if (data.section === "foot") {
-        data.cell.styles.lineWidth = { top: 0.8, right: 0.3, bottom: 0.3, left: 0.3 };
-      }
-    },
-  });
-
-  const finalY = getTableFinalY(doc, y + 60);
+  const finalY = renderOrderTables(doc, order, y);
 
   if (order.guestCount > 0) {
     const pricePerPerson = order.amountNum / order.guestCount;
     doc.setFontSize(9);
     doc.setTextColor(80, 80, 80);
-    doc.text(`Cena na osobę: ${fmtNum(pricePerPerson)} PLN`, PAGE_LEFT, finalY + 10);
+    doc.text(`Cena na osobę: ${fmtNum(pricePerPerson)} PLN`, PAGE_LEFT, finalY + 6);
     doc.setTextColor(0, 0, 0);
   }
 
-  addFooterDate(doc, finalY + 18);
+  addFooterDate(doc, finalY + 14);
   doc.save(`oferta_${order.id}.pdf`);
 }
 
