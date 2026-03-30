@@ -222,6 +222,35 @@ const SettingsFormView = () => {
     }));
   };
 
+  const toggleExtrasCategoryForEvent = async (eventId: string, extrasCategoryId: string) => {
+    const event = events.find((e) => e.id === eventId);
+    if (!event) return;
+
+    const has = event.allowedExtrasCategoryIds.includes(extrasCategoryId);
+
+    if (has) {
+      await supabase
+        .from("event_extras_category_mappings")
+        .delete()
+        .eq("event_type_id", eventId)
+        .eq("extras_category_id", extrasCategoryId);
+    } else {
+      await supabase
+        .from("event_extras_category_mappings")
+        .insert({ event_type_id: eventId, extras_category_id: extrasCategoryId });
+    }
+
+    setEvents(events.map((e) => {
+      if (e.id !== eventId) return e;
+      return {
+        ...e,
+        allowedExtrasCategoryIds: has
+          ? e.allowedExtrasCategoryIds.filter((cid) => cid !== extrasCategoryId)
+          : [...e.allowedExtrasCategoryIds, extrasCategoryId],
+      };
+    }));
+  };
+
   // ─── Extras categories CRUD ───
   const addExtrasCategory = async () => {
     if (!newExCatName.trim()) return;
