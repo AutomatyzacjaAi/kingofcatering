@@ -69,7 +69,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
 
   const resetForm = () => {
     setFormName(""); setFormDesc(""); setFormPrice(0); setFormPriceOnSite(null);
-    setFormConfigurable(false); setFormIcon("📋");
+    setFormConfigurable(false);
     setFormGroups([]);
     setEditingId(null); setShowForm(false);
   };
