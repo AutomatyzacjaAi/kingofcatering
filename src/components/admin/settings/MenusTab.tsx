@@ -92,6 +92,7 @@ export function MenusTab({ menus, dishes, reload }: Props) {
       name: "",
       minSelections: 1,
       maxSelections: 1,
+      multiplier: 1,
       sortOrder: formGroups.length,
       items: [],
     }]);
