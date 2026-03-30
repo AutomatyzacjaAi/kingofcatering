@@ -207,6 +207,23 @@ const toRow = (item: PdfOrder["items"][0]) => [
   `${fmtNum(item.total)} PLN`,
 ];
 
+/** Build rows for an item, including indented sub-item rows */
+const toRowsWithSubs = (item: PdfOrder["items"][0]): { content: string[][]; } => {
+  const rows: string[][] = [];
+  rows.push(toRow(item));
+  if (item.subItems && item.subItems.length > 0) {
+    item.subItems.forEach(sub => {
+      rows.push([
+        `    ↳ ${sub.name}`,
+        String(sub.quantity) + " " + sub.unit,
+        "",
+        "",
+      ]);
+    });
+  }
+  return { content: rows };
+};
+
 const renderOrderTables = (
   doc: jsPDF, order: PdfOrder, startY: number,
 ): number => {
