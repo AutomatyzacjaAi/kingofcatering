@@ -328,7 +328,6 @@ export function MenusTab({ menus, dishes, reload }: Props) {
                 <button onClick={() => setExpandedId(expandedId === m.id ? null : m.id)} className="p-0.5 text-muted-foreground">
                   {expandedId === m.id ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
-                <span className="text-lg">{m.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{m.name}</span>
