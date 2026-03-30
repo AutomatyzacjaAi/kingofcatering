@@ -587,14 +587,29 @@ export async function generateSummaryPdf(orders: PdfOrder[], docType: SummaryDoc
 
       autoTable(doc, {
         startY: y,
-        head: [["NR", "KLIENT", "WYDARZENIE", "KWOTA", "GOŚCI", "ADRES"]],
-        body: dateOrders.map(o => [
-          o.id, o.client.toUpperCase(), (o.event || "-").toUpperCase(), o.amount,
-          o.guestCount > 0 ? String(o.guestCount) : "-",
-          o.deliveryAddress || "-",
-        ]),
+        head: [["NR", "KLIENT", "WYDARZENIE", "KWOTA", "GOŚCI", "POZYCJE"]],
+        body: dateOrders.map(o => {
+          const productItems = o.items.filter(i => i.type !== "extra" && i.type !== "service");
+          const extraItems = o.items.filter(i => i.type === "extra" || i.type === "service");
+          let pozycje = "";
+          if (productItems.length > 0) {
+            pozycje += "PRODUKTY:\n" + productItems.map(i => `  ${i.name} ×${i.quantity}`).join("\n");
+          }
+          if (extraItems.length > 0) {
+            if (pozycje) pozycje += "\n";
+            pozycje += "DODATKI:\n" + extraItems.map(i => `  ${i.name} ×${i.quantity}`).join("\n");
+          }
+          return [
+            o.id, o.client.toUpperCase(), (o.event || "-").toUpperCase(), o.amount,
+            o.guestCount > 0 ? String(o.guestCount) : "-",
+            pozycje || "-",
+          ];
+        }),
         ...TABLE_STYLES,
         styles: { ...TABLE_STYLES.styles, fontSize: 8, cellPadding: 2.5 },
+        columnStyles: {
+          5: { cellWidth: 60, fontSize: 7 },
+        },
       });
       y = getTableFinalY(doc, y + 30) + 8;
     }
