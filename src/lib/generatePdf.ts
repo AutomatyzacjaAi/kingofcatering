@@ -707,57 +707,6 @@ export async function generateSummaryPdf(orders: PdfOrder[], docType: SummaryDoc
       });
       y = getTableFinalY(doc, y + 30) + 8;
     }
-
-  } else if (docType === "food-cost") {
-    let grandFC = 0, grandRev = 0;
-
-    for (const [date, dateOrders] of grouped) {
-      const dayLabel = parseDateForGrouping(date);
-      const rows: string[][] = [];
-      let dayFC = 0, dayRev = 0;
-
-      dateOrders.forEach(o => {
-        o.items.forEach(item => {
-          if (item.type === "service" || item.type === "waiter" || !item.foodCostPerUnit) return;
-          const totalFC = item.foodCostPerUnit * item.quantity;
-          const margin = item.total > 0 ? ((item.total - totalFC) / item.total) * 100 : 0;
-          rows.push([
-            o.id, item.name.toUpperCase(), `${item.quantity} ${item.unit}`,
-            `${fmtNum(item.foodCostPerUnit)} PLN`, `${fmtNum(totalFC)} PLN`,
-            `${fmtNum(item.total)} PLN`, `${margin.toFixed(1)}%`,
-          ]);
-          dayFC += totalFC;
-          dayRev += item.total;
-        });
-      });
-
-      if (rows.length === 0) continue;
-      grandFC += dayFC;
-      grandRev += dayRev;
-      const dayMargin = dayRev > 0 ? ((dayRev - dayFC) / dayRev) * 100 : 0;
-
-      y = checkPage(doc, y);
-      y = addDayHeader(doc, dayLabel, `FC: ${fmtNum(dayFC)} PLN / Marża: ${dayMargin.toFixed(1)}%`, y);
-
-      autoTable(doc, {
-        startY: y,
-        head: [["ZAMÓWIENIE", "PRODUKT", "ILOŚĆ", "FC/JEDN.", "FC ŁĄCZNIE", "PRZYCHÓD", "MARŻA"]],
-        body: rows,
-        ...TABLE_STYLES,
-        styles: { ...TABLE_STYLES.styles, fontSize: 7, cellPadding: 2 },
-        headStyles: { ...TABLE_STYLES.headStyles, fontSize: 7 },
-        columnStyles: { 3: { halign: "right" as const }, 4: { halign: "right" as const }, 5: { halign: "right" as const }, 6: { halign: "right" as const } },
-      });
-      y = getTableFinalY(doc, y + 30) + 8;
-    }
-
-    // Grand total
-    y = checkPage(doc, y);
-    const grandMargin = grandRev > 0 ? ((grandRev - grandFC) / grandRev) * 100 : 0;
-    doc.setFontSize(11);
-    doc.setFont("Roboto", "normal");
-    doc.setTextColor(0, 0, 0);
-    doc.text(`SUMA: FOOD COST ${fmtNum(grandFC)} PLN | PRZYCHÓD ${fmtNum(grandRev)} PLN | MARŻA ${grandMargin.toFixed(1)}%`, PAGE_LEFT, y);
   }
 
   addFooterDate(doc, Math.min(getTableFinalY(doc, y) + 10, 285));
