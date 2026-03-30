@@ -97,6 +97,22 @@ const AdminSidebar = ({ activeSection, onSectionChange, onLogout, isSuperAdmin =
           </button>
         ))}
 
+        {/* Super admin: Tenants */}
+        {isSuperAdmin && (
+          <button
+            onClick={() => onSectionChange("tenants")}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              activeSection === "tenants"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <Building2 className="w-4 h-4" />
+            Firmy
+          </button>
+        )}
+
         {/* Settings with accordion */}
         <button
           onClick={handleSettingsClick}
