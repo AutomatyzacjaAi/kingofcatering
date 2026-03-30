@@ -32,6 +32,7 @@ interface DedicatedOffer {
 interface OfferTemplate {
   id: string;
   name: string;
+  contact_section_type: string;
 }
 
 const statusColors: Record<string, string> = {
